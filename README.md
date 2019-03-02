@@ -140,7 +140,7 @@ public void onNotificationStateUpdate(BluetoothPeripheral peripheral, BluetoothG
 
 ## Example application
 
-An [example application]() is provided in the repo. It shows how to connect to Blood Pressure meters, read the data and show it on screen.
+An example application is provided in the repo. It shows how to connect to Blood Pressure meters, read the data and show it on screen.
 
 ## Acknowledgements
 
