@@ -270,7 +270,6 @@ public class BluetoothPeripheral {
                     } else if(state == BluetoothProfile.STATE_CONNECTING) {
                         Log.i(TAG, "cancelling connect attempt");
                     }
-                    state = BluetoothProfile.STATE_DISCONNECTED;
                     completeDisconnect(true, status);
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTING) {
                     // Device is disconnection, let it finish...
@@ -413,7 +412,7 @@ public class BluetoothPeripheral {
         @Override
         public void onDescriptorRead(BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, int status) {
             if(status!= GATT_SUCCESS) {
-                Log.i(TAG, String.format("ERROR: Write descriptor failed device: %s", getAddress()));
+                Log.e(TAG, String.format("ERROR: Write descriptor failed device: %s", getAddress()));
             }
             final byte[] value = new byte[descriptor.getValue().length];
             System.arraycopy(descriptor.getValue(), 0, value, 0, descriptor.getValue().length);
@@ -435,9 +434,11 @@ public class BluetoothPeripheral {
          */
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
-            // Characteristic has new value so pass it on to the right service handler
+            // Copy the byte array so we have a threadsafe copy
             final byte[] value = new byte[characteristic.getValue().length];
             System.arraycopy(characteristic.getValue(), 0, value, 0, characteristic.getValue().length );
+
+            // Characteristic has new value so pass it on to the right service handler
             bleHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -473,15 +474,17 @@ public class BluetoothPeripheral {
                     retryCommand();
                     return;
                 } else {
-                    Log.i(TAG, String.format(Locale.ENGLISH,"ERROR: Read failed for characteristic: %s, status %d", characteristic.getUuid(), status));
+                    Log.e(TAG, String.format(Locale.ENGLISH,"ERROR: Read failed for characteristic: %s, status %d", characteristic.getUuid(), status));
                     completedCommand();
                     return;
                 }
             }
 
-            // Characteristic has been read, pass it on to service handler
+            // Copy the byte array so we have a threadsafe copy
             final byte[] value = new byte[characteristic.getValue().length];
             System.arraycopy(characteristic.getValue(), 0, value, 0, characteristic.getValue().length );
+
+            // Characteristic has been read, pass it on to service handler
             bleHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -524,22 +527,23 @@ public class BluetoothPeripheral {
                 }
             }
 
-            // Inform the service handler of the write
+            // Copy the byte array so we have a threadsafe copy
             final byte[] value = new byte[currentWriteBytes.length];
             System.arraycopy(currentWriteBytes, 0, value, 0, currentWriteBytes.length );
+            currentWriteBytes = null;
+
+            // Inform the service handler of the write
             bleHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     peripheralCallback.onCharacteristicWrite(BluetoothPeripheral.this, value, characteristic, status);
                 }
             });
-            currentWriteBytes = null;
             completedCommand();
         }
 
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, final int rssi, final int status) {
-            Log.i(TAG, String.format("RSSI: %d", rssi));
             bleHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -551,7 +555,6 @@ public class BluetoothPeripheral {
 
         @Override
         public void onMtuChanged(BluetoothGatt gatt, final int mtu, final int status) {
-            Log.i(TAG, String.format("mtu %d", mtu));
             bleHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -697,7 +700,7 @@ public class BluetoothPeripheral {
      * Connect directly with the bluetooth device. This call will timeout in max 30 seconds
      */
     void connect() {
-
+        // Make sure we are disconnected before we start making a connection
         if (state == BluetoothProfile.STATE_DISCONNECTED) {
             // Register bonding broadcast receiver
             context.registerReceiver(bondStateReceiver, new IntentFilter(ACTION_BOND_STATE_CHANGED));
@@ -745,10 +748,10 @@ public class BluetoothPeripheral {
                     }
                 });
             } else {
-                Log.i(TAG, String.format("ERROR: Already have Gatt object for '%s'", getName()));
+                Log.e(TAG, String.format("ERROR: Already have Gatt object for '%s'", getName()));
             }
         } else {
-            Log.i(TAG, String.format("ERROR: Peripheral '%s' not yet disconnected", getName()));
+            Log.e(TAG, String.format("ERROR: Peripheral '%s' not yet disconnected", getName()));
         }
     }
 
@@ -926,19 +929,19 @@ public class BluetoothPeripheral {
      */
     public boolean readCharacteristic(final BluetoothGattCharacteristic characteristic) {
         if(bluetoothGatt == null) {
-            Log.i(TAG, "ERROR: Gatt is null, ignoring read request");
+            Log.e(TAG, "ERROR: Gatt is 'null', ignoring read request");
             return false;
         }
 
         // Check if characteristic is valid
         if(characteristic == null) {
-            Log.i(TAG, "ERROR: Characteristic is null, ignoring read request");
+            Log.e(TAG, "ERROR: Characteristic is 'null', ignoring read request");
             return false;
         }
 
         // Check if this characteristic actually has READ property
         if((characteristic.getProperties() & PROPERTY_READ) == 0 ) {
-            Log.i(TAG, "ERROR: Characteristic cannot be read");
+            Log.e(TAG, "ERROR: Characteristic cannot be read");
             return false;
         }
 
@@ -949,9 +952,10 @@ public class BluetoothPeripheral {
                 // Double check if gatt is still valid
                 if(bluetoothGatt != null) {
                     if(!bluetoothGatt.readCharacteristic(characteristic)) {
-                        Log.i(TAG, String.format("ReadCharacteristic failed for characteristic: %s", characteristic.getUuid()));
+                        Log.e(TAG, String.format("ERROR: readCharacteristic failed for characteristic: %s", characteristic.getUuid()));
                         completedCommand();
                     } else {
+                        Log.d(TAG, String.format("reading characteristic <%s>", characteristic.getUuid()));
                         nrTries++;
                     }
                 } else {
@@ -984,13 +988,13 @@ public class BluetoothPeripheral {
     public boolean writeCharacteristic(final BluetoothGattCharacteristic characteristic, final byte[] value, final int writeType) {
         // Check if characteristic is valid
         if(characteristic == null) {
-            Log.e(TAG, "ERROR: Characteristic is null, ignoring write request");
+            Log.e(TAG, "ERROR: Characteristic is 'null', ignoring write request");
             return false;
         }
 
         // Check if byte array is valid
         if(value == null) {
-            Log.e(TAG, "ERROR: Value to write is null, ignoring write request");
+            Log.e(TAG, "ERROR: Value to write is 'null', ignoring write request");
             return false;
         }
 
@@ -1007,7 +1011,7 @@ public class BluetoothPeripheral {
             default: writeProperty = 0; break;
         }
         if((characteristic.getProperties() & writeProperty) == 0 ) {
-            Log.e(TAG, String.format(Locale.ENGLISH,"ERROR: Characteristic cannot be written with this writeType : %d", writeType));
+            Log.e(TAG, String.format(Locale.ENGLISH,"ERROR: Characteristic <%s> does not support writeType '%s'", characteristic.getUuid(), writeTypeToString(writeType)));
             return false;
         }
 
@@ -1024,7 +1028,7 @@ public class BluetoothPeripheral {
                         Log.e(TAG, String.format("ERROR: writeCharacteristic failed for characteristic: %s", characteristic.getUuid()));
                         completedCommand();
                     } else {
-                        Log.d(TAG, String.format("Writing <%s> to characteristic <%s>", bytes2String(bytesToWrite), characteristic.getUuid()));
+                        Log.d(TAG, String.format("writing <%s> to characteristic <%s>", bytes2String(bytesToWrite), characteristic.getUuid()));
                         nrTries++;
                     }
                 } else {
@@ -1049,13 +1053,13 @@ public class BluetoothPeripheral {
      */
     public boolean readDescriptor(final BluetoothGattDescriptor descriptor) {
         if(bluetoothGatt == null) {
-            Log.i(TAG, "ERROR: Gatt is null, ignoring read request");
+            Log.e(TAG, "ERROR: Gatt is 'null', ignoring read request");
             return false;
         }
 
         // Check if characteristic is valid
         if(descriptor == null) {
-            Log.i(TAG, "ERROR: descriptor is null, ignoring read request");
+            Log.e(TAG, "ERROR: descriptor is 'null', ignoring read request");
             return false;
         }
 
@@ -1066,7 +1070,7 @@ public class BluetoothPeripheral {
                 // Double check if gatt is still valid
                 if(bluetoothGatt != null) {
                     if(!bluetoothGatt.readDescriptor(descriptor)) {
-                        Log.i(TAG, String.format("ReadDescriptor failed for characteristic: %s", descriptor.getUuid()));
+                        Log.e(TAG, String.format("ERROR: readDescriptor failed for characteristic: %s", descriptor.getUuid()));
                         completedCommand();
                     } else {
                         nrTries++;
@@ -1097,13 +1101,13 @@ public class BluetoothPeripheral {
     public boolean writeDescriptor(final BluetoothGattDescriptor descriptor, final byte[] value) {
         // Check if characteristic is valid
         if(descriptor == null) {
-            Log.e(TAG, "ERROR: descriptor is null, ignoring write request");
+            Log.e(TAG, "ERROR: descriptor is 'null', ignoring write request");
             return false;
         }
 
         // Check if byte array is valid
         if(value == null) {
-            Log.e(TAG, "ERROR: Value to write is null, ignoring write request");
+            Log.e(TAG, "ERROR: Value to write is 'null', ignoring write request");
             return false;
         }
 
@@ -1123,7 +1127,7 @@ public class BluetoothPeripheral {
                         Log.e(TAG, String.format("ERROR: writeDescriptor failed for descriptor: %s", descriptor.getUuid()));
                         completedCommand();
                     } else {
-                        Log.d(TAG, String.format("Writing <%s> to descriptor <%s>", bytes2String(bytesToWrite), descriptor.getUuid()));
+                        Log.d(TAG, String.format("writing <%s> to descriptor <%s>", bytes2String(bytesToWrite), descriptor.getUuid()));
                         nrTries++;
                     }
                 } else {
@@ -1152,14 +1156,14 @@ public class BluetoothPeripheral {
     public boolean setNotify(BluetoothGattCharacteristic characteristic, final boolean enable) {
         // Check if characteristic is valid
         if(characteristic == null) {
-            Log.i(TAG, "ERROR: Characteristic is null, ignoring setNotify request");
+            Log.e(TAG, "ERROR: Characteristic is 'null', ignoring setNotify request");
             return false;
         }
 
         // Get the Client Configuration Descriptor for the characteristic
         final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString(CCC_DESCRIPTOR_UUID));
         if(descriptor == null) {
-            Log.i(TAG, String.format("ERROR: Could not get CCC descriptor for characteristic %s", characteristic.getUuid()));
+            Log.e(TAG, String.format("ERROR: Could not get CCC descriptor for characteristic %s", characteristic.getUuid()));
             return false;
         }
 
@@ -1171,7 +1175,7 @@ public class BluetoothPeripheral {
         } else if ((properties & PROPERTY_INDICATE) > 0) {
             value = BluetoothGattDescriptor.ENABLE_INDICATION_VALUE;
         } else {
-            Log.i(TAG, String.format("ERROR: Characteristic %s does not have notify or indicate property", characteristic.getUuid()));
+            Log.e(TAG, String.format("ERROR: Characteristic %s does not have notify or indicate property", characteristic.getUuid()));
             return false;
         }
         final byte[] finalValue = enable ? value : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
@@ -1183,7 +1187,7 @@ public class BluetoothPeripheral {
                 // If we are dealing with the CCC descriptor then first set notification for Gatt object
                 if(descriptor.getUuid().equals(UUID.fromString(CCC_DESCRIPTOR_UUID))) {
                     if(!bluetoothGatt.setCharacteristicNotification(descriptor.getCharacteristic(), enable)) {
-                        Log.i(TAG, String.format("ERROR: setCharacteristicNotification failed for descriptor: %s", descriptor.getUuid()));
+                        Log.e(TAG, String.format("ERROR: setCharacteristicNotification failed for descriptor: %s", descriptor.getUuid()));
                     }
                 }
 
@@ -1194,7 +1198,7 @@ public class BluetoothPeripheral {
                     result = bluetoothGatt.writeDescriptor(descriptor);
                 } else {
                     // Up to Android 6 there is a bug where Android takes the writeType of the parent characteristic instead of always WRITE_TYPE_DEFAULT
-                    // See XXX
+                    // See: https://android.googlesource.com/platform/frameworks/base/+/942aebc95924ab1e7ea1e92aaf4e7fc45f695a6c%5E%21/#F0
                     final BluetoothGattCharacteristic parentCharacteristic = descriptor.getCharacteristic();
                     final int originalWriteType = parentCharacteristic.getWriteType();
                     parentCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
@@ -1202,7 +1206,7 @@ public class BluetoothPeripheral {
                     parentCharacteristic.setWriteType(originalWriteType);
                 }
                 if(!result) {
-                    Log.i(TAG, String.format("ERROR: writeDescriptor failed for descriptor: %s", descriptor.getUuid()));
+                    Log.e(TAG, String.format("ERROR: writeDescriptor failed for descriptor: %s", descriptor.getUuid()));
                     completedCommand();
                 } else {
                     nrTries++;
@@ -1233,7 +1237,7 @@ public class BluetoothPeripheral {
                 result = (boolean) refreshMethod.invoke(bluetoothGatt);
             }
         } catch (Exception e) {
-            Log.i(TAG, "ERROR: Could not invoke refresh method");
+            Log.e(TAG, "ERROR: Could not invoke refresh method");
         }
         return result;
     }
@@ -1251,7 +1255,7 @@ public class BluetoothPeripheral {
             public void run() {
                 if(bluetoothGatt != null && state == BluetoothProfile.STATE_CONNECTED) {
                     if (!bluetoothGatt.readRemoteRssi()) {
-                        Log.i(TAG, "ERROR: readRemoteRssi failed");
+                        Log.e(TAG, "ERROR: readRemoteRssi failed");
                         completedCommand();
                     }
                 } else {
@@ -1280,7 +1284,7 @@ public class BluetoothPeripheral {
             public void run() {
                 if(bluetoothGatt != null && state == BluetoothProfile.STATE_CONNECTED) {
                     if (!bluetoothGatt.requestMtu(mtu)) {
-                        Log.i(TAG, "ERROR: requestMtu failed");
+                        Log.e(TAG, "ERROR: requestMtu failed");
                         completedCommand();
                     }
                 } else {
@@ -1331,7 +1335,7 @@ public class BluetoothPeripheral {
 
         // Check if we still have a valid gatt object
         if (bluetoothGatt == null) {
-            Log.i(TAG, String.format("GATT is null for device: %s, clearing command queue", getAddress()));
+            Log.e(TAG, String.format("ERROR: GATT is 'null' for peripheral '%s', clearing command queue", getAddress()));
             commandQueue.clear();
             return;
         }
@@ -1384,6 +1388,19 @@ public class BluetoothPeripheral {
                 return "DISCONNECTING";
             default:
                 return "DISCONNECTED";
+        }
+    }
+
+    private String writeTypeToString(final int writeType) {
+        switch (writeType) {
+            case WRITE_TYPE_DEFAULT:
+                return "WRITE_TYPE_DEFAULT";
+            case WRITE_TYPE_NO_RESPONSE:
+                return "WRITE_TYPE_NO_RESPONSE";
+            case WRITE_TYPE_SIGNED:
+                return "WRITE_TYPE_SIGNED";
+            default:
+                return "unknown writeType";
         }
     }
 
