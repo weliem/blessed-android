@@ -615,15 +615,6 @@ public class BluetoothPeripheral {
                                 }
                             });
                         }
-
-                        // Experimental!!! To make sure the Beurer BF850 continues after bonding
-                        if(commandQueueBusy) {
-                            if(!isRetrying) {
-                                Log.d(TAG, "Retrying command after bonding completed");
-                                retryCommand();
-                            }
-                        }
-
                         break;
                     case BOND_NONE:
                         if(previousBondState == BOND_BONDING) {
