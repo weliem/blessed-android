@@ -95,7 +95,7 @@ public boolean readCharacteristic(BluetoothGattCharacteristic characteristic)
 public boolean writeCharacteristic(BluetoothGattCharacteristic characteristic, byte[] value, int writeType)
 ```
 
-Both methods are asynchrous and will be queued up. This mean you will receive a callback once the result of the operation is available.
+Both methods are asynchronous and will be queued up. So you can just issue as many read/write operations as you like without waiting for each of them to complete. You will receive a callback once the result of the operation is available.
 For read operations you will get a callback on:
 
 ```java
