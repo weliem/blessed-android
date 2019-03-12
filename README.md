@@ -111,7 +111,7 @@ In these callbacks, the *value* parameter is the threadsafe byte array that was 
 
 ## Turning notifications on/off
 
-BLESSED provides a convenience method `setNotify` to turn notifications on or off. It will perform all the necessary operators like writing to the Client Characteristic Configuration descriptor for you. So all you need to do is:
+BLESSED provides a convenience method `setNotify` to turn notifications on or off. It will perform all the necessary operations like writing to the Client Characteristic Configuration descriptor for you. So all you need to do is:
 
 ```java
 // See if this peripheral has the Current Time service
