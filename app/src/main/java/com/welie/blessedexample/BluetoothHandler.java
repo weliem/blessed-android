@@ -31,6 +31,10 @@ public class BluetoothHandler {
     private static final UUID BLP_SERVICE_UUID = UUID.fromString("00001810-0000-1000-8000-00805f9b34fb");
     private static final UUID BLOOD_PRESSURE_MEASUREMENT_CHARACTERISTIC_UUID = UUID.fromString("00002A35-0000-1000-8000-00805f9b34fb");
 
+    // UUIDs for the Health Thermometer service (HTS)
+    private static final UUID HTS_SERVICE_UUID = UUID.fromString("00001809-0000-1000-8000-00805f9b34fb");
+    private static final UUID TEMPERATURE_MEASUREMENT_CHARACTERISTIC_UUID = UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb");
+
     // UUIDs for the Device Information service (DIS)
     private static final UUID DIS_SERVICE_UUID = UUID.fromString("0000180A-0000-1000-8000-00805f9b34fb");
     private static final UUID MANUFACTURER_NAME_CHARACTERISTIC_UUID = UUID.fromString("00002A29-0000-1000-8000-00805f9b34fb");
@@ -89,6 +93,11 @@ public class BluetoothHandler {
             // Turn on notifications for Blood Pressure Service
             if(peripheral.getService(BLP_SERVICE_UUID) != null) {
                 peripheral.setNotify(peripheral.getCharacteristic(BLP_SERVICE_UUID, BLOOD_PRESSURE_MEASUREMENT_CHARACTERISTIC_UUID), true);
+            }
+
+            // Turn on notification for Health Thermometer Service
+            if(peripheral.getService(HTS_SERVICE_UUID) != null) {
+                peripheral.setNotify(peripheral.getCharacteristic(HTS_SERVICE_UUID, TEMPERATURE_MEASUREMENT_CHARACTERISTIC_UUID), true);
             }
         }
 
@@ -204,6 +213,6 @@ public class BluetoothHandler {
         central = new BluetoothCentral(context, bluetoothCentralCallback, new Handler());
 
         // Scan for peripherals with a certain service UUID
-        central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID});
+        central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID});
     }
 }

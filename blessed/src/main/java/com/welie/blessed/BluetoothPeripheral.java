@@ -282,7 +282,7 @@ public class BluetoothPeripheral {
                                 public void run() {
                                     listener.connectFailed(BluetoothPeripheral.this, status);
                                 }
-                            }, 1000); // Give the stack some time to register the bond loss internally
+                            }, 1000); // Give the stack some time to register the bond loss internally. This is needed on most phones...
                         };
                     } else {
                         completeDisconnect(true, status);
@@ -1539,14 +1539,7 @@ public class BluetoothPeripheral {
             return connectGattCompat(bluetoothGattCallback, remoteDevice, autoConnect);
         }
 
-        /*
-          Some implementations of Bluetooth Stack have a race condition where autoConnect flag
-          is not properly set before calling connectGatt. That's the reason for using reflection
-          to set the flag manually.
-         */
-
         try {
-//            Log.i(TAG,"Trying to connectGatt using reflection.");
             Object iBluetoothGatt = getIBluetoothGatt(getIBluetoothManager());
 
             if (iBluetoothGatt == null) {
@@ -1581,8 +1574,6 @@ public class BluetoothPeripheral {
     }
 
     private BluetoothGatt connectGattCompat(BluetoothGattCallback bluetoothGattCallback, BluetoothDevice device, boolean autoConnect) {
-//        Log.i(TAG,"Connecting without reflection");
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             Log.i(TAG, String.format("Connecting to '%s' (%s) using TRANSPORT_LE", device.getName(), device.getAddress()));
             return device.connectGatt(context, autoConnect, bluetoothGattCallback, TRANSPORT_LE);
@@ -1594,7 +1585,6 @@ public class BluetoothPeripheral {
 
     private boolean connectUsingReflection(BluetoothDevice device, BluetoothGatt bluetoothGatt, BluetoothGattCallback bluetoothGattCallback, boolean autoConnect)
             throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, NoSuchFieldException {
-//        Log.i(TAG, String.format("Connecting to '%s' (%s) (using reflection)", device.getName(), device.getAddress()));
         setAutoConnectValue(bluetoothGatt, autoConnect);
         Method connectMethod = bluetoothGatt.getClass().getDeclaredMethod("connect", Boolean.class, BluetoothGattCallback.class);
         connectMethod.setAccessible(true);

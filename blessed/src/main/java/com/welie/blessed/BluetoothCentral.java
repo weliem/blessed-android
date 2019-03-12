@@ -420,7 +420,7 @@ public class BluetoothCentral {
                             .build();
                     filters.add(filter);
                 } else {
-                    Log.e(TAG, String.format("%s is not a valid address", address));
+                    Log.e(TAG, String.format("%s is not a valid address. Make sure all alphabetic characters are uppercase.", address));
                 }
             }
         }
@@ -484,9 +484,23 @@ public class BluetoothCentral {
      */
     public void connectPeripheral(BluetoothPeripheral peripheral, BluetoothPeripheralCallback peripheralCallback) {
         synchronized (connectLock) {
+            // Make sure peripheral is valid
+            if(peripheral == null) {
+                Log.e(TAG, "No valid peripheral specified, aborting connection");
+                return;
+            }
+
             // Check if we already have an outstanding connection request for this peripheral
             if (unconnectedPeripherals.containsKey(peripheral.getAddress())) {
                 Log.d(TAG, String.format("WARNING: Already connecting to %s'", peripheral.getAddress()));
+                return;
+            }
+
+            // Check if the peripheral is cached or not. If not, abort connection
+            int deviceType = peripheral.getType();
+            if(deviceType == BluetoothDevice.DEVICE_TYPE_UNKNOWN) {
+                // The peripheral is not cached so we cannot autoconnect
+                Log.e(TAG,String.format("peripheral with address '%s' not in Bluetooth cache, aborting connection", peripheral.getAddress()));
                 return;
             }
 
@@ -512,6 +526,12 @@ public class BluetoothCentral {
     public void autoConnectPeripheral(BluetoothPeripheral peripheral, BluetoothPeripheralCallback peripheralCallback) {
         // Make sure we are the only ones executing this method
         synchronized (connectLock) {
+            // Make sure peripheral is valid
+            if(peripheral == null) {
+                Log.e(TAG, "No valid peripheral specified, aborting connection");
+                return;
+            }
+
             // Check if we are not already asking this peripheral for data
             if (unconnectedPeripherals.get(peripheral.getAddress()) != null) {
                 Log.d(TAG, String.format("WARNING: Already issued autoconnect for '%s' ", peripheral.getAddress()));
@@ -603,7 +623,7 @@ public class BluetoothCentral {
     public BluetoothPeripheral getPeripheral(String peripheralAddress) {
         // Check if it is valid address
         if(!BluetoothAdapter.checkBluetoothAddress(peripheralAddress)) {
-            Log.e(TAG, String.format("%s is not a valid address", peripheralAddress));
+            Log.e(TAG, String.format("%s is not a valid address. Make sure all alphabetic characters are uppercase.", peripheralAddress));
             return null;
         }
 
