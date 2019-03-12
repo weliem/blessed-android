@@ -202,6 +202,7 @@ public class BluetoothPeripheral {
     private Queue<Runnable> commandQueue;
     private boolean commandQueueBusy;
     private boolean isRetrying;
+    private boolean bondLost = false;
     private BluetoothGatt bluetoothGatt;
     private int state;
     private int nrTries;
@@ -209,6 +210,7 @@ public class BluetoothPeripheral {
     private Set<UUID> notifyingCharacteristics = new HashSet<>();
     private final Handler timeoutHandler = new Handler();
     private Runnable timeoutRunnable;
+    private Runnable discoverServicesRunnable;
 
     /**
      * This abstract class is used to implement BluetoothGatt callbacks.
@@ -249,20 +251,21 @@ public class BluetoothPeripheral {
                             delayWhenBonded = 1000;
                         }
                         final int delay = bondstate == BOND_BONDED ? delayWhenBonded : 0;
-                        bleHandler.postDelayed(new Runnable() {
+                        discoverServicesRunnable = new Runnable() {
                             @Override
                             public void run() {
-                                Log.i(TAG, String.format(Locale.ENGLISH,"discovering services of '%s' with delay of %d ms", getName(), delay));
+                                Log.d(TAG, String.format(Locale.ENGLISH, "discovering services of '%s' with delay of %d ms", getName(), delay));
                                 boolean result = gatt.discoverServices();
                                 if (!result) {
-                                    Log.i(TAG, "discoverServices failed to start");
-                                    disconnect();
+                                    Log.e(TAG, "discoverServices failed to start");
                                 }
+                                discoverServicesRunnable = null;
                             }
-                        }, delay);
+                        };
+                        bleHandler.postDelayed(discoverServicesRunnable, delay);
                     } else if (bondstate == BOND_BONDING) {
                         // Apparently the bonding process has already started let it complete
-                        Log.i(TAG, "wait for bonding to complete");
+                        Log.i(TAG, "waiting for bonding to complete");
                     }
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                     if(state == BluetoothProfile.STATE_CONNECTED || state == BluetoothProfile.STATE_DISCONNECTING) {
@@ -270,14 +273,27 @@ public class BluetoothPeripheral {
                     } else if(state == BluetoothProfile.STATE_CONNECTING) {
                         Log.i(TAG, "cancelling connect attempt");
                     }
-                    completeDisconnect(true, status);
+                    if(bondLost) {
+                        completeDisconnect(false, status);
+                        if (listener != null) {
+                            // Consider the loss of the bond a connection failure so that a connection retry will take place
+                            bleHandler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    listener.connectFailed(BluetoothPeripheral.this, status);
+                                }
+                            }, 1000); // Give the stack some time to register the bond loss internally
+                        };
+                    } else {
+                        completeDisconnect(true, status);
+                    }
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTING) {
                     // Device is disconnection, let it finish...
-                    Log.i(TAG, "device is disconnecting");
+                    Log.i(TAG, "peripheral is disconnecting");
                     state = BluetoothProfile.STATE_DISCONNECTING;
                 } else if (newState == BluetoothProfile.STATE_CONNECTING) {
                     // Device is connection, let it finish...
-                    Log.i(TAG, "device is connecting");
+                    Log.i(TAG, "peripheral is connecting");
                     state = BluetoothProfile.STATE_CONNECTING;
                 }
             } else {
@@ -294,7 +310,7 @@ public class BluetoothPeripheral {
                     }
                 } else if(state == BluetoothProfile.STATE_CONNECTED && newState == BluetoothProfile.STATE_DISCONNECTED && !servicesDiscovered) {
                     // We got a disconnection before the services were even discovered
-                    Log.i(TAG, String.format("device '%s' disconnected with status '%s' during service discovery", getName(), statusToString(status)));
+                    Log.i(TAG, String.format("peripheral '%s' disconnected with status '%s' during service discovery", getName(), statusToString(status)));
                     completeDisconnect(false, status);
                     if (listener != null) {
                         listener.connectFailed(BluetoothPeripheral.this, status);
@@ -302,7 +318,7 @@ public class BluetoothPeripheral {
                 } else {
                     // See if we got connection drop
                     if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                        Log.i(TAG, String.format("device '%s' disconnected with status '%s'", getName(), statusToString(status)));
+                        Log.i(TAG, String.format("peripheral '%s' disconnected with status '%s'", getName(), statusToString(status)));
                     } else {
                         Log.i(TAG, String.format("unexpected connection state change for '%s' status '%s'", getName(), statusToString(status)));
                     }
@@ -585,7 +601,7 @@ public class BluetoothPeripheral {
 
                 switch (bondState) {
                     case BOND_BONDING:
-                        Log.d(TAG, String.format("Starting bonding with '%s' (%s)", device.getName(), device.getAddress()));
+                        Log.d(TAG, String.format("starting bonding with '%s' (%s)", device.getName(), device.getAddress()));
                         bleHandler.post(new Runnable() {
                             @Override
                             public void run() {
@@ -594,7 +610,7 @@ public class BluetoothPeripheral {
                         });
                         break;
                     case BOND_BONDED:
-                        Log.d(TAG, String.format("Bonded with '%s' (%s)", device.getName(), device.getAddress()));
+                        Log.d(TAG, String.format("bonded with '%s' (%s)", device.getName(), device.getAddress()));
                         bleHandler.post(new Runnable() {
                             @Override
                             public void run() {
@@ -607,7 +623,7 @@ public class BluetoothPeripheral {
                             bleHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    Log.d(TAG, String.format("Discovering services of '%s'", getName()));
+                                    Log.d(TAG, String.format("discovering services of '%s'", getName()));
                                     boolean result = bluetoothGatt.discoverServices();
                                     if (!result) {
                                         Log.e(TAG, "discoverServices failed to start");
@@ -618,7 +634,7 @@ public class BluetoothPeripheral {
                         break;
                     case BOND_NONE:
                         if(previousBondState == BOND_BONDING) {
-                            Log.e(TAG, String.format("Bonding failed for '%s', disconnecting device", getName()));
+                            Log.e(TAG, String.format("bonding failed for '%s', disconnecting device", getName()));
                             bleHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -626,7 +642,14 @@ public class BluetoothPeripheral {
                                 }
                             });
                         } else {
-                            Log.e(TAG, String.format("Bond lost for '%s', disconnecting device", getName()));
+                            Log.e(TAG, String.format("bond lost for '%s'", getName()));
+                            bondLost = true;
+
+                            // Cancel the discoverServiceRunnable if it is still pending
+                            if(discoverServicesRunnable != null) {
+                                bleHandler.removeCallbacks(discoverServicesRunnable);
+                            }
+
                             bleHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -702,6 +725,7 @@ public class BluetoothPeripheral {
                 @Override
                 public void run() {
                     // Connect to device with autoConnect = false
+                    Log.i(TAG, String.format("connect to '%s' (%s) using TRANSPORT_LE", getName(), getAddress()));
                     bluetoothGatt = device.connectGatt(context, false, bluetoothGattCallback, TRANSPORT_LE);
                     startConnectionTimer(BluetoothPeripheral.this);
                 }
@@ -771,7 +795,7 @@ public class BluetoothPeripheral {
                 @Override
                 public void run() {
                     if (bluetoothGatt != null) {
-                        Log.i(TAG, String.format("Force disconnect '%s' (%s), state: %s", getName(), getAddress(), state));
+                        Log.i(TAG, String.format("force disconnect '%s' (%s), state: %s", getName(), getAddress(), state));
                         bluetoothGatt.disconnect();
                     }
                 }
@@ -788,13 +812,12 @@ public class BluetoothPeripheral {
      */
     private void completeDisconnect(boolean notify, final int status) {
         state = BluetoothProfile.STATE_DISCONNECTED;
-        // Do some cleanup
-//        clearServicesCache();
         if(bluetoothGatt != null) {
             bluetoothGatt.close();
             bluetoothGatt = null;
         }
         commandQueue.clear();
+        commandQueueBusy = false;
         context.unregisterReceiver(bondStateReceiver);
         context.unregisterReceiver(pairingRequestBroadcastReceiver);
         if(listener != null && notify) {
@@ -1627,7 +1650,6 @@ public class BluetoothPeripheral {
     }
 
     private void startConnectionTimer(final BluetoothPeripheral peripheral) {
-        Log.i(TAG, "starting connection timer");
         if (timeoutRunnable != null) {
             timeoutHandler.removeCallbacks(timeoutRunnable);
         }
@@ -1647,7 +1669,6 @@ public class BluetoothPeripheral {
 
     private void cancelConnectionTimer() {
         if (timeoutRunnable != null) {
-            Log.i(TAG, "cancelling connection timer");
             timeoutHandler.removeCallbacks(timeoutRunnable);
             timeoutRunnable = null;
         }

@@ -57,6 +57,7 @@ public class BluetoothHandler {
     private final BluetoothPeripheralCallback peripheralCallback = new BluetoothPeripheralCallback() {
         @Override
         public void onServicesDiscovered(BluetoothPeripheral peripheral) {
+            Log.i(TAG, "discovered services");
 
             // Read manufacturer and model number from the Device Information Service
             if(peripheral.getService(DIS_SERVICE_UUID) != null) {

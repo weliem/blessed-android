@@ -192,7 +192,6 @@ public class BluetoothCentral {
          */
         @Override
         public void connected(final BluetoothPeripheral peripheral) {
-            Log.i(TAG, String.format("connected to '%s' (%s)", peripheral.getName(), peripheral.getAddress()));
             updateMode(BluetoothCentralMode.IDLE, null);
             connectionRetries.remove(peripheral.getAddress());
 
@@ -218,7 +217,6 @@ public class BluetoothCentral {
          */
         @Override
         public void connectFailed(final BluetoothPeripheral peripheral, final int status) {
-            Log.e(TAG, String.format("ERROR: Connection to %s failed", peripheral.getAddress()));
             updateMode(BluetoothCentralMode.IDLE, null);
 
             // Remove from unconnected peripherals list
@@ -234,12 +232,13 @@ public class BluetoothCentral {
             }
 
             if(nrRetries < MAX_CONNECTION_RETRIES) {
-                Log.d(TAG, String.format("retrying connection to '%s'", peripheral.getAddress()));
+                Log.i(TAG, String.format("retrying connection to '%s'", peripheral.getAddress()));
                 nrRetries++;
                 connectionRetries.put(peripheral.getAddress(), nrRetries);
                 unconnectedPeripherals.put(peripheral.getAddress(), peripheral);
                 peripheral.autoConnect();
             } else {
+                Log.e(TAG, String.format("ERROR: Connection to %s failed", peripheral.getAddress()));
                 callBackHandler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -364,7 +363,7 @@ public class BluetoothCentral {
             // Start the scanner
             updateMode(BluetoothCentralMode.SCANNING, scanByServiceUUIDCallback);
             bluetoothScanner.startScan(filters, scanSettings, scanCallback);
-            Log.d(TAG, "scan started");
+            Log.i(TAG, "scan started");
         }  else {
             Log.e(TAG, "ERROR: Start scanning failed");
             updateMode(BluetoothCentralMode.IDLE, null);
@@ -415,10 +414,14 @@ public class BluetoothCentral {
         if (peripheralAddresses != null) {
             filters = new ArrayList<>();
             for (String address : peripheralAddresses) {
-                ScanFilter filter = new ScanFilter.Builder()
-                        .setDeviceAddress(address)
-                        .build();
-                filters.add(filter);
+                if(BluetoothAdapter.checkBluetoothAddress(address)) {
+                    ScanFilter filter = new ScanFilter.Builder()
+                            .setDeviceAddress(address)
+                            .build();
+                    filters.add(filter);
+                } else {
+                    Log.e(TAG, String.format("%s is not a valid address", address));
+                }
             }
         }
         startScan(filters, scanSettings, scanByServiceUUIDCallback);
@@ -598,6 +601,13 @@ public class BluetoothCentral {
      * @return a BluetoothPeripheral object matching the specified mac address or null if it was not found
      */
     public BluetoothPeripheral getPeripheral(String peripheralAddress) {
+        // Check if it is valid address
+        if(!BluetoothAdapter.checkBluetoothAddress(peripheralAddress)) {
+            Log.e(TAG, String.format("%s is not a valid address", peripheralAddress));
+            return null;
+        }
+
+        // Lookup or create BluetoothPeripheral object
         if(connectedPeripheral.containsKey(peripheralAddress)) {
             return connectedPeripheral.get(peripheralAddress);
         } else if(unconnectedPeripherals.containsKey(peripheralAddress)) {
