@@ -37,6 +37,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.util.Log;
 
 import java.lang.reflect.Constructor;
@@ -211,6 +212,7 @@ public class BluetoothPeripheral {
     private final Handler timeoutHandler = new Handler();
     private Runnable timeoutRunnable;
     private Runnable discoverServicesRunnable;
+    private long connectTimestamp;
 
     /**
      * This abstract class is used to implement BluetoothGatt callbacks.
@@ -230,13 +232,15 @@ public class BluetoothPeripheral {
          */
         @Override
         public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState) {
+            long timePassed = SystemClock.elapsedRealtime() - connectTimestamp;
+
             cancelConnectionTimer();
 
             if (status == GATT_SUCCESS) {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
                     state = BluetoothProfile.STATE_CONNECTED;
                     int bondstate = device.getBondState();
-                    Log.i(TAG, String.format("connected to '%s' (%s)", getName(), bondStateToString(bondstate)));
+                    Log.i(TAG, String.format("connected to '%s' (%s) in %.1fs", getName(), bondStateToString(bondstate), timePassed / 1000.0f));
 
                     // Take action depending on the bond state
                     if(bondstate == BOND_NONE || bondstate == BOND_BONDED) {
@@ -727,6 +731,7 @@ public class BluetoothPeripheral {
                     // Connect to device with autoConnect = false
                     Log.i(TAG, String.format("connect to '%s' (%s) using TRANSPORT_LE", getName(), getAddress()));
                     bluetoothGatt = device.connectGatt(context, false, bluetoothGattCallback, TRANSPORT_LE);
+                    connectTimestamp = SystemClock.elapsedRealtime();
                     startConnectionTimer(BluetoothPeripheral.this);
                 }
             }, DIRECT_CONNECTION_DELAY_IN_MS);
@@ -759,6 +764,7 @@ public class BluetoothPeripheral {
                             // Versions below Nougat had a race condition bug in autoconnect, so use special workaround
                             bluetoothGatt = autoConnectGatt(device,true,bluetoothGattCallback);
                         }
+                        connectTimestamp = SystemClock.elapsedRealtime();
 
                     }
                 });
