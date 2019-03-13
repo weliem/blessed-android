@@ -95,7 +95,7 @@ public boolean readCharacteristic(BluetoothGattCharacteristic characteristic)
 public boolean writeCharacteristic(BluetoothGattCharacteristic characteristic, byte[] value, int writeType)
 ```
 
-Both methods are asynchrous and will be queued up. This mean you will receive a callback once the result of the operation is available.
+Both methods are asynchronous and will be queued up. So you can just issue as many read/write operations as you like without waiting for each of them to complete. You will receive a callback once the result of the operation is available.
 For read operations you will get a callback on:
 
 ```java
@@ -111,7 +111,7 @@ In these callbacks, the *value* parameter is the threadsafe byte array that was 
 
 ## Turning notifications on/off
 
-BLESSED provides a convenience method `setNotify` to turn notifications on or off. It will perform all the necessary operators like writing to the Client Characteristic Configuration descriptor for you. So all you need to do is:
+BLESSED provides a convenience method `setNotify` to turn notifications on or off. It will perform all the necessary operations like writing to the Client Characteristic Configuration descriptor for you. So all you need to do is:
 
 ```java
 // See if this peripheral has the Current Time service
