@@ -379,7 +379,7 @@ public class BluetoothPeripheral {
             // Do some checks first
             final BluetoothGattCharacteristic parentCharacteristic = descriptor.getCharacteristic();
             if(status!= GATT_SUCCESS) {
-                Log.e(TAG, String.format("ERROR: Write descriptor failed value <%s>, device: %s, characteristic: %s", bytes2String(descriptor.getValue()), getAddress(), parentCharacteristic.getUuid()));
+                Log.e(TAG, String.format("ERROR: Write descriptor failed value <%s>, device: %s, characteristic: %s", bytes2String(currentWriteBytes), getAddress(), parentCharacteristic.getUuid()));
             }
 
             // Check if this was the Client Configuration Descriptor
@@ -1207,14 +1207,13 @@ public class BluetoothPeripheral {
         boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
-                // If we are dealing with the CCC descriptor then first set notification for Gatt object
-                if(descriptor.getUuid().equals(UUID.fromString(CCC_DESCRIPTOR_UUID))) {
-                    if(!bluetoothGatt.setCharacteristicNotification(descriptor.getCharacteristic(), enable)) {
-                        Log.e(TAG, String.format("ERROR: setCharacteristicNotification failed for descriptor: %s", descriptor.getUuid()));
-                    }
+                // First set notification for Gatt object
+                if(!bluetoothGatt.setCharacteristicNotification(descriptor.getCharacteristic(), enable)) {
+                    Log.e(TAG, String.format("ERROR: setCharacteristicNotification failed for descriptor: %s", descriptor.getUuid()));
                 }
 
                 // Then write to descriptor
+                currentWriteBytes = finalValue;
                 descriptor.setValue(finalValue);
                 boolean result;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
