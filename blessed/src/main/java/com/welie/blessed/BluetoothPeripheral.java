@@ -90,19 +90,19 @@ public class BluetoothPeripheral {
     public static final int GATT_CONN_TIMEOUT  = 8;
 
     /** GATT read operation is not permitted */
-    public static final int GATT_READ_NOT_PERMITTED = 0x2;
+    public static final int GATT_READ_NOT_PERMITTED = 2;
 
     /** GATT write operation is not permitted */
-    public static final int GATT_WRITE_NOT_PERMITTED = 0x3;
+    public static final int GATT_WRITE_NOT_PERMITTED = 3;
 
     /** Insufficient authentication for a given operation */
-    public static final int GATT_INSUFFICIENT_AUTHENTICATION = 0x5;
+    public static final int GATT_INSUFFICIENT_AUTHENTICATION = 5;
 
     /** The given request is not supported */
-    public static final int GATT_REQUEST_NOT_SUPPORTED = 0x6;
+    public static final int GATT_REQUEST_NOT_SUPPORTED = 6;
 
     /** Insufficient encryption for a given operation */
-    public static final int GATT_INSUFFICIENT_ENCRYPTION = 0xf;
+    public static final int GATT_INSUFFICIENT_ENCRYPTION = 15;
 
     /** The connection was terminated by the peripheral */
     public static final int GATT_CONN_TERMINATE_PEER_USER = 19;
@@ -481,17 +481,11 @@ public class BluetoothPeripheral {
         public void onCharacteristicRead(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, int status) {
             // Perform some checks on the status field
             if (status != GATT_SUCCESS) {
-                if (status == GATT_AUTH_FAIL) {
-                    // Characteristic encrypted and needs bonding, so retry operation
-                    // This only seems to happen on Android 6
-                    Log.i(TAG, "Read failed (Authentication failed), bonding in progress so retry read command");
-                    retryCommand();
-                    return;
-                } else if (status == GATT_INSUFFICIENT_AUTHENTICATION) {
-                    // // Characteristic encrypted and needs bonding, so retry operation
-                    // This only seems to happen on Android < 6
-                    Log.i(TAG, "Read failed (Insufficient authentication) bonding in progress so retry read command");
-                    retryCommand();
+                if (status == GATT_AUTH_FAIL || status == GATT_INSUFFICIENT_AUTHENTICATION ) {
+                    // Characteristic encrypted and needs bonding,
+                    // So retry operation after bonding completes
+                    // This only seems to happen on Android 5/6/7
+                    Log.w(TAG, "read needs bonding, bonding in progress");
                     return;
                 } else {
                     Log.e(TAG, String.format(Locale.ENGLISH,"ERROR: Read failed for characteristic: %s, status %d", characteristic.getUuid(), status));
@@ -528,17 +522,11 @@ public class BluetoothPeripheral {
         public void onCharacteristicWrite(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
             // Perform some checks on the status field
             if(status!= GATT_SUCCESS) {
-                if (status == GATT_AUTH_FAIL) {
-                    // Characteristic encrypted and needs bonding, so retry operation
-                    // This only seems to happen on Android 6
-                    Log.i(TAG, "Write failed (Authentication failed), bonding in progress so retrying write command");
-                    retryCommand();
-                    return;
-                } else if (status == GATT_INSUFFICIENT_AUTHENTICATION) {
-                    // Characteristic encrypted and needs bonding, so retry operation
-                    // This only seems to happen on Android < 6
-                    Log.i(TAG, "Write failed (Insufficient authentication), bonding in progress so retrying write command");
-                    retryCommand();
+                if (status == GATT_AUTH_FAIL || status == GATT_INSUFFICIENT_AUTHENTICATION ) {
+                    // Characteristic encrypted and needs bonding,
+                    // So retry operation after bonding completes
+                    // This only seems to happen on Android 5/6/7
+                    Log.i(TAG, "write needs bonding, bonding in progress");
                     return;
                 } else {
                     Log.e(TAG, String.format("ERROR: Writing <%s> to characteristic <%s> failed, status %s", bytes2String(currentWriteBytes), characteristic.getUuid(), statusToString(status)));
@@ -614,6 +602,7 @@ public class BluetoothPeripheral {
                         });
                         break;
                     case BOND_BONDED:
+                        // Bonding succeeded
                         Log.d(TAG, String.format("bonded with '%s' (%s)", device.getName(), device.getAddress()));
                         bleHandler.post(new Runnable() {
                             @Override
@@ -621,6 +610,7 @@ public class BluetoothPeripheral {
                                 peripheralCallback.onBondingSucceeded(BluetoothPeripheral.this);
                             }
                         });
+
                         // If bonding was started at connection time, we may still have to discover the services
                         if(bluetoothGatt.getServices().isEmpty()) {
                             // No services discovered yet so proceed with discovering services
@@ -635,6 +625,13 @@ public class BluetoothPeripheral {
                                 }
                             });
                         }
+
+                        // If bonding was triggered by a read/write, we must retry it
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                            if (commandQueueBusy) {
+                                retryCommand();
+                            }
+                        }
                         break;
                     case BOND_NONE:
                         if(previousBondState == BOND_BONDING) {
@@ -645,6 +642,11 @@ public class BluetoothPeripheral {
                                     peripheralCallback.onBondingFailed(BluetoothPeripheral.this);
                                 }
                             });
+
+                            // Try to continue the queue if needed
+                            if(commandQueueBusy) {
+                                completedCommand();
+                            }
                         } else {
                             Log.e(TAG, String.format("bond lost for '%s'", getName()));
                             bondLost = true;
