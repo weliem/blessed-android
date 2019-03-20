@@ -1359,6 +1359,7 @@ public class BluetoothPeripheral {
         if (bluetoothGatt == null) {
             Log.e(TAG, String.format("ERROR: GATT is 'null' for peripheral '%s', clearing command queue", getAddress()));
             commandQueue.clear();
+            commandQueueBusy = false;
             return;
         }
 
