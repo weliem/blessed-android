@@ -1316,6 +1316,7 @@ public class BluetoothPeripheral {
             }
         });
     }
+
     /**
      * The current command has been completed, move to the next command in the queue (if any)
      */
@@ -1376,6 +1377,7 @@ public class BluetoothPeripheral {
                             bluetoothCommand.run();
                         } catch (Exception ex) {
                             Log.e(TAG, String.format("ERROR: Command exception for device '%s'", getName()), ex);
+                            completedCommand();
                         }
                 }
             });
