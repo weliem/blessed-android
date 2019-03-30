@@ -233,7 +233,6 @@ public class BluetoothPeripheral {
         @Override
         public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState) {
             long timePassed = SystemClock.elapsedRealtime() - connectTimestamp;
-
             cancelConnectionTimer();
 
             if (status == GATT_SUCCESS) {
@@ -780,13 +779,20 @@ public class BluetoothPeripheral {
 
     void cancelAutoConnect() {
         if (bluetoothGatt != null) {
-            if(BluetoothPeripheral.this.state == BluetoothProfile.STATE_DISCONNECTED || BluetoothPeripheral.this.state == BluetoothProfile.STATE_CONNECTING) {
-                // Not connected devices will not receive callback so call close immediately
+            // If an autoconnect was issued, the state should be STATE_CONNECTING
+            if(BluetoothPeripheral.this.state == BluetoothProfile.STATE_CONNECTING) {
+                // Cancel the autoconnect by calling disconnect
                 disconnect();
-                completeDisconnect(false, 0);
+
+                // Since we will not get a callback on onConnectionStateChange for this, we complete the disconnect ourselves
+                bleHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        completeDisconnect(false, GATT_SUCCESS);
+                    }
+                }, 100);
             } else {
-                // For other connection states, follow normal disconnect flow
-                bluetoothGatt.disconnect();
+                Log.w(TAG, "no autoconnect issued for this peripheral, so cannot cancel autoconnect");
             }
         }
     }
