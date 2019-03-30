@@ -10,7 +10,7 @@ BLESSED is a very compact BLE library for Android 6 and higher, that makes worki
 * *Workarounds for some known Android bugs*, so you don't have to research any workarounds
 * *Higher abstraction methods for convenience*, so that you don't have to do a lot of low-level management to get stuff done
 
-The library contains of 3 core classes and 2 callback abstract classes:
+The library consists of 3 core classes and 2 callback abstract classes:
 1. `BluetoothCentral`, and it companion abstract class `BluetoothCentralCallback`
 2. `BluetoothPeripheral`, and it's companion abstract class `BluetoothPeripheralCallback`
 3. `BluetoothBytesParser`
@@ -61,7 +61,7 @@ public void autoConnectPeripheral(BluetoothPeripheral peripheral, BluetoothPerip
 
 The method `connectPeripheral` will try to immediately connect to a device that has already been found using a scan. This method will time out after 30 seconds or less depending on the device manufacturer. 
 
-The method `autoConnectPeripheral` is for re-connecting to known devices for which you already now the device address. The BLE stack will automatically connect to the device when it sees it in its internal scan. Therefor it may take longer to connect to a device but this call will never time out! So you can issue the autoConnect and the device will be connected when it is found. This call will **also work** when the device is not cached by the Android stack as BLESSED takes care of it!
+The method `autoConnectPeripheral` is for re-connecting to known devices for which you already know the device's mac address. The BLE stack will automatically connect to the device when it sees it in its internal scan. Therefore, it may take longer to connect to a device but this call will never time out! So you can issue the autoConnect command and the device will be connected whenever it is found. This call will **also work** when the device is not cached by the Android stack, as BLESSED takes care of it!
 
 If you know the mac address of your peripheral you can obtain a `BluetoothPeripheral` object using:
 ```java
@@ -82,7 +82,7 @@ The BLESSED library will automatically do the service discovery for you and once
 ```java
 public void onServicesDiscovered(BluetoothPeripheral peripheral)
 ```
-In order to get the services you can use methods like getServices() or getService(UUID). In order to get hold of characteristics you can call getCharacteristic(UUID) on the BluetoothGattService object or call getCharacteristic() on the BluetoothPeripheral object.
+In order to get the services you can use methods like `getServices()` or `getService(UUID)`. In order to get hold of characteristics you can call `getCharacteristic(UUID)` on the BluetoothGattService object or call `getCharacteristic()` on the BluetoothPeripheral object.
 
 This callback is the proper place to start enabling notifications or read/write characteristics.
 
@@ -136,6 +136,11 @@ public void onNotificationStateUpdate(BluetoothPeripheral peripheral, BluetoothG
           Log.e(TAG, String.format("ERROR: Changing notification state failed for %s", characteristic.getUuid()));
      }
 }
+```
+When notifications arrive you will receive a callback on:
+
+```java
+public void onCharacteristicUpdate(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic characteristic)
 ```
 
 ## Example application
