@@ -348,7 +348,9 @@ public class BluetoothPeripheral {
                 disconnect();
                 return;
             }
-            Log.i(TAG, String.format(Locale.ENGLISH,"discovered %d services for '%s'", gatt.getServices().size(), getName()));
+
+            final List<BluetoothGattService> services = gatt.getServices();
+            Log.i(TAG, String.format(Locale.ENGLISH,"discovered %d services for '%s'", services.size(), getName()));
             
             // Let the listeners know we are now properly connected
             if(listener != null) {
@@ -777,23 +779,41 @@ public class BluetoothPeripheral {
         }
     }
 
-    void cancelAutoConnect() {
-        if (bluetoothGatt != null) {
-            // If an autoconnect was issued, the state should be STATE_CONNECTING
-            if(BluetoothPeripheral.this.state == BluetoothProfile.STATE_CONNECTING) {
-                // Cancel the autoconnect by calling disconnect
-                disconnect();
+    /**
+     * Cancel an active or pending connection
+     *
+     * This operation is asynchronous and you will receive a callback on onDisconnectedPeripheral.
+     *
+     */
+    public void cancelConnection() {
+        // Check if we have a Gatt object
+        if(bluetoothGatt == null) {
+            return;
+        }
 
-                // Since we will not get a callback on onConnectionStateChange for this, we complete the disconnect ourselves
-                bleHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        completeDisconnect(false, GATT_SUCCESS);
-                    }
-                }, 100);
-            } else {
-                Log.w(TAG, "no autoconnect issued for this peripheral, so cannot cancel autoconnect");
-            }
+        // Check if we are not already disconnected or disconnecting
+        if(state == BluetoothProfile.STATE_DISCONNECTED || state == BluetoothProfile.STATE_DISCONNECTING) {
+            return;
+        }
+
+        // Cancel the connection timer
+        cancelConnectionTimer();
+
+        // Check if we are in the process of connecting
+        if(state == BluetoothProfile.STATE_CONNECTING) {
+            // Cancel the connection by calling disconnect
+            disconnect();
+
+            // Since we will not get a callback on onConnectionStateChange for this, we complete the disconnect ourselves
+            bleHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    completeDisconnect(true, GATT_SUCCESS);
+                }
+            }, 50);
+        } else {
+            // Cancel active connection
+            disconnect();
         }
     }
 
@@ -802,14 +822,14 @@ public class BluetoothPeripheral {
      *
      * <p>When the disconnection has been completed {@link BluetoothCentralCallback#onDisconnectedPeripheral(BluetoothPeripheral, int)} will be called.
      */
-    public void disconnect() {
+    private void disconnect() {
         if (state == BluetoothProfile.STATE_CONNECTED || state == BluetoothProfile.STATE_CONNECTING) {
             this.state = BluetoothProfile.STATE_DISCONNECTING;
             bleHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     if (bluetoothGatt != null) {
-                        Log.i(TAG, String.format("force disconnect '%s' (%s), state: %s", getName(), getAddress(), state));
+                        Log.i(TAG, String.format("force disconnect '%s' (%s)", getName(), getAddress()));
                         bluetoothGatt.disconnect();
                     }
                 }
@@ -957,6 +977,7 @@ public class BluetoothPeripheral {
      * @return true if the operation was enqueued, false if the characteristic does not support reading or the characteristic was invalid
      */
     public boolean readCharacteristic(final BluetoothGattCharacteristic characteristic) {
+        // Check if gatt object is valid
         if(bluetoothGatt == null) {
             Log.e(TAG, "ERROR: Gatt is 'null', ignoring read request");
             return false;
@@ -1015,6 +1036,12 @@ public class BluetoothPeripheral {
      * @return true if a write operation was succesfully enqueued, otherwise false
      */
     public boolean writeCharacteristic(final BluetoothGattCharacteristic characteristic, final byte[] value, final int writeType) {
+        // Check if gatt object is valid
+        if(bluetoothGatt == null) {
+            Log.e(TAG, "ERROR: Gatt is 'null', ignoring read request");
+            return false;
+        }
+
         // Check if characteristic is valid
         if(characteristic == null) {
             Log.e(TAG, "ERROR: Characteristic is 'null', ignoring write request");

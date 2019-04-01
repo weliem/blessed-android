@@ -67,7 +67,7 @@ public class BluetoothCentral {
     private BluetoothLeScanner bluetoothScanner;
     private BluetoothLeScanner autoConnectScanner;
     private final BluetoothCentralCallback bluetoothCentralCallback;
-    private final Map<String, BluetoothPeripheral> connectedPeripheral;
+    private final Map<String, BluetoothPeripheral> connectedPeripherals;
     private final Map<String, BluetoothPeripheral> unconnectedPeripherals;
     private BluetoothCentralMode mode = BluetoothCentralMode.IDLE;
     private final List<String> reconnectPeripheralAddresses;
@@ -196,7 +196,7 @@ public class BluetoothCentral {
             connectionRetries.remove(peripheral.getAddress());
 
             // Do some administration work
-            connectedPeripheral.put(peripheral.getAddress(), peripheral);
+            connectedPeripherals.put(peripheral.getAddress(), peripheral);
             if(unconnectedPeripherals.get(peripheral.getAddress()) != null) {
                 unconnectedPeripherals.remove(peripheral.getAddress());
             }
@@ -256,7 +256,7 @@ public class BluetoothCentral {
         @Override
         public void disconnected(final BluetoothPeripheral peripheral, final int status) {
             // Remove it from the connected peripherals map
-            connectedPeripheral.remove(peripheral.getAddress());
+            connectedPeripherals.remove(peripheral.getAddress());
 
             // Do some administration
             if(unconnectedPeripherals.get(peripheral.getAddress()) != null) {
@@ -301,7 +301,7 @@ public class BluetoothCentral {
             this.callBackHandler = new Handler();
         }
         this.bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        this.connectedPeripheral = new HashMap<>();
+        this.connectedPeripherals = new HashMap<>();
         this.unconnectedPeripherals = new HashMap<>();
         this.reconnectCallbacks = new HashMap<>();
         this.timeoutHandler = new Handler();
@@ -467,7 +467,6 @@ public class BluetoothCentral {
         if(mode == BluetoothCentralMode.SCANNING) {
             Log.i(TAG, "Stop scanning");
             cancelTimeoutTimer();
-//            bluetoothScanner = bluetoothAdapter.getBluetoothLeScanner();
             if (bluetoothScanner != null) {
                 bluetoothScanner.stopScan(currentCallback);
                 updateMode(BluetoothCentralMode.IDLE, null);
@@ -505,7 +504,7 @@ public class BluetoothCentral {
             }
 
             // Check if we are already connected to this peripheral
-            if (!connectedPeripheral.containsKey(peripheral.getAddress())) {
+            if (!connectedPeripherals.containsKey(peripheral.getAddress())) {
                 // Connect to peripheral
                 peripheral.setPeripheralCallback(peripheralCallback);
                 this.unconnectedPeripherals.put(peripheral.getAddress(), peripheral);
@@ -578,41 +577,65 @@ public class BluetoothCentral {
         scanForAutoConnectPeripherals();
     }
 
-
-
     /**
-     * Cancel a autoconnect for a peripheral
+     * Cancel an active or pending connection for a peripheral
      *
-     * @param peripheralAddress the peripheral to stop getting data for
+     * @param peripheral the peripheral
      */
-    public void cancelAutoConnectPeripheral(String peripheralAddress) {
-        BluetoothPeripheral peripheral = unconnectedPeripherals.get(peripheralAddress);
-        if(peripheral != null) {
-            peripheral.cancelAutoConnect();
-            unconnectedPeripherals.remove(peripheralAddress);
-        } else {
-            autoConnectScanner.stopScan(autoConnectScanCallback);
-            autoConnectScanner = null;
+    public void cancelConnection(final BluetoothPeripheral peripheral) {
+        // Check if peripheral is valid
+        if(peripheral == null) {
+            Log.e(TAG, "ERROR: cannot cancel connection, peripheral is null");
+            return;
+        }
+
+        // Get the peripheral address
+        String peripheralAddress = peripheral.getAddress();
+
+        // First check if we are doing a reconnection scan for this peripheral
+        if(reconnectPeripheralAddresses.contains(peripheralAddress)) {
+            // Clean up first
             reconnectPeripheralAddresses.remove(peripheralAddress);
             reconnectCallbacks.remove(peripheralAddress);
+            autoConnectScanner.stopScan(autoConnectScanCallback);
+            autoConnectScanner = null;
+            cancelAutoConnectTimer();
 
-            // See if there are any other peripherals to scan for
+            // If there are any devices left, restart the reconnection scan
             if(reconnectPeripheralAddresses.size() > 0) {
                 scanForAutoConnectPeripherals();
             }
+
+            callBackHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    bluetoothCentralCallback.onDisconnectedPeripheral(peripheral, BluetoothPeripheral.GATT_SUCCESS);
+                }
+            });
+
+            return;
+        }
+
+        // Check if it is an unconnected peripheral
+        if(unconnectedPeripherals.containsKey(peripheralAddress)) {
+            BluetoothPeripheral unconnectedPeripheral = unconnectedPeripherals.get(peripheralAddress);
+            if(unconnectedPeripheral != null) {
+                unconnectedPeripheral.cancelConnection();
+            }
+            return;
+        }
+
+        // Check if this is a connected peripheral
+        if(connectedPeripherals.containsKey(peripheralAddress)) {
+            BluetoothPeripheral connectedPeripheral = connectedPeripherals.get(peripheralAddress);
+            if(connectedPeripheral != null) {
+                connectedPeripheral.cancelConnection();
+            }
+        } else {
+            Log.e(TAG, String.format("cannot cancel connection to unknown peripheral %s", peripheralAddress));
         }
     }
 
-    /**
-     * Disconnect a peripheral
-     *
-     * @param peripheral the peripheral to disconnect
-     */
-    public void disconnectPeripheral(BluetoothPeripheral peripheral) {
-        if(peripheral != null) {
-            peripheral.disconnect();
-        }
-    }
 
     /**
      * Get a peripheral object matching the specified mac address
@@ -628,8 +651,8 @@ public class BluetoothCentral {
         }
 
         // Lookup or create BluetoothPeripheral object
-        if(connectedPeripheral.containsKey(peripheralAddress)) {
-            return connectedPeripheral.get(peripheralAddress);
+        if(connectedPeripherals.containsKey(peripheralAddress)) {
+            return connectedPeripherals.get(peripheralAddress);
         } else if(unconnectedPeripherals.containsKey(peripheralAddress)) {
             return unconnectedPeripherals.get(peripheralAddress);
         } else {
@@ -643,7 +666,7 @@ public class BluetoothCentral {
      * @return list of connected peripherals
      */
     public List<BluetoothPeripheral> getConnectedPeripherals() {
-        return new ArrayList<>(connectedPeripheral.values());
+        return new ArrayList<>(connectedPeripherals.values());
     }
 
     private boolean isBleReady() {
