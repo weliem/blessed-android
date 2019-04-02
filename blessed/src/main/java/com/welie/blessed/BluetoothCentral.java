@@ -600,6 +600,7 @@ public class BluetoothCentral {
             autoConnectScanner.stopScan(autoConnectScanCallback);
             autoConnectScanner = null;
             cancelAutoConnectTimer();
+            Log.d(TAG, String.format("cancelling autoconnect for %s", peripheralAddress));
 
             // If there are any devices left, restart the reconnection scan
             if(reconnectPeripheralAddresses.size() > 0) {
