@@ -204,6 +204,7 @@ public class BluetoothPeripheral {
     private boolean commandQueueBusy;
     private boolean isRetrying;
     private boolean bondLost = false;
+    private boolean manuallyBonding = false;
     private BluetoothGatt bluetoothGatt;
     private int state;
     private int nrTries;
@@ -629,9 +630,21 @@ public class BluetoothPeripheral {
 
                         // If bonding was triggered by a read/write, we must retry it
                         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                            if (commandQueueBusy) {
-                                retryCommand();
+                            if (commandQueueBusy && !manuallyBonding) {
+                                bleHandler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Log.d(TAG, "retrying command after bonding");
+                                        retryCommand();
+                                    }
+                                }, 50);
                             }
+                        }
+
+                        // If we are doing a manual bond, complete the command
+                        if(manuallyBonding) {
+                            manuallyBonding = false;
+                            completedCommand();
                         }
                         break;
                     case BOND_NONE:
@@ -644,8 +657,12 @@ public class BluetoothPeripheral {
                                 }
                             });
 
-                            // Try to continue the queue if needed
-                            if(commandQueueBusy) {
+                            // If we are doing a manual bond, complete the command
+                            if(manuallyBonding) {
+                                manuallyBonding = false;
+                                completedCommand();
+                            } else if(commandQueueBusy) {
+                                // Try to continue the queue if needed
                                 completedCommand();
                             }
                         } else {
@@ -777,6 +794,35 @@ public class BluetoothPeripheral {
         } else {
             Log.e(TAG, String.format("ERROR: Peripheral '%s' not yet disconnected", getName()));
         }
+    }
+
+    public boolean createBond() {
+        // Check if we have a Gatt object
+        if(bluetoothGatt == null) {
+            Log.e(TAG, "ERROR: no gatt object for peripheral");
+            return false;
+        }
+
+        // Enqueue the bond command
+        boolean result = commandQueue.add(new Runnable() {
+            @Override
+            public void run() {
+                manuallyBonding = true;
+                if (!device.createBond()) {
+                    Log.e(TAG, String.format("ERROR: bonding failed for %s", getAddress()));
+                    completedCommand();
+                } else {
+                    Log.d(TAG, String.format("manually bonding %s", getAddress()));
+                    nrTries++;
+                }
+            }
+        });
+        if(result) {
+            nextCommand();
+        } else {
+            Log.e(TAG, "ERROR: Could not enqueue bonding command");
+        }
+        return result;
     }
 
     /**
