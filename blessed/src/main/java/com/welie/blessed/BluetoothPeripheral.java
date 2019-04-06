@@ -796,14 +796,23 @@ public class BluetoothPeripheral {
         }
     }
 
+    /**
+     * Create a bond with the peripheral
+     *
+     * <p>If a (auto)connect has been issued, the bonding command will be enqueued and you will
+     * receive updates via the {@link BluetoothPeripheralCallback}. Otherwise the bonding will
+     * be done immediately and no updates via the callback will happen.
+     *
+     * @return true if bonding was started/enqueued, false if not
+     */
     public boolean createBond() {
         // Check if we have a Gatt object
         if(bluetoothGatt == null) {
-            Log.e(TAG, "ERROR: no gatt object for peripheral");
-            return false;
+            // No gatt object so no connection issued, do create bond immediately
+            return device.createBond();
         }
 
-        // Enqueue the bond command
+        // Enqueue the bond command because a connection has been issued or we are already connected
         boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
