@@ -192,7 +192,7 @@ public class BluetoothCentral {
          */
         @Override
         public void connected(final BluetoothPeripheral peripheral) {
-            updateMode(BluetoothCentralMode.IDLE, null);
+            updateMode(BluetoothCentralMode.IDLE);
             connectionRetries.remove(peripheral.getAddress());
 
             // Do some administration work
@@ -217,7 +217,7 @@ public class BluetoothCentral {
          */
         @Override
         public void connectFailed(final BluetoothPeripheral peripheral, final int status) {
-            updateMode(BluetoothCentralMode.IDLE, null);
+            updateMode(BluetoothCentralMode.IDLE);
 
             // Remove from unconnected peripherals list
             if(unconnectedPeripherals.get(peripheral.getAddress()) != null) {
@@ -361,12 +361,14 @@ public class BluetoothCentral {
         // If get scanner was succesful, start the scan
         if (bluetoothScanner != null) {
             // Start the scanner
-            updateMode(BluetoothCentralMode.SCANNING, scanCallback);
+            updateMode(BluetoothCentralMode.SCANNING);
+            currentCallback = scanCallback;
+            currentFilters = filters;
             bluetoothScanner.startScan(filters, scanSettings, scanCallback);
             Log.i(TAG, "scan started");
         }  else {
             Log.e(TAG, "ERROR: Start scanning failed");
-            updateMode(BluetoothCentralMode.IDLE, null);
+            updateMode(BluetoothCentralMode.IDLE);
         }
     }
 
@@ -469,9 +471,10 @@ public class BluetoothCentral {
             cancelTimeoutTimer();
             if (bluetoothScanner != null) {
                 bluetoothScanner.stopScan(currentCallback);
-                updateMode(BluetoothCentralMode.IDLE, null);
+                updateMode(BluetoothCentralMode.IDLE);
             }
             currentCallback = null;
+            currentFilters = null;
         }
     }
 
@@ -508,11 +511,11 @@ public class BluetoothCentral {
                 // Connect to peripheral
                 peripheral.setPeripheralCallback(peripheralCallback);
                 this.unconnectedPeripherals.put(peripheral.getAddress(), peripheral);
-                updateMode(BluetoothCentralMode.CONNECTING, null);
+                updateMode(BluetoothCentralMode.CONNECTING);
                 peripheral.connect();
             } else {
                 Log.i(TAG, String.format("WARNING: Already connected with %s", peripheral.getAddress()));
-                updateMode(BluetoothCentralMode.IDLE, null);
+                updateMode(BluetoothCentralMode.IDLE);
             }
         }
     }
@@ -797,11 +800,8 @@ public class BluetoothCentral {
      *
      * @param newMode New scanmode of central
      */
-    private void updateMode(BluetoothCentralMode newMode, ScanCallback callback) {
+    private void updateMode(BluetoothCentralMode newMode) {
         this.mode = newMode;
-        currentCallback = callback;
-
-//        Log.d(TAG, String.format("mode '%s'", newMode));
 
         switch (newMode) {
             case IDLE:
