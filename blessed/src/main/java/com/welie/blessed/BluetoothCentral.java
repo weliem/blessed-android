@@ -361,7 +361,7 @@ public class BluetoothCentral {
         // If get scanner was succesful, start the scan
         if (bluetoothScanner != null) {
             // Start the scanner
-            updateMode(BluetoothCentralMode.SCANNING, scanByServiceUUIDCallback);
+            updateMode(BluetoothCentralMode.SCANNING, scanCallback);
             bluetoothScanner.startScan(filters, scanSettings, scanCallback);
             Log.i(TAG, "scan started");
         }  else {
