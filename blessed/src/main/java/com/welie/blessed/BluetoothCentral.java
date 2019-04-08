@@ -231,7 +231,7 @@ public class BluetoothCentral {
                 if(retries != null) nrRetries = retries;
             }
 
-            if(nrRetries < MAX_CONNECTION_RETRIES) {
+            if(nrRetries < MAX_CONNECTION_RETRIES && status != BluetoothPeripheral.GATT_CONN_TIMEOUT) {
                 Log.i(TAG, String.format("retrying connection to '%s'", peripheral.getAddress()));
                 nrRetries++;
                 connectionRetries.put(peripheral.getAddress(), nrRetries);
