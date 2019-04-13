@@ -238,7 +238,7 @@ public class BluetoothCentral {
                 unconnectedPeripherals.put(peripheral.getAddress(), peripheral);
                 peripheral.autoConnect();
             } else {
-                Log.e(TAG, String.format("ERROR: Connection to %s failed", peripheral.getAddress()));
+                Log.i(TAG, String.format("connection to '%s' (%s) failed", peripheral.getName(), peripheral.getAddress()));
                 callBackHandler.post(new Runnable() {
                     @Override
                     public void run() {

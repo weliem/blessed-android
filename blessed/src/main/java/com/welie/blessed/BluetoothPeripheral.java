@@ -198,7 +198,10 @@ public class BluetoothPeripheral {
     private static final int CONNECTION_TIMEOUT_IN_MS = 35000;
 
     // Samsung phones time out after 5 seconds while most other phone time out after 30 seconds
-    private static final int TIMEOUT_THRESHOLD = 4500;
+    private static final int TIMEOUT_THRESHOLD_SAMSUNG = 4500;
+
+    // Most other phone time out after 30 seconds
+    private static final int TIMEOUT_THRESHOLD_DEFAULT = 25000;
 
     // The maximum number of enabled notifications Android supports (BTA_GATTC_NOTIF_REG_MAX)
     private static final int MAX_NOTIFYING_CHARACTERISTICS = 15;
@@ -316,7 +319,7 @@ public class BluetoothPeripheral {
 
                 // See if the initial connection failed
                 if (state == BluetoothProfile.STATE_CONNECTING) {
-                    boolean isTimeout = timePassed > TIMEOUT_THRESHOLD;
+                    boolean isTimeout = timePassed > getTimoutThreshold();
                     Log.i(TAG, String.format("connection failed with status '%s' (%s)", statusToString(status), isTimeout ? "TIMEOUT" : "ERROR"));
                     final int adjustedStatus = (status == GATT_ERROR && isTimeout) ? GATT_CONN_TIMEOUT : status;
                     completeDisconnect(false, adjustedStatus);
@@ -1771,6 +1774,15 @@ public class BluetoothPeripheral {
         if (timeoutRunnable != null) {
             timeoutHandler.removeCallbacks(timeoutRunnable);
             timeoutRunnable = null;
+        }
+    }
+
+    private int getTimoutThreshold() {
+        String manufacturer = Build.MANUFACTURER;
+        if(manufacturer.equals("samsung")) {
+            return TIMEOUT_THRESHOLD_SAMSUNG;
+        } else {
+            return TIMEOUT_THRESHOLD_DEFAULT;
         }
     }
 }
