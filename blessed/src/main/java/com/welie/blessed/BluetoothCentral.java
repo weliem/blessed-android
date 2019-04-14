@@ -858,4 +858,25 @@ public class BluetoothCentral {
     }
 
     //endregion
+
+    /*
+     * Make the pairing popup appear in the foreground by doing a 1 sec discovery.
+     * If the pairing popup is shown within 60 seconds, it will be shown in the foreground
+     *
+     */
+    public void startPairingPopupHack() {
+        // Check if we are on a Samsung device because those don't need the hack
+        String manufacturer = Build.MANUFACTURER;
+        if(!manufacturer.equals("samsung")) {
+            bluetoothAdapter.startDiscovery();
+
+            callBackHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d(TAG, "popup hack completed");
+                    bluetoothAdapter.cancelDiscovery();
+                }
+            }, 1000);
+        }
+    }
 }
