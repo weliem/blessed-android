@@ -210,9 +210,12 @@ public class BluetoothHandler {
 
     private BluetoothHandler(Context context) {
         this.context = context;
+
+        // Create BluetoothCentral
         central = new BluetoothCentral(context, bluetoothCentralCallback, new Handler());
 
-        // Scan for peripherals with a certain service UUID
+        // Scan for peripherals with a certain service UUIDs
+        central.startPairingPopupHack();
         central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID});
     }
 }
