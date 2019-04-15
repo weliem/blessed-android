@@ -151,6 +151,7 @@ public class BluetoothCentral {
             synchronized (this) {
                 // Get the deviceAdress and corresponding callback
                 String deviceAddress = result.getDevice().getAddress();
+                Log.d(TAG, String.format("peripheral with address '%s' found", deviceAddress));
                 BluetoothPeripheralCallback callback = reconnectCallbacks.get(deviceAddress);
 
                 // Clean up first
@@ -159,7 +160,6 @@ public class BluetoothCentral {
 
                 // If we have all devices, stop the scan
                 if(reconnectPeripheralAddresses.size() == 0) {
-                    Log.d(TAG, String.format("Peripheral with address '%s' found, stopping autoconnect scan", deviceAddress));
                     autoConnectScanner.stopScan(autoConnectScanCallback);
                     autoConnectScanner = null;
                     cancelAutoConnectTimer();
@@ -194,6 +194,8 @@ public class BluetoothCentral {
         @Override
         public void connected(final BluetoothPeripheral peripheral) {
             updateMode(BluetoothCentralMode.IDLE);
+
+            // Remove peripheral from retry map if it is there
             connectionRetries.remove(peripheral.getAddress());
 
             // Do some administration work
@@ -201,7 +203,8 @@ public class BluetoothCentral {
             if(connectedPeripherals.size() == MAX_CONNECTED_PERIPHERALS) {
                 Log.w(TAG, "maximum amount (7) of connected peripherals reached");
             }
-            
+
+            // Remove peripheral from unconnected peripherals map if it is there
             if(unconnectedPeripherals.get(peripheral.getAddress()) != null) {
                 unconnectedPeripherals.remove(peripheral.getAddress());
             }
@@ -229,15 +232,16 @@ public class BluetoothCentral {
                 unconnectedPeripherals.remove(peripheral.getAddress());
             }
 
-            // Retry connection or conclude the connection has failed
+            // Get the number of retries for this peripheral
             int nrRetries = 0;
             if(connectionRetries.get(peripheral.getAddress()) != null) {
                 Integer retries = connectionRetries.get(peripheral.getAddress());
                 if(retries != null) nrRetries = retries;
             }
 
+            // Retry connection or conclude the connection has failed
             if(nrRetries < MAX_CONNECTION_RETRIES && status != BluetoothPeripheral.GATT_CONN_TIMEOUT) {
-                Log.i(TAG, String.format("retrying connection to '%s'", peripheral.getAddress()));
+                Log.i(TAG, String.format("retrying connection to '%s' (%s)",peripheral.getName(), peripheral.getAddress()));
                 nrRetries++;
                 connectionRetries.put(peripheral.getAddress(), nrRetries);
                 unconnectedPeripherals.put(peripheral.getAddress(), peripheral);
@@ -263,7 +267,7 @@ public class BluetoothCentral {
             // Remove it from the connected peripherals map
             connectedPeripherals.remove(peripheral.getAddress());
 
-            // Do some administration
+            // Make sure it is also not in unconnected peripherals map
             if(unconnectedPeripherals.get(peripheral.getAddress()) != null) {
                 unconnectedPeripherals.remove(peripheral.getAddress());
             }
@@ -273,6 +277,7 @@ public class BluetoothCentral {
                 mode = BluetoothCentralMode.IDLE;
             }
 
+            // Trigger callback
             callBackHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -493,13 +498,13 @@ public class BluetoothCentral {
         synchronized (connectLock) {
             // Make sure peripheral is valid
             if(peripheral == null) {
-                Log.e(TAG, "No valid peripheral specified, aborting connection");
+                Log.e(TAG, "no valid peripheral specified, aborting connection");
                 return;
             }
 
             // Check if we already have an outstanding connection request for this peripheral
             if (unconnectedPeripherals.containsKey(peripheral.getAddress())) {
-                Log.d(TAG, String.format("WARNING: Already connecting to %s'", peripheral.getAddress()));
+                Log.w(TAG, String.format("WARNING: Already connecting to %s'", peripheral.getAddress()));
                 return;
             }
 
@@ -515,7 +520,7 @@ public class BluetoothCentral {
             if (!connectedPeripherals.containsKey(peripheral.getAddress())) {
                 // Connect to peripheral
                 peripheral.setPeripheralCallback(peripheralCallback);
-                this.unconnectedPeripherals.put(peripheral.getAddress(), peripheral);
+                unconnectedPeripherals.put(peripheral.getAddress(), peripheral);
                 updateMode(BluetoothCentralMode.CONNECTING);
                 peripheral.connect();
             } else {
@@ -541,7 +546,7 @@ public class BluetoothCentral {
 
             // Check if we are not already asking this peripheral for data
             if (unconnectedPeripherals.get(peripheral.getAddress()) != null) {
-                Log.d(TAG, String.format("WARNING: Already issued autoconnect for '%s' ", peripheral.getAddress()));
+                Log.w(TAG, String.format("WARNING: Already issued autoconnect for '%s' ", peripheral.getAddress()));
                 return;
             }
 
@@ -561,11 +566,11 @@ public class BluetoothCentral {
                 return;
 
             }
-            // It is all looking good! Create peripheral object to autoconnect to
+            // It is all looking good! Set the callback and prepare for autoconnect
             peripheral.setPeripheralCallback(peripheralCallback);
-            this.unconnectedPeripherals.put(peripheral.getAddress(), peripheral);
+            unconnectedPeripherals.put(peripheral.getAddress(), peripheral);
 
-            // Ask the system to get data for this peripheral whenever we can connect to it
+            // Autoconnect to this peripheral
             peripheral.autoConnect();
         }
     }
@@ -688,7 +693,7 @@ public class BluetoothCentral {
     }
 
     private boolean isBleSupported() {
-        if(this.bluetoothAdapter != null && this.context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+        if(bluetoothAdapter != null && context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             return true;
         }
 
@@ -697,7 +702,7 @@ public class BluetoothCentral {
     }
 
     private boolean isBleEnabled() {
-        if (this.bluetoothAdapter.isEnabled()) {
+        if (bluetoothAdapter.isEnabled()) {
             return true;
         }
         Log.e(TAG, "ERROR: Bluetooth disabled");
@@ -719,12 +724,12 @@ public class BluetoothCentral {
      * If timeout is executed the scan is stopped and automatically restarted. This is done to avoid Android 9 scan restrictions
      */
     private void setScanTimer() {
-//        Log.d(TAG, "starting timer");
-
+        // Cancel runnable if it exists
         if (timeoutRunnable != null) {
             timeoutHandler.removeCallbacks(timeoutRunnable);
         }
 
+        // Prepare runnable
         this.timeoutRunnable = new Runnable() {
             @Override
             public void run() {
@@ -742,6 +747,7 @@ public class BluetoothCentral {
             }
         };
 
+        // Start timer
         timeoutHandler.postDelayed(timeoutRunnable, SCAN_TIMEOUT);
     }
 
@@ -760,12 +766,12 @@ public class BluetoothCentral {
      * If timeout is executed the scan is stopped and automatically restarted. This is done to avoid Android 9 scan restrictions
      */
     private void setAutoConnectTimer() {
-//        Log.d(TAG, "starting autoconnect timer");
-
+        // Cancel runnanle if it exists
         if (autoConnectRunnable != null) {
             autoConnectHandler.removeCallbacks(autoConnectRunnable);
         }
 
+        // Prepare autoconnect runnable
         this.autoConnectRunnable = new Runnable() {
             @Override
             public void run() {
@@ -787,6 +793,7 @@ public class BluetoothCentral {
             }
         };
 
+        // Start autoconnect timer
         autoConnectHandler.postDelayed(autoConnectRunnable, SCAN_TIMEOUT);
     }
 
@@ -806,7 +813,7 @@ public class BluetoothCentral {
      * @param newMode New scanmode of central
      */
     private void updateMode(BluetoothCentralMode newMode) {
-        this.mode = newMode;
+        mode = newMode;
 
         switch (newMode) {
             case IDLE:
@@ -861,8 +868,6 @@ public class BluetoothCentral {
             return true;
         }
     }
-
-    //endregion
 
     /*
      * Make the pairing popup appear in the foreground by doing a 1 sec discovery.
