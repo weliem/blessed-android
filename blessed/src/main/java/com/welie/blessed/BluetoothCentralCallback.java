@@ -58,4 +58,12 @@ public abstract class BluetoothCentralCallback {
      * @param scanResult the scanResult describing the peripheral
      */
     public void onDiscoveredPeripheral(final BluetoothPeripheral peripheral, final ScanResult scanResult) {}
+
+    /**
+     * Scanning failed
+     *
+     * @param errorCode the status code for the scanning failure
+     */
+    public void onScanFailed(final int errorCode) {}
+
 }

@@ -58,6 +58,9 @@ public class BluetoothCentral {
     private static final int MAX_CONNECTION_RETRIES = 1;
     private static final int MAX_CONNECTED_PERIPHERALS = 7;
 
+    // Scanning error codes
+    public static final int SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES = 5;
+
     // Private enums
     private enum BluetoothCentralMode {IDLE, SCANNING, CONNECTING}
 
@@ -113,6 +116,17 @@ public class BluetoothCentral {
                 }
             }
         }
+
+        @Override
+        public void onScanFailed(final int errorCode) {
+            Log.e(TAG, String.format("scan failed with error code %d", errorCode));
+            callBackHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    bluetoothCentralCallback.onScanFailed(errorCode);
+                }
+            });
+        }
     };
 
     /**
@@ -135,13 +149,14 @@ public class BluetoothCentral {
         }
 
         @Override
-        public void onBatchScanResults(List<ScanResult> results) {
-            Log.i(TAG, "onBatchScanResults");
-        }
-
-        @Override
-        public void onScanFailed(int errorCode) {
+        public void onScanFailed(final int errorCode) {
             Log.e(TAG, String.format("scan failed with error code %d", errorCode));
+            callBackHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                     bluetoothCentralCallback.onScanFailed(errorCode);
+                }
+            });
         }
     };
 
@@ -176,8 +191,14 @@ public class BluetoothCentral {
         }
 
         @Override
-        public void onScanFailed(int errorCode) {
-            Log.e(TAG, String.format("scan failed with error code %d", errorCode));
+        public void onScanFailed(final int errorCode) {
+            Log.e(TAG, String.format("autoconnect scan failed with error code %d", errorCode));
+            callBackHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    bluetoothCentralCallback.onScanFailed(errorCode);
+                }
+            });
         }
     };
 
