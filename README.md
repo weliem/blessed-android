@@ -26,6 +26,7 @@ The BLESSED library was inspired by CoreBluetooth on iOS and provides the same l
 There are 3 different scanning methods:
 
 ```java
+public void scanForPeripherals()
 public void scanForPeripheralsWithServices(UUID[] serviceUUIDs)
 public void scanForPeripheralsWithNames(String[] peripheralNames)
 public void scanForPeripheralsWithAddresses(String[] peripheralAddresses)
@@ -51,7 +52,7 @@ UUID BLOODPRESSURE_SERVICE_UUID = UUID.fromString("00001810-0000-1000-8000-00805
 // Scan for peripherals with a certain service UUID
 central.scanForPeripheralsWithServices(new UUID[]{BLOODPRESSURE_SERVICE_UUID});
 ```
-**Note** Only 1 of these 3 types of scans can be active at one time! So call `stopScan()` before calling another scan.
+**Note** Only 1 of these 4 types of scans can be active at one time! So call `stopScan()` before calling another scan.
 
 ## Connecting to devies
 
