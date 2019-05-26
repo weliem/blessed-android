@@ -338,13 +338,20 @@ public class BluetoothCentral {
         this.timeoutHandler = new Handler();
         this.autoConnectHandler = new Handler();
         this.reconnectPeripheralAddresses = new ArrayList<>();
-        this.autoConnectScanSettings = new ScanSettings.Builder()
-                .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
-                .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
-                .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
-                .setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
-                .setReportDelay(0L)
-                .build();
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            this.autoConnectScanSettings = new ScanSettings.Builder()
+                    .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
+                    .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
+                    .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
+                    .setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
+                    .setReportDelay(0L)
+                    .build();
+        } else {
+            this.autoConnectScanSettings = new ScanSettings.Builder()
+                    .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
+                    .setReportDelay(0L)
+                    .build();
+        }
         setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY);
     }
 
@@ -362,13 +369,20 @@ public class BluetoothCentral {
             scanMode == ScanSettings.SCAN_MODE_LOW_LATENCY ||
             scanMode == ScanSettings.SCAN_MODE_BALANCED ||
             scanMode == ScanSettings.SCAN_MODE_OPPORTUNISTIC) {
-            this.scanSettings = new ScanSettings.Builder()
-                    .setScanMode(scanMode)
-                    .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
-                    .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
-                    .setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
-                    .setReportDelay(0L)
-                    .build();
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                this.scanSettings = new ScanSettings.Builder()
+                        .setScanMode(scanMode)
+                        .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
+                        .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
+                        .setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
+                        .setReportDelay(0L)
+                        .build();
+            } else {
+                this.scanSettings = new ScanSettings.Builder()
+                        .setScanMode(scanMode)
+                        .setReportDelay(0L)
+                        .build();
+            }
             return true;
         }
         return false;

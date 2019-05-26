@@ -755,7 +755,7 @@ public class BluetoothPeripheral {
                 public void run() {
                     // Connect to device with autoConnect = false
                     Log.i(TAG, String.format("connect to '%s' (%s) using TRANSPORT_LE", getName(), getAddress()));
-                    bluetoothGatt = device.connectGatt(context, false, bluetoothGattCallback, TRANSPORT_LE);
+                    bluetoothGatt = connectGattHelper(device, false, bluetoothGattCallback);
                     connectTimestamp = SystemClock.elapsedRealtime();
                     startConnectionTimer(BluetoothPeripheral.this);
                 }
@@ -787,7 +787,7 @@ public class BluetoothPeripheral {
                             bluetoothGatt = device.connectGatt(context, true, bluetoothGattCallback, TRANSPORT_LE);
                         } else {
                             // Versions below Nougat had a race condition bug in autoconnect, so use special workaround
-                            bluetoothGatt = autoConnectGatt(device,true,bluetoothGattCallback);
+                            bluetoothGatt = connectGattHelper(device,true,bluetoothGattCallback);
                         }
                         connectTimestamp = SystemClock.elapsedRealtime();
 
@@ -1643,7 +1643,7 @@ public class BluetoothPeripheral {
 
     /////////////////
 
-    BluetoothGatt autoConnectGatt(BluetoothDevice remoteDevice, boolean autoConnect, BluetoothGattCallback bluetoothGattCallback) {
+    BluetoothGatt connectGattHelper(BluetoothDevice remoteDevice, boolean autoConnect, BluetoothGattCallback bluetoothGattCallback) {
 
         if (remoteDevice == null) {
             return null;
@@ -1697,12 +1697,24 @@ public class BluetoothPeripheral {
 
     private BluetoothGatt connectGattCompat(BluetoothGattCallback bluetoothGattCallback, BluetoothDevice device, boolean autoConnect) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Log.i(TAG, String.format("Connecting to '%s' (%s) using TRANSPORT_LE", device.getName(), device.getAddress()));
             return device.connectGatt(context, autoConnect, bluetoothGattCallback, TRANSPORT_LE);
-        } else {
-            Log.i(TAG, String.format("Connecting to '%s' (%s)", device.getName(), device.getAddress()));
-            return device.connectGatt(context, autoConnect, bluetoothGattCallback);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            // Try to call connectGatt with TRANSPORT_LE parameter using reflection
+            try {
+                Method connectGattMethod = device.getClass().getMethod("connectGatt", Context.class, boolean.class, BluetoothGattCallback.class, int.class);
+                try {
+                    return (BluetoothGatt) connectGattMethod.invoke(device, context, autoConnect, bluetoothGattCallback, TRANSPORT_LE);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            }
         }
+        // Fallback on connectGatt without TRANSPORT_LE parameter
+        return device.connectGatt(context, autoConnect, bluetoothGattCallback);
     }
 
     private boolean connectUsingReflection(BluetoothDevice device, BluetoothGatt bluetoothGatt, BluetoothGattCallback bluetoothGattCallback, boolean autoConnect)
