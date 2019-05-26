@@ -23,7 +23,7 @@ The BLESSED library was inspired by CoreBluetooth on iOS and provides the same l
 
 ## Scanning
 
-There are 3 different scanning methods:
+There are 4 different scanning methods:
 
 ```java
 public void scanForPeripherals()
