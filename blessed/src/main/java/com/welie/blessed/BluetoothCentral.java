@@ -460,6 +460,14 @@ public class BluetoothCentral {
         startScan(filters, scanSettings, scanByServiceUUIDCallback);
     }
 
+    /**
+     * Scan for any peripheral that is advertising
+     *
+     */
+    public void scanForPeripherals() {
+        startScan(null, scanSettings, scanByServiceUUIDCallback);
+    }
+
     private void scanForAutoConnectPeripherals() {
         // Check is BLE is available, enabled and all permission granted
         if(!isBleReady()) return;
