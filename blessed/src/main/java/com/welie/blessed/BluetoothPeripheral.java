@@ -670,15 +670,6 @@ public class BluetoothPeripheral {
                                     peripheralCallback.onBondingFailed(BluetoothPeripheral.this);
                                 }
                             });
-
-                            // If we are doing a manual bond, complete the command
-                            if(manuallyBonding) {
-                                manuallyBonding = false;
-                                completedCommand();
-                            } else if(commandQueueBusy) {
-                                // Try to continue the queue if needed
-                                completedCommand();
-                            }
                         } else {
                             Log.e(TAG, String.format("bond lost for '%s'", getName()));
                             bondLost = true;
