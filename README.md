@@ -54,7 +54,7 @@ central.scanForPeripheralsWithServices(new UUID[]{BLOODPRESSURE_SERVICE_UUID});
 ```
 **Note** Only 1 of these 4 types of scans can be active at one time! So call `stopScan()` before calling another scan.
 
-## Connecting to devies
+## Connecting to devices
 
 There are 2 ways to connect to a device:
 ```java
