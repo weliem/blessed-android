@@ -55,6 +55,7 @@ public class BluetoothCentral {
 
     // Private constants
     private static final long SCAN_TIMEOUT = 180_000L;
+    private static final int SCAN_RESTART_DELAY = 2*1000;
     private static final int MAX_CONNECTION_RETRIES = 1;
     private static final int MAX_CONNECTED_PERIPHERALS = 7;
 
@@ -545,6 +546,12 @@ public class BluetoothCentral {
                 return;
             }
 
+            // Check if we are already connected to this peripheral
+            if (connectedPeripherals.containsKey(peripheral.getAddress())) {
+                Log.w(TAG, String.format("WARNING: Already connected to %s'", peripheral.getAddress()));
+                return;
+            }
+
             // Check if we already have an outstanding connection request for this peripheral
             if (unconnectedPeripherals.containsKey(peripheral.getAddress())) {
                 Log.w(TAG, String.format("WARNING: Already connecting to %s'", peripheral.getAddress()));
@@ -559,17 +566,20 @@ public class BluetoothCentral {
                 return;
             }
 
-            // Check if we are already connected to this peripheral
-            if (!connectedPeripherals.containsKey(peripheral.getAddress())) {
-                // Connect to peripheral
-                peripheral.setPeripheralCallback(peripheralCallback);
-                unconnectedPeripherals.put(peripheral.getAddress(), peripheral);
-                updateMode(BluetoothCentralMode.CONNECTING);
-                peripheral.connect();
-            } else {
-                Log.i(TAG, String.format("WARNING: Already connected with %s", peripheral.getAddress()));
-                updateMode(BluetoothCentralMode.IDLE);
+            // Check if the peripheral supports BLE
+            if(!(deviceType == BluetoothDevice.DEVICE_TYPE_LE || deviceType == BluetoothDevice.DEVICE_TYPE_DUAL)) {
+                // This device does not support Bluetooth LE, so we cannot connect
+                Log.e(TAG, "peripheral does not support Bluetooth LE");
+                return;
             }
+
+            // It is all looking good! Set the callback and prepare to connect
+            peripheral.setPeripheralCallback(peripheralCallback);
+            unconnectedPeripherals.put(peripheral.getAddress(), peripheral);
+
+            // Now connect
+            updateMode(BluetoothCentralMode.CONNECTING);
+            peripheral.connect();
         }
     }
 
@@ -584,6 +594,12 @@ public class BluetoothCentral {
             // Make sure peripheral is valid
             if(peripheral == null) {
                 Log.e(TAG, "No valid peripheral specified, aborting connection");
+                return;
+            }
+
+            // Check if we are already connected to this peripheral
+            if (connectedPeripherals.containsKey(peripheral.getAddress())) {
+                Log.w(TAG, String.format("WARNING: Already connected to %s'", peripheral.getAddress()));
                 return;
             }
 
@@ -607,8 +623,8 @@ public class BluetoothCentral {
                 // This device does not support Bluetooth LE, so we cannot connect
                 Log.e(TAG, "peripheral does not support Bluetooth LE");
                 return;
-
             }
+
             // It is all looking good! Set the callback and prepare for autoconnect
             peripheral.setPeripheralCallback(peripheralCallback);
             unconnectedPeripherals.put(peripheral.getAddress(), peripheral);
@@ -763,7 +779,7 @@ public class BluetoothCentral {
     }
 
     /**
-     * Set scan timeout timer, timeout time is {@code CONNECT_TIMEOUT}.
+     * Set scan timeout timer, timeout time is {@code SCAN_TIMEOUT}.
      * If timeout is executed the scan is stopped and automatically restarted. This is done to avoid Android 9 scan restrictions
      */
     private void setScanTimer() {
@@ -786,7 +802,7 @@ public class BluetoothCentral {
                     public void run() {
                         startScan(currentFilters, scanSettings, callback);
                     }
-                }, 5*1000);
+                }, SCAN_RESTART_DELAY);
             }
         };
 
@@ -805,20 +821,18 @@ public class BluetoothCentral {
     }
 
     /**
-     * Set scan timeout timer, timeout time is {@code CONNECT_TIMEOUT}.
+     * Set scan timeout timer, timeout time is {@code SCAN_TIMEOUT}.
      * If timeout is executed the scan is stopped and automatically restarted. This is done to avoid Android 9 scan restrictions
      */
     private void setAutoConnectTimer() {
         // Cancel runnanle if it exists
-        if (autoConnectRunnable != null) {
-            autoConnectHandler.removeCallbacks(autoConnectRunnable);
-        }
+        cancelAutoConnectTimer();
 
         // Prepare autoconnect runnable
-        this.autoConnectRunnable = new Runnable() {
+        autoConnectRunnable = new Runnable() {
             @Override
             public void run() {
-                Log.d(TAG, "autoconnect timeout, restarting scan");
+                Log.d(TAG, "autoconnect scan timeout, restarting scan");
 
                 // Stop previous autoconnect scans if any
                 if(autoConnectScanner != null) {
@@ -832,7 +846,7 @@ public class BluetoothCentral {
                     public void run() {
                         scanForAutoConnectPeripherals();
                     }
-                }, 2*1000);
+                }, SCAN_RESTART_DELAY);
             }
         };
 
