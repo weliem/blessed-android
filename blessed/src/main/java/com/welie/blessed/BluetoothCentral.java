@@ -55,7 +55,7 @@ public class BluetoothCentral {
 
     // Private constants
     private static final long SCAN_TIMEOUT = 180_000L;
-    private static final int SCAN_RESTART_DELAY = 2*1000;
+    private static final int SCAN_RESTART_DELAY = 1000;
     private static final int MAX_CONNECTION_RETRIES = 1;
     private static final int MAX_CONNECTED_PERIPHERALS = 7;
 
@@ -223,7 +223,7 @@ public class BluetoothCentral {
             // Do some administration work
             connectedPeripherals.put(peripheral.getAddress(), peripheral);
             if(connectedPeripherals.size() == MAX_CONNECTED_PERIPHERALS) {
-                Log.w(TAG, "maximum amount (7) of connected peripherals reached");
+                Log.w(TAG, String.format("maximum amount (%d) of connected peripherals reached", MAX_CONNECTED_PERIPHERALS));
             }
 
             // Remove peripheral from unconnected peripherals map if it is there
@@ -521,11 +521,11 @@ public class BluetoothCentral {
      */
     public void stopScan() {
         if(mode == BluetoothCentralMode.SCANNING) {
-            Log.i(TAG, "Stop scanning");
             cancelTimeoutTimer();
             if (bluetoothScanner != null) {
                 bluetoothScanner.stopScan(currentCallback);
                 updateMode(BluetoothCentralMode.IDLE);
+                Log.i(TAG, "scan stopped");
             }
             currentCallback = null;
             currentFilters = null;
@@ -794,13 +794,14 @@ public class BluetoothCentral {
             public void run() {
                 Log.d(TAG, "scanning timeout, restarting scan");
                 final ScanCallback callback = currentCallback;
+                final List<ScanFilter> filters = currentFilters;
                 stopScan();
 
                 // Restart the scan and timer
                 callBackHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        startScan(currentFilters, scanSettings, callback);
+                        startScan(filters, scanSettings, callback);
                     }
                 }, SCAN_RESTART_DELAY);
             }
