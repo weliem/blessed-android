@@ -259,6 +259,8 @@ public class BluetoothCentral {
                 nrRetries++;
                 connectionRetries.put(peripheral.getAddress(), nrRetries);
                 unconnectedPeripherals.put(peripheral.getAddress(), peripheral);
+
+                // Retry with autoconnect
                 peripheral.autoConnect();
             } else {
                 Log.i(TAG, String.format("connection to '%s' (%s) failed", peripheral.getName(), peripheral.getAddress()));
