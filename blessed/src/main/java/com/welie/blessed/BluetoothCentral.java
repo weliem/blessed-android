@@ -539,19 +539,11 @@ public class BluetoothCentral {
                 return;
             }
 
-            // Check if the peripheral is cached or not. If not, abort connection
+            // Check if the peripheral is cached or not. If not, issue a warning
             int deviceType = peripheral.getType();
             if (deviceType == BluetoothDevice.DEVICE_TYPE_UNKNOWN) {
-                // The peripheral is not cached so we cannot autoconnect
-                Log.e(TAG, String.format("peripheral with address '%s' not in Bluetooth cache, aborting connection", peripheral.getAddress()));
-                return;
-            }
-
-            // Check if the peripheral supports BLE
-            if (!(deviceType == BluetoothDevice.DEVICE_TYPE_LE || deviceType == BluetoothDevice.DEVICE_TYPE_DUAL)) {
-                // This device does not support Bluetooth LE, so we cannot connect
-                Log.e(TAG, "peripheral does not support Bluetooth LE");
-                return;
+                // The peripheral is not cached so connection is likely to fail
+                Log.w(TAG, String.format("peripheral with address '%s' is not in the Bluetooth cache, hence connection may fail", peripheral.getAddress()));
             }
 
             // It is all looking good! Set the callback and prepare to connect
