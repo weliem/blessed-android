@@ -122,7 +122,8 @@ public class BluetoothHandler {
         }
 
         @Override
-        public void onCharacteristicUpdate(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic characteristic) {
+        public void onCharacteristicUpdate(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic characteristic, int status) {
+            if(status != GATT_SUCCESS) return;
             UUID characteristicUUID = characteristic.getUuid();
             BluetoothBytesParser parser = new BluetoothBytesParser(value);
 

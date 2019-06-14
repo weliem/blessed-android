@@ -446,7 +446,7 @@ public class BluetoothPeripheral {
          *               {@link BluetoothGatt#GATT_SUCCESS} if the operation succeeds.
          */
         @Override
-        public void onDescriptorRead(BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, int status) {
+        public void onDescriptorRead(BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int status) {
             if(status!= GATT_SUCCESS) {
                 Log.e(TAG, String.format("ERROR: Write descriptor failed device: %s", getAddress()));
             }
@@ -455,7 +455,7 @@ public class BluetoothPeripheral {
             bleHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    peripheralCallback.onDescriptorRead(BluetoothPeripheral.this, value, descriptor);
+                    peripheralCallback.onDescriptorRead(BluetoothPeripheral.this, value, descriptor, status);
                 }
             });
             completedCommand();
@@ -478,7 +478,7 @@ public class BluetoothPeripheral {
             bleHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    peripheralCallback.onCharacteristicUpdate(BluetoothPeripheral.this, value, characteristic);
+                    peripheralCallback.onCharacteristicUpdate(BluetoothPeripheral.this, value, characteristic, GATT_SUCCESS);
                 }
             });
         }
@@ -494,7 +494,7 @@ public class BluetoothPeripheral {
          *               was completed successfully.
          */
         @Override
-        public void onCharacteristicRead(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, int status) {
+        public void onCharacteristicRead(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
             // Perform some checks on the status field
             if (status != GATT_SUCCESS) {
                 if (status == GATT_AUTH_FAIL || status == GATT_INSUFFICIENT_AUTHENTICATION ) {
@@ -505,8 +505,6 @@ public class BluetoothPeripheral {
                     return;
                 } else {
                     Log.e(TAG, String.format(Locale.ENGLISH,"ERROR: Read failed for characteristic: %s, status %d", characteristic.getUuid(), status));
-                    completedCommand();
-                    return;
                 }
             }
 
@@ -518,7 +516,7 @@ public class BluetoothPeripheral {
             bleHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    peripheralCallback.onCharacteristicUpdate(BluetoothPeripheral.this, value, characteristic);
+                    peripheralCallback.onCharacteristicUpdate(BluetoothPeripheral.this, value, characteristic, status);
                 }
             });
             completedCommand();
@@ -546,8 +544,6 @@ public class BluetoothPeripheral {
                     return;
                 } else {
                     Log.e(TAG, String.format("ERROR: Writing <%s> to characteristic <%s> failed, status %s", bytes2String(currentWriteBytes), characteristic.getUuid(), statusToString(status)));
-                    completedCommand();
-                    return;
                 }
             }
 
@@ -1049,7 +1045,7 @@ public class BluetoothPeripheral {
      *
      * <p>The characteristic must support reading it, otherwise the operation will not be enqueued.
      *
-     * <p>{@link BluetoothPeripheralCallback#onCharacteristicUpdate(BluetoothPeripheral, byte[], BluetoothGattCharacteristic)}  will be triggered as a result of this call.
+     * <p>{@link BluetoothPeripheralCallback#onCharacteristicUpdate(BluetoothPeripheral, byte[], BluetoothGattCharacteristic, int)}   will be triggered as a result of this call.
      *
      * @param characteristic Specifies the characteristic to read.
      * @return true if the operation was enqueued, false if the characteristic does not support reading or the characteristic was invalid

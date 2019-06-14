@@ -55,8 +55,9 @@ public abstract class BluetoothPeripheralCallback {
      * @param peripheral the peripheral
      * @param value the new value received
      * @param characteristic the characteristic for which the new value was received
+     * @param status GATT status code
      */
-    public void onCharacteristicUpdate(final BluetoothPeripheral peripheral, byte[] value, final BluetoothGattCharacteristic characteristic) {}
+    public void onCharacteristicUpdate(final BluetoothPeripheral peripheral, byte[] value, final BluetoothGattCharacteristic characteristic, final int status) {}
 
     /**
      * Callback indicating the result of a characteristic write operation.
@@ -76,8 +77,9 @@ public abstract class BluetoothPeripheralCallback {
      * @param peripheral the peripheral
      * @param value the read value
      * @param descriptor the descriptor that was read
+     * @param status GATT status code
      */
-    public void onDescriptorRead(final BluetoothPeripheral peripheral, byte[] value, final BluetoothGattDescriptor descriptor) {}
+    public void onDescriptorRead(final BluetoothPeripheral peripheral, byte[] value, final BluetoothGattDescriptor descriptor, final int status) {}
 
     /**
      * Callback invoked as the result of a descriptor write operation.
