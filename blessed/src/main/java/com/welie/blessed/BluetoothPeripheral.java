@@ -51,6 +51,7 @@ import java.util.Locale;
 import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static android.bluetooth.BluetoothDevice.ACTION_BOND_STATE_CHANGED;
 import static android.bluetooth.BluetoothDevice.ERROR;
@@ -726,7 +727,7 @@ public class BluetoothPeripheral {
         } else {
             this.bleHandler = new Handler();
         }
-        this.commandQueue = new LinkedList<>();
+        this.commandQueue = new ConcurrentLinkedQueue<>();
         this.state = BluetoothProfile.STATE_DISCONNECTED;
         this.commandQueueBusy = false;
     }
@@ -1458,36 +1459,39 @@ public class BluetoothPeripheral {
      * If the read or write fails, the next command in the queue is executed.
      */
     private void nextCommand() {
-        // If there is still a command being executed then bail out
-        if(commandQueueBusy) {
-            return;
-        }
+        // Make sure only one thread can execute this method
+        synchronized (this) {
+            // If there is still a command being executed then bail out
+            if (commandQueueBusy) {
+                return;
+            }
 
-        // Check if we still have a valid gatt object
-        if (bluetoothGatt == null) {
-            Log.e(TAG, String.format("gatt is 'null' for peripheral '%s', clearing command queue", getAddress()));
-            commandQueue.clear();
-            commandQueueBusy = false;
-            return;
-        }
+            // Check if we still have a valid gatt object
+            if (bluetoothGatt == null) {
+                Log.e(TAG, String.format("gatt is 'null' for peripheral '%s', clearing command queue", getAddress()));
+                commandQueue.clear();
+                commandQueueBusy = false;
+                return;
+            }
 
-        // Execute the next command in the queue
-        if (commandQueue.size() > 0) {
+            // Execute the next command in the queue
             final Runnable bluetoothCommand = commandQueue.peek();
-            commandQueueBusy = true;
-            nrTries = 0;
+            if (bluetoothCommand != null) {
+                commandQueueBusy = true;
+                nrTries = 0;
 
-            bleHandler.post(new Runnable() {
-                @Override
-                public void run() {
+                bleHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
                         try {
                             bluetoothCommand.run();
                         } catch (Exception ex) {
                             Log.e(TAG, String.format("command exception for device '%s'", getName()), ex);
                             completedCommand();
                         }
-                }
-            });
+                    }
+                });
+            }
         }
     }
 
