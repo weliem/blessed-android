@@ -40,11 +40,11 @@ import android.util.Log;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Central class to connect and communicate with bluetooth peripherals.
@@ -69,10 +69,10 @@ public class BluetoothCentral {
     private BluetoothLeScanner bluetoothScanner;
     private BluetoothLeScanner autoConnectScanner;
     private final BluetoothCentralCallback bluetoothCentralCallback;
-    private final Map<String, BluetoothPeripheral> connectedPeripherals = new HashMap<>();
-    private final Map<String, BluetoothPeripheral> unconnectedPeripherals = new HashMap<>();
+    private final Map<String, BluetoothPeripheral> connectedPeripherals = new ConcurrentHashMap<>();
+    private final Map<String, BluetoothPeripheral> unconnectedPeripherals = new ConcurrentHashMap<>();
     private final List<String> reconnectPeripheralAddresses = new ArrayList<>();
-    private final Map<String, BluetoothPeripheralCallback> reconnectCallbacks = new HashMap<>();
+    private final Map<String, BluetoothPeripheralCallback> reconnectCallbacks = new ConcurrentHashMap<>();
     private String[] scanPeripheralNames;
     private final Handler timeoutHandler = new Handler();
     private Runnable timeoutRunnable;
@@ -83,7 +83,7 @@ public class BluetoothCentral {
     private List<ScanFilter> currentFilters;
     private ScanSettings scanSettings;
     private final ScanSettings autoConnectScanSettings;
-    private final Map<String, Integer> connectionRetries = new HashMap<>();
+    private final Map<String, Integer> connectionRetries = new ConcurrentHashMap<>();
 
     //region Callbacks
 
