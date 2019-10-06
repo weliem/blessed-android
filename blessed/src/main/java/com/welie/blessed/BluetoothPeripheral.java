@@ -505,6 +505,8 @@ public class BluetoothPeripheral {
                     return;
                 } else {
                     Log.e(TAG, String.format(Locale.ENGLISH,"read failed for characteristic: %s, status %d", characteristic.getUuid(), status));
+                    completedCommand();
+                    return;
                 }
             }
 
@@ -806,7 +808,7 @@ public class BluetoothPeripheral {
      *
      * @return true if bonding was started/enqueued, false if not
      */
-    public boolean createBond() {
+    public boolean ccreateBond() {
         // Check if we have a Gatt object
         if(bluetoothGatt == null) {
             // No gatt object so no connection issued, do create bond immediately
@@ -827,6 +829,7 @@ public class BluetoothPeripheral {
                 }
             }
         });
+
         if(result) {
             nextCommand();
         } else {
@@ -1379,7 +1382,7 @@ public class BluetoothPeripheral {
      * @return true if the operation was enqueued, false otherwise
      */
     public boolean readRemoteRssi() {
-        return commandQueue.add(new Runnable() {
+        boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
                 if(bluetoothGatt != null && state == BluetoothProfile.STATE_CONNECTED) {
@@ -1393,6 +1396,14 @@ public class BluetoothPeripheral {
                 }
             }
         });
+
+        if(result) {
+            nextCommand();
+        } else {
+            Log.e(TAG, "could not enqueue setNotify command");
+        }
+
+        return result;
     }
 
     /**
@@ -1408,7 +1419,7 @@ public class BluetoothPeripheral {
      * @return true if the operation was enqueued, false otherwise
      */
     public boolean requestMtu (final int mtu) {
-        return commandQueue.add(new Runnable() {
+        boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
                 if(bluetoothGatt != null && state == BluetoothProfile.STATE_CONNECTED) {
@@ -1422,6 +1433,14 @@ public class BluetoothPeripheral {
                 }
             }
         });
+
+        if(result) {
+            nextCommand();
+        } else {
+            Log.e(TAG, "could not enqueue setNotify command");
+        }
+
+        return result;
     }
 
     /**
