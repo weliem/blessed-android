@@ -855,7 +855,7 @@ public class BluetoothPeripheral {
      *
      * @return true if bonding was started/enqueued, false if not
      */
-    public boolean ccreateBond() {
+    public boolean createBond() {
         // Check if we have a Gatt object
         if (bluetoothGatt == null) {
             // No gatt object so no connection issued, do create bond immediately
