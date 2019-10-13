@@ -505,9 +505,11 @@ public class BluetoothCentral {
      */
     public void stopScan() {
         cancelTimeoutTimer();
-        if (bluetoothScanner != null) {
+        if (bluetoothScanner != null & currentCallback != null) {
             bluetoothScanner.stopScan(currentCallback);
             Log.i(TAG, "scan stopped");
+        } else {
+            Log.i(TAG, "no scan to stop because no scan is running");
         }
         currentCallback = null;
         currentFilters = null;
