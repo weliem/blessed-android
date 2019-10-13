@@ -361,6 +361,11 @@ public class BluetoothPeripheral {
                 }
             } else {
                 // Check if service discovery completed
+                if(discoverServicesRunnable != null) {
+                    // Service discovery is still pending so cancel it
+                    bleHandler.removeCallbacks(discoverServicesRunnable);
+                    discoverServicesRunnable = null;
+                }
                 List<BluetoothGattService> services = getServices();
                 boolean servicesDiscovered = !services.isEmpty();
 
@@ -375,7 +380,7 @@ public class BluetoothPeripheral {
                     }
                 } else if (state == BluetoothProfile.STATE_CONNECTED && newState == BluetoothProfile.STATE_DISCONNECTED && !servicesDiscovered) {
                     // We got a disconnection before the services were even discovered
-                    Log.i(TAG, String.format("peripheral '%s' disconnected with status '%s' during service discovery", getName(), statusToString(status)));
+                    Log.i(TAG, String.format("peripheral '%s' disconnected with status '%s' before completing service discovery", getName(), statusToString(status)));
                     completeDisconnect(false, status);
                     if (listener != null) {
                         listener.connectFailed(BluetoothPeripheral.this, status);
@@ -722,6 +727,7 @@ public class BluetoothPeripheral {
                             // Cancel the discoverServiceRunnable if it is still pending
                             if (discoverServicesRunnable != null) {
                                 bleHandler.removeCallbacks(discoverServicesRunnable);
+                                discoverServicesRunnable = null;
                             }
 
                             bleHandler.post(new Runnable() {
