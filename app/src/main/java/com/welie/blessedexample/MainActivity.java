@@ -18,6 +18,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
+import timber.log.Timber;
+
 public class MainActivity extends AppCompatActivity {
 
     private final String TAG = MainActivity.class.getSimpleName();
@@ -31,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         Log.d(TAG, "onCreate called");
+
+        Timber.plant(new Timber.DebugTree());
 
         setContentView(R.layout.activity_main);
         bloodpressureValue = (TextView) findViewById(R.id.bloodPressureValue);
