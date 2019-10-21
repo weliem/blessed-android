@@ -23,6 +23,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadow.api.Shadow;
 import org.robolectric.shadows.ShadowApplication;
+import org.robolectric.shadows.ShadowBluetoothAdapter;
 import org.robolectric.shadows.ShadowPackageManager;
 
 import java.lang.reflect.Field;
@@ -43,6 +44,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -76,7 +78,6 @@ public class BluetoothCentralTest {
         initMocks(this);
 
         application = ShadowApplication.getInstance();
-        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
 
         bluetoothAdapter = Shadow.extract(ShadowBluetoothLEAdapter.getDefaultAdapter());
         bluetoothAdapter.setEnabled(true);
@@ -94,6 +95,7 @@ public class BluetoothCentralTest {
 
     @Test
     public void scanForPeripheralsTest()  throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION);
         central.scanForPeripherals();
         verify(scanner).startScan(anyList(), any(ScanSettings.class), any(ScanCallback.class));
 
@@ -120,6 +122,7 @@ public class BluetoothCentralTest {
 
     @Test
     public void scanForPeripheralsWithServicesTest() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION);
         UUID BLP_SERVICE_UUID = UUID.fromString("00001810-0000-1000-8000-00805f9b34fb");
         central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID});
 
@@ -162,6 +165,7 @@ public class BluetoothCentralTest {
 
     @Test
     public void scanForPeripheralsWithAddressesTest() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION);
         String myAddress = "12:23:34:98:76:54";
         central.scanForPeripheralsWithAddresses(new String[]{myAddress});
 
@@ -203,6 +207,7 @@ public class BluetoothCentralTest {
 
     @Test
     public void scanForPeripheralsWithNamesTest() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION);
         String myName = "Polar";
         central.scanForPeripheralsWithNames(new String[]{myName});
 
@@ -239,6 +244,7 @@ public class BluetoothCentralTest {
 
     @Test
     public void scanFailedTest() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION);
         central.scanForPeripherals();
         verify(scanner).startScan(anyList(), any(ScanSettings.class), any(ScanCallback.class));
 
@@ -253,7 +259,20 @@ public class BluetoothCentralTest {
     }
 
     @Test
+    public void scanFailedAutoconnectTest() throws Exception {
+        // Grab the scan callback that is used
+        Field field = BluetoothCentral.class.getDeclaredField("autoConnectScanCallback");
+        field.setAccessible(true);
+        ScanCallback scanCallback = (ScanCallback) field.get(central);
+
+        scanCallback.onScanFailed(SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES);
+
+        verify(callback).onScanFailed(SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES);
+    }
+
+    @Test
     public void scanForNamesFailedTest() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION);
         String myName = "Polar";
         central.scanForPeripheralsWithNames(new String[]{myName});
 
@@ -269,6 +288,7 @@ public class BluetoothCentralTest {
 
     @Test
     public void stopScanTest() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION);
         central.scanForPeripherals();
         verify(scanner).startScan(anyList(), any(ScanSettings.class), any(ScanCallback.class));
 
@@ -292,6 +312,7 @@ public class BluetoothCentralTest {
 
     @Test
     public void connectPeripheralTest() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION);
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
         when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
@@ -313,6 +334,8 @@ public class BluetoothCentralTest {
 
     @Test
     public void connectionFailedRetryTest() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION);
+
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
         when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
@@ -336,6 +359,8 @@ public class BluetoothCentralTest {
 
     @Test
     public void connectionFailedAfterRetryTest() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION);
+
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
         when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
@@ -359,6 +384,8 @@ public class BluetoothCentralTest {
 
     @Test
     public void cancelConnectionPeripheralTest() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION);
+
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
         when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
@@ -388,6 +415,8 @@ public class BluetoothCentralTest {
 
     @Test
     public void autoconnectTestCached() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION);
+
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
         when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
@@ -409,6 +438,8 @@ public class BluetoothCentralTest {
 
     @Test
     public void autoconnectTestUnCached() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION);
+
         BluetoothDevice device = mock(BluetoothDevice.class);
         when(device.getAddress()).thenReturn("12:23:34:98:76:54");
         when(device.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
@@ -433,5 +464,19 @@ public class BluetoothCentralTest {
         scanCallback.onScanResult(CALLBACK_TYPE_ALL_MATCHES, scanResult);
 
         verify(peripheral).connect();
+    }
+
+    @Test
+    public void bluetoothOffTest() {
+        application.grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION);
+        bluetoothAdapter.setEnabled(false);
+        central.scanForPeripherals();
+        verify(scanner, never()).startScan(anyList(), any(ScanSettings.class), any(ScanCallback.class));
+    }
+
+    @Test
+    public void noPermissionTest() {
+        central.scanForPeripherals();
+        verify(scanner, never()).startScan(anyList(), any(ScanSettings.class), any(ScanCallback.class));
     }
 }
