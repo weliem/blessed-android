@@ -36,6 +36,7 @@ import static com.welie.blessed.BluetoothCentral.SCAN_FAILED_OUT_OF_HARDWARE_RES
 import static com.welie.blessed.BluetoothPeripheral.GATT_SUCCESS;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -333,6 +334,48 @@ public class BluetoothCentralTest {
     }
 
     @Test
+    public void connectPeripheralAlreadyConnectedTest() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+        BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
+        when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
+        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
+
+        central.connectPeripheral(peripheral, peripheralCallback);
+
+        verify(peripheral).connect();
+
+        // Grab the scan callback that is used
+        Field field = BluetoothCentral.class.getDeclaredField("internalCallback");
+        field.setAccessible(true);
+        BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
+
+        // Give connected event and see if we get callback
+        internalCallback.connected(peripheral);
+
+        verify(callback).onConnectedPeripheral(peripheral);
+
+        central.connectPeripheral(peripheral, peripheralCallback);
+
+        verify(peripheral, times(1)).connect();
+    }
+
+    @Test
+    public void connectPeripheralConnectingTest() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+        BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
+        when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
+        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
+
+        central.connectPeripheral(peripheral, peripheralCallback);
+
+        verify(peripheral).connect();
+
+        central.connectPeripheral(peripheral, peripheralCallback);
+
+        verify(peripheral, times(1)).connect();
+    }
+
+    @Test
     public void connectionFailedRetryTest() throws Exception {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
 
@@ -383,6 +426,49 @@ public class BluetoothCentralTest {
     }
 
     @Test
+    public void getConnectedPeripheralsTest() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+        BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
+        when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
+        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
+
+        central.connectPeripheral(peripheral, peripheralCallback);
+
+        verify(peripheral).connect();
+
+        // Grab the scan callback that is used
+        Field field = BluetoothCentral.class.getDeclaredField("internalCallback");
+        field.setAccessible(true);
+        BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
+
+        // Give connected event and see if we get callback
+        internalCallback.connected(peripheral);
+
+        verify(callback).onConnectedPeripheral(peripheral);
+
+        List<BluetoothPeripheral> peripherals = central.getConnectedPeripherals();
+        assertNotNull(peripherals);
+        assertEquals(1, peripherals.size());
+        assertEquals(peripheral, peripherals.get(0));
+
+        peripheral.cancelConnection();
+
+        internalCallback.disconnected(peripheral, GATT_SUCCESS);
+
+        List<BluetoothPeripheral> peripherals2 = central.getConnectedPeripherals();
+        assertNotNull(peripherals2);
+        assertEquals(0, peripherals2.size());
+    }
+
+    @Test
+    public void getConnectedPeripheralsNoneTest() {
+        List<BluetoothPeripheral> peripherals = central.getConnectedPeripherals();
+        assertNotNull(peripherals);
+        assertEquals(0, peripherals.size());
+    }
+
+
+    @Test
     public void cancelConnectionPeripheralTest() throws Exception {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
 
@@ -409,6 +495,47 @@ public class BluetoothCentralTest {
         verify(peripheral).cancelConnection();
 
         internalCallback.disconnected(peripheral, GATT_SUCCESS);
+
+        verify(callback).onDisconnectedPeripheral(peripheral, GATT_SUCCESS);
+    }
+
+    @Test
+    public void cancelConnectionUnconnectedPeripheralTest() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+
+        BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
+        when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
+        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
+
+        central.connectPeripheral(peripheral, peripheralCallback);
+
+        verify(peripheral).connect();
+
+        central.cancelConnection(peripheral);
+
+        verify(peripheral).cancelConnection();
+
+        // Grab the scan callback that is used
+        Field field = BluetoothCentral.class.getDeclaredField("internalCallback");
+        field.setAccessible(true);
+        BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
+
+        internalCallback.disconnected(peripheral, GATT_SUCCESS);
+
+        verify(callback).onDisconnectedPeripheral(peripheral, GATT_SUCCESS);
+    }
+
+    @Test
+    public void cancelConnectionReconnectingPeripheralTest() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+
+        BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
+        when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
+        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_UNKNOWN);
+
+        central.autoConnectPeripheral(peripheral, peripheralCallback);
+
+        central.cancelConnection(peripheral);
 
         verify(callback).onDisconnectedPeripheral(peripheral, GATT_SUCCESS);
     }
@@ -465,6 +592,90 @@ public class BluetoothCentralTest {
 
         verify(peripheral).connect();
     }
+
+
+    @Test
+    public void autoconnectPeripheralConnectedTest() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+        BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
+        when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
+        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
+
+        central.connectPeripheral(peripheral, peripheralCallback);
+
+        verify(peripheral).connect();
+
+        // Grab the scan callback that is used
+        Field field = BluetoothCentral.class.getDeclaredField("internalCallback");
+        field.setAccessible(true);
+        BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
+
+        // Give connected event and see if we get callback
+        internalCallback.connected(peripheral);
+
+        verify(callback).onConnectedPeripheral(peripheral);
+
+        central.autoConnectPeripheral(peripheral, peripheralCallback);
+
+        verify(peripheral, never()).autoConnect();
+    }
+
+    @Test
+    public void autoconnectTwice() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+
+        BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
+        when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
+        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_UNKNOWN);
+        central.autoConnectPeripheral(peripheral, peripheralCallback);
+
+        verify(peripheral, never()).autoConnect();
+        verify(scanner).startScan(anyList(), any(ScanSettings.class), any(ScanCallback.class));
+
+        central.autoConnectPeripheral(peripheral, peripheralCallback);
+
+        verify(peripheral, never()).autoConnect();
+    }
+
+    @Test
+    public void getPeripheralWrongMacAddressTest() {
+        // Get peripheral and supply lowercase mac address
+        BluetoothPeripheral peripheral = central.getPeripheral("ac:de:ef:12:34:56");
+        assertNull(peripheral);
+    }
+
+    @Test
+    public void getPeripheralValidMacAddressTest() {
+        // Get peripheral and supply lowercase mac address
+        BluetoothPeripheral peripheral = central.getPeripheral("AC:DE:EF:12:34:56");
+        assertNotNull(peripheral);
+    }
+
+    @Test
+    public void getPeripheralConnectedTest() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+        BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
+        when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
+        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
+
+        central.connectPeripheral(peripheral, peripheralCallback);
+
+        verify(peripheral).connect();
+
+        // Grab the scan callback that is used
+        Field field = BluetoothCentral.class.getDeclaredField("internalCallback");
+        field.setAccessible(true);
+        BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
+
+        // Give connected event and see if we get callback
+        internalCallback.connected(peripheral);
+
+        verify(callback).onConnectedPeripheral(peripheral);
+
+        BluetoothPeripheral peripheral2 = central.getPeripheral("12:23:34:98:76:54");
+        assertEquals(peripheral, peripheral2);
+    }
+
 
     @Test
     public void bluetoothOffTest() {
