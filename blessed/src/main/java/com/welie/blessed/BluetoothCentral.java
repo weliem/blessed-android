@@ -31,18 +31,17 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.ParcelUuid;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import timber.log.Timber;
@@ -86,6 +85,35 @@ public class BluetoothCentral {
     private final Map<String, Integer> connectionRetries = new ConcurrentHashMap<>();
 
     //region Callbacks
+
+    private final BroadcastReceiver bluetoothStateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            if (action != null &&
+                action.equals(BluetoothAdapter.ACTION_STATE_CHANGED) &&
+                intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR) == BluetoothAdapter.STATE_OFF &&
+                !connectedPeripherals.isEmpty()) {
+
+                Iterator<BluetoothPeripheral> it = connectedPeripherals.values().iterator();
+                while (it.hasNext()) {
+                    final BluetoothPeripheral peripheral = it.next();
+                    peripheral.cancelConnection();
+
+                    // Trigger callback
+                    callBackHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            bluetoothCentralCallback.onDisconnectedPeripheral(peripheral, BluetoothPeripheral.GATT_CONN_TERMINATE_LOCAL_HOST);
+                        }
+                    });
+
+                    // remove it from connected pripherals
+                    it.remove();
+                }
+            }
+        }
+    };
 
     /**
      * Callback for scan by peripheral name. Do substring filtering before forwarding result.
@@ -234,6 +262,12 @@ public class BluetoothCentral {
                     bluetoothCentralCallback.onConnectedPeripheral(peripheral);
                 }
             });
+
+            // on Android Q, onConnectionStateChanged does not get called when turning bluetooth OFF
+            if (context != null && connectedPeripherals.size() == 1 &&
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                context.registerReceiver(bluetoothStateReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+            }
         }
 
         /**
@@ -290,6 +324,10 @@ public class BluetoothCentral {
                 unconnectedPeripherals.remove(peripheral.getAddress());
             }
 
+            if (context != null && connectedPeripherals.isEmpty() &&
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                context.unregisterReceiver(bluetoothStateReceiver);
+            }
             // Trigger callback
             callBackHandler.post(new Runnable() {
                 @Override

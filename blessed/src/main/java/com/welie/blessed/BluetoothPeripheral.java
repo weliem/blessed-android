@@ -39,6 +39,9 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.SystemClock;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -958,8 +961,8 @@ public class BluetoothPeripheral {
                 @Override
                 public void run() {
                     if (bluetoothGatt != null) {
-                        Timber.i("force disconnect '%s' (%s)", getName(), getAddress());
                         bluetoothGatt.disconnect();
+                        Timber.i("force disconnect '%s' (%s) %s", getName(), getAddress(), bluetoothGatt);
                     }
                 }
             });
@@ -994,6 +997,7 @@ public class BluetoothPeripheral {
      *
      * @return Address of the bluetooth peripheral
      */
+    @NotNull
     public String getAddress() {
         return device.getAddress();
     }
@@ -1012,6 +1016,7 @@ public class BluetoothPeripheral {
      *
      * @return name of the bluetooth peripheral
      */
+    @Nullable
     public String getName() {
         return device.getName();
     }
