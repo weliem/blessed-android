@@ -321,6 +321,10 @@ public class BluetoothCentral {
          */
         @Override
         public void disconnected(final BluetoothPeripheral peripheral, final int status) {
+            if (context != null && connectedPeripherals.size() == 1 &&
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                context.unregisterReceiver(bluetoothStateReceiver);
+            }
             // Remove it from the connected peripherals map
             connectedPeripherals.remove(peripheral.getAddress());
 
@@ -329,10 +333,6 @@ public class BluetoothCentral {
                 unconnectedPeripherals.remove(peripheral.getAddress());
             }
 
-            if (context != null && connectedPeripherals.isEmpty() &&
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                context.unregisterReceiver(bluetoothStateReceiver);
-            }
             // Trigger callback
             callBackHandler.post(new Runnable() {
                 @Override
