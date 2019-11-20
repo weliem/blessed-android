@@ -273,6 +273,7 @@ public class BluetoothPeripheral {
     private Runnable timeoutRunnable;
     private Runnable discoverServicesRunnable;
     private long connectTimestamp;
+    private String cachedName;
 
     /**
      * This abstract class is used to implement BluetoothGatt callbacks.
@@ -970,6 +971,11 @@ public class BluetoothPeripheral {
         }
     }
 
+    void disconnectWhenBluetoothOff() {
+        bluetoothGatt = null;
+        completeDisconnect(true, GATT_SUCCESS);
+    }
+
     /**
      * Complete the disconnect after getting connectionstate = disconnected
      */
@@ -1013,7 +1019,12 @@ public class BluetoothPeripheral {
      * @return name of the bluetooth peripheral
      */
     public String getName() {
-        return device.getName();
+        String name = device.getName();
+        if(name != null) {
+            // Cache the name so that we even know it when bluetooth is switched off
+            cachedName = name;
+        }
+        return cachedName;
     }
 
     /**

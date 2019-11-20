@@ -31,7 +31,10 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
@@ -84,6 +87,9 @@ public class BluetoothCentral {
     private ScanSettings scanSettings;
     private final ScanSettings autoConnectScanSettings;
     private final Map<String, Integer> connectionRetries = new ConcurrentHashMap<>();
+    private boolean expectingBluetoothOffDisconnects = false;
+    private final Handler disconnectHandler = new Handler();
+    private Runnable disconnectRunnable;
 
     //region Callbacks
 
@@ -282,6 +288,11 @@ public class BluetoothCentral {
          */
         @Override
         public void disconnected(final BluetoothPeripheral peripheral, final int status) {
+            if(expectingBluetoothOffDisconnects) {
+                cancelDisconnectionTimer();
+                expectingBluetoothOffDisconnects = false;
+            }
+
             // Remove it from the connected peripherals map
             connectedPeripherals.remove(peripheral.getAddress());
 
@@ -339,6 +350,10 @@ public class BluetoothCentral {
                     .build();
         }
         setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY);
+
+        // Register for broadcasts on BluetoothAdapter state change
+        IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+        context.registerReceiver(adapterStateReceiver, filter);
     }
 
     /**
@@ -910,4 +925,84 @@ public class BluetoothCentral {
             }, 1000);
         }
     }
+
+
+    /**
+     *  Some phones, like Google/Pixel phones, don't automatically disconnect devices so this method does it manually
+     */
+    private void cancelAllConnectionsWhenBluetoothOff() {
+        Timber.d("disconnect all peripherals because bluetooth is off");
+        // Call cancelConnection for connected peripherals
+        for(final BluetoothPeripheral peripheral : connectedPeripherals.values()) {
+            peripheral.disconnectWhenBluetoothOff();
+        }
+        connectedPeripherals.clear();
+
+        // Call cancelConnection for unconnected peripherals
+        for(final BluetoothPeripheral peripheral : unconnectedPeripherals.values()) {
+            peripheral.disconnectWhenBluetoothOff();
+        }
+        unconnectedPeripherals.clear();
+    }
+
+    /**
+     * Timer to determine if manual disconnection in case of bluetooth off is needed
+     */
+    private void startDisconnectionTimer() {
+        if (disconnectRunnable != null) {
+            disconnectHandler.removeCallbacks(disconnectRunnable);
+        }
+
+        disconnectRunnable = new Runnable() {
+            @Override
+            public void run() {
+                Timber.e("bluetooth turned off but no automatic disconnects happening, so doing it ourselves");
+                cancelAllConnectionsWhenBluetoothOff();
+                disconnectRunnable = null;
+            }
+        };
+
+        disconnectHandler.postDelayed(disconnectRunnable, 1000);
+    }
+
+    /**
+     * Cancel timer for bluetooth off disconnects
+     */
+    private void cancelDisconnectionTimer() {
+        if (disconnectRunnable != null) {
+            disconnectHandler.removeCallbacks(disconnectRunnable);
+            disconnectRunnable = null;
+        }
+    }
+
+    private final BroadcastReceiver adapterStateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            if(action == null) return;
+
+            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                switch (state) {
+                    case BluetoothAdapter.STATE_OFF:
+                        expectingBluetoothOffDisconnects = true;
+                        startDisconnectionTimer();
+                        Timber.d("bluetooth turned off");
+                        break;
+                    case BluetoothAdapter.STATE_TURNING_OFF:
+                        expectingBluetoothOffDisconnects = true;
+                        Timber.d("bluetooth turning off");
+                        break;
+                    case BluetoothAdapter.STATE_ON:
+                        expectingBluetoothOffDisconnects = false;
+                        Timber.d("bluetooth turned on");
+                        break;
+                    case BluetoothAdapter.STATE_TURNING_ON:
+                        expectingBluetoothOffDisconnects = false;
+                        Timber.d("bluetooth turning on");
+                        break;
+                }
+            }
+        }
+    };
 }
