@@ -943,6 +943,10 @@ public class BluetoothCentral {
             peripheral.disconnectWhenBluetoothOff();
         }
         unconnectedPeripherals.clear();
+
+        // Clean up autoconnect by scanning information
+        reconnectPeripheralAddresses.clear();
+        reconnectCallbacks.clear();
     }
 
     /**
