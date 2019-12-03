@@ -902,17 +902,18 @@ public class BluetoothPeripheral {
      */
     public boolean requestConnectionPriority(final int priority) {
 
-        // Enqueue the bond command because a connection has been issued or we are already connected
+        // Enqueue the request connection priority command and complete is immediately as there is no callback for it
         boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
-                manuallyBonding = true;
-                if (!bluetoothGatt.requestConnectionPriority(priority)) {
-                    Timber.e("could not set connection priority");
-                } else {
-                    Timber.d("requesting connection priority %d", priority);
+                if (bluetoothGatt != null && state == BluetoothProfile.STATE_CONNECTED) {
+                    if (!bluetoothGatt.requestConnectionPriority(priority)) {
+                        Timber.e("could not set connection priority");
+                    } else {
+                        Timber.d("requesting connection priority %d", priority);
+                    }
+                    completedCommand();
                 }
-                completedCommand();
             }
         });
 
