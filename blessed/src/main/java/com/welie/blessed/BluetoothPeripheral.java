@@ -893,6 +893,38 @@ public class BluetoothPeripheral {
     }
 
     /**
+     * Request a different connection priority
+     *
+     * Use the standard parameters for Android: CONNECTION_PRIORITY_BALANCED, CONNECTION_PRIORITY_HIGH, or CONNECTION_PRIORITY_LOW_POWER
+     *
+     * @param priority the requested connection priority
+     * @return true if request was enqueued, false if not
+     */
+    public boolean requestConnectionPriority(final int priority) {
+
+        // Enqueue the bond command because a connection has been issued or we are already connected
+        boolean result = commandQueue.add(new Runnable() {
+            @Override
+            public void run() {
+                manuallyBonding = true;
+                if (!bluetoothGatt.requestConnectionPriority(priority)) {
+                    Timber.e("could not set connection priority");
+                } else {
+                    Timber.d("requesting connection priority %d", priority);
+                }
+                completedCommand();
+            }
+        });
+
+        if (result) {
+            nextCommand();
+        } else {
+            Timber.e("could not enqueue request connection priority command");
+        }
+        return result;
+    }
+
+    /**
      * Version of createBond with transport parameter.
      * May use in the future if needed as I never encountered an issue
      */

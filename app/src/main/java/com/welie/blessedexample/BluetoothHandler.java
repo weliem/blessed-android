@@ -18,6 +18,7 @@ import java.util.UUID;
 
 import timber.log.Timber;
 
+import static android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_HIGH;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE;
 import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT8;
@@ -60,6 +61,9 @@ public class BluetoothHandler {
         @Override
         public void onServicesDiscovered(BluetoothPeripheral peripheral) {
             Timber.i("discovered services");
+
+            // Request a new connection priority
+            peripheral.requestConnectionPriority(CONNECTION_PRIORITY_HIGH);
 
             // Read manufacturer and model number from the Device Information Service
             if(peripheral.getService(DIS_SERVICE_UUID) != null) {
