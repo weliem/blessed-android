@@ -854,7 +854,7 @@ public class BluetoothPeripheral {
     }
 
     /**
-     * Create a bond with the peripheral
+     * Create a bond with the peripheral.
      *
      * <p>If a (auto)connect has been issued, the bonding command will be enqueued and you will
      * receive updates via the {@link BluetoothPeripheralCallback}. Otherwise the bonding will
@@ -893,9 +893,9 @@ public class BluetoothPeripheral {
     }
 
     /**
-     * Request a different connection priority
+     * Request a different connection priority.
      *
-     * Use the standard parameters for Android: CONNECTION_PRIORITY_BALANCED, CONNECTION_PRIORITY_HIGH, or CONNECTION_PRIORITY_LOW_POWER
+     * Use the standard parameters for Android: CONNECTION_PRIORITY_BALANCED, CONNECTION_PRIORITY_HIGH, or CONNECTION_PRIORITY_LOW_POWER. There is no callback for this function.
      *
      * @param priority the requested connection priority
      * @return true if request was enqueued, false if not
@@ -944,7 +944,7 @@ public class BluetoothPeripheral {
     }
 
     /**
-     * Cancel an active or pending connection
+     * Cancel an active or pending connection.
      * <p>
      * This operation is asynchronous and you will receive a callback on onDisconnectedPeripheral.
      */
@@ -1029,7 +1029,7 @@ public class BluetoothPeripheral {
     }
 
     /**
-     * Get the mac address of the bluetooth peripheral
+     * Get the mac address of the bluetooth peripheral.
      *
      * @return Address of the bluetooth peripheral
      */
@@ -1038,7 +1038,7 @@ public class BluetoothPeripheral {
     }
 
     /**
-     * Get the type of the peripheral
+     * Get the type of the peripheral.
      *
      * @return the device type {@link #DEVICE_TYPE_CLASSIC}, {@link #DEVICE_TYPE_LE} {@link #DEVICE_TYPE_DUAL}. {@link #DEVICE_TYPE_UNKNOWN} if it's not available
      */
@@ -1047,7 +1047,7 @@ public class BluetoothPeripheral {
     }
 
     /**
-     * Get the name of the bluetooth peripheral
+     * Get the name of the bluetooth peripheral.
      *
      * @return name of the bluetooth peripheral
      */
@@ -1061,7 +1061,8 @@ public class BluetoothPeripheral {
     }
 
     /**
-     * Get the bond state of the bluetooth peripheral
+     * Get the bond state of the bluetooth peripheral.
+     *
      * <p>Possible values for the bond state are:
      * {@link #BOND_NONE},
      * {@link #BOND_BONDING},
@@ -1084,7 +1085,7 @@ public class BluetoothPeripheral {
     }
 
     /**
-     * Get the BluetoothGattService object for a service UUID
+     * Get the BluetoothGattService object for a service UUID.
      *
      * @param serviceUUID the UUID of the service
      * @return the BluetoothGattService object for the service UUID or null if the peripheral does not have a service with the specified UUID
@@ -1098,7 +1099,7 @@ public class BluetoothPeripheral {
     }
 
     /**
-     * Get the BluetoothGattCharacteristic object for a characteristic UUID
+     * Get the BluetoothGattCharacteristic object for a characteristic UUID.
      *
      * @param serviceUUID        the service UUID the characteristic is part of
      * @param characteristicUUID the UUID of the chararacteristic
@@ -1114,7 +1115,8 @@ public class BluetoothPeripheral {
     }
 
     /**
-     * Returns the connection state of the peripheral
+     * Returns the connection state of the peripheral.
+     *
      * <p>Possible values for the connection state are:
      * {@link #STATE_CONNECTED},
      * {@link #STATE_CONNECTING},
@@ -1128,7 +1130,7 @@ public class BluetoothPeripheral {
     }
 
     /**
-     * Boolean to indicate if the specified characteristic is currently notifying or indicating
+     * Boolean to indicate if the specified characteristic is currently notifying or indicating.
      *
      * @param characteristic the characteristic
      * @return true is the characteristic is notifying or indicating, false if it is not
@@ -1283,7 +1285,7 @@ public class BluetoothPeripheral {
 
 
     /**
-     * Read the value of a descriptor
+     * Read the value of a descriptor.
      *
      * @param descriptor the descriptor to read
      * @return true if a write operation was succesfully enqueued, otherwise false
@@ -1327,7 +1329,7 @@ public class BluetoothPeripheral {
     }
 
     /**
-     * Write a value to a descriptor
+     * Write a value to a descriptor.
      *
      * <p>For turning on/off notifications use {@link BluetoothPeripheral#setNotify(BluetoothGattCharacteristic, boolean)} instead.
      *

@@ -418,7 +418,7 @@ public class BluetoothCentral {
     }
 
     /**
-     * Scan for peripherals that advertise at least one of the specified service UUIDs
+     * Scan for peripherals that advertise at least one of the specified service UUIDs.
      *
      * @param serviceUUIDs an array of service UUIDs
      */
@@ -451,7 +451,7 @@ public class BluetoothCentral {
     }
 
     /**
-     * Scan for peripherals that have any of the specified peripheral mac addresses
+     * Scan for peripherals that have any of the specified peripheral mac addresses.
      *
      * @param peripheralAddresses array of peripheral mac addresses to scan for
      */
@@ -475,7 +475,7 @@ public class BluetoothCentral {
     }
 
     /**
-     * Scan for any peripheral that is advertising
+     * Scan for any peripheral that is advertising.
      */
     public void scanForPeripherals() {
         startScan(null, scanSettings, scanByServiceUUIDCallback);
@@ -518,7 +518,7 @@ public class BluetoothCentral {
     }
 
     /**
-     * Stop scanning for peripherals
+     * Stop scanning for peripherals.
      */
     public void stopScan() {
         cancelTimeoutTimer();
@@ -533,8 +533,8 @@ public class BluetoothCentral {
     }
 
     /**
-     * Connect to a known peripheral immediately. The peripheral must have been found by scanning for this call to succeed. This method will time out in max 30 seconds.
-     * If the peripheral is already connected, no connection attempt will be made. This method is asynchronous.
+     * Connect to a known peripheral immediately. The peripheral must have been found by scanning for this call to succeed. This method will time out in max 30 seconds on most phones and in 5 seconds on Samsung phones.
+     * If the peripheral is already connected, no connection attempt will be made. This method is asynchronous and there can be only one outstanding connect.
      *
      * @param peripheral BLE peripheral to connect with
      */
@@ -642,7 +642,7 @@ public class BluetoothCentral {
     }
 
     /**
-     * Cancel an active or pending connection for a peripheral
+     * Cancel an active or pending connection for a peripheral.
      *
      * @param peripheral the peripheral
      */
@@ -703,7 +703,7 @@ public class BluetoothCentral {
 
 
     /**
-     * Get a peripheral object matching the specified mac address
+     * Get a peripheral object matching the specified mac address.
      *
      * @param peripheralAddress mac address
      * @return a BluetoothPeripheral object matching the specified mac address or null if it was not found
@@ -726,7 +726,7 @@ public class BluetoothCentral {
     }
 
     /**
-     * Get the list of connected peripherals
+     * Get the list of connected peripherals.
      *
      * @return list of connected peripherals
      */
@@ -863,7 +863,7 @@ public class BluetoothCentral {
     }
 
     /**
-     * Remove bond for a peripheral
+     * Remove bond for a peripheral.
      *
      * @param peripheralAddress the address of the peripheral
      * @return true if the peripheral was succesfully unpaired or it wasn't paired, false if it was paired and removing it failed
@@ -905,9 +905,10 @@ public class BluetoothCentral {
         }
     }
 
-    /*
+    /**
      * Make the pairing popup appear in the foreground by doing a 1 sec discovery.
-     * If the pairing popup is shown within 60 seconds, it will be shown in the foreground
+     *
+     * If the pairing popup is shown within 60 seconds, it will be shown in the foreground.
      *
      */
     public void startPairingPopupHack() {
