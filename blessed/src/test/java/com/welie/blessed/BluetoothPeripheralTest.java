@@ -30,6 +30,7 @@ import java.util.UUID;
 import static android.bluetooth.BluetoothDevice.BOND_BONDED;
 import static android.bluetooth.BluetoothDevice.BOND_BONDING;
 import static android.bluetooth.BluetoothDevice.BOND_NONE;
+import static android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_HIGH;
 import static android.bluetooth.BluetoothGatt.GATT_FAILURE;
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_INDICATE;
@@ -558,6 +559,16 @@ public class BluetoothPeripheralTest {
         callback.onMtuChanged(gatt, 32, 0);
 
         verify(peripheralCallback).onMtuChanged(peripheral, 32, 0);
+    }
+
+    @Test
+    public void connectionPriorityTest() throws Exception {
+        BluetoothGattCallback callback = connectAndGetCallback();
+        callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
+
+        peripheral.requestConnectionPriority(CONNECTION_PRIORITY_HIGH);
+
+        verify(gatt).requestConnectionPriority(CONNECTION_PRIORITY_HIGH);
     }
 
     @Test
