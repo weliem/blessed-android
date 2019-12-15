@@ -23,7 +23,7 @@ import timber.log.Timber;
 public class MainActivity extends AppCompatActivity {
 
     private final String TAG = MainActivity.class.getSimpleName();
-    private TextView bloodpressureValue;
+    private TextView measurementValue;
     private static final int REQUEST_ENABLE_BT = 1;
     private static final int ACCESS_LOCATION_REQUEST = 2;
 
@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
         Timber.plant(new Timber.DebugTree());
 
         setContentView(R.layout.activity_main);
-        bloodpressureValue = (TextView) findViewById(R.id.bloodPressureValue);
+        measurementValue = (TextView) findViewById(R.id.bloodPressureValue);
 
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if(bluetoothAdapter == null) return;
@@ -54,22 +54,33 @@ public class MainActivity extends AppCompatActivity {
     private void initBluetoothHandler()
     {
         BluetoothHandler.getInstance(getApplicationContext());
-        registerReceiver(dataReceiver, new IntentFilter( "BluetoothMeasurement" ));
+        registerReceiver(bloodPressureDataReceiver, new IntentFilter( "BluetoothMeasurement" ));
+        registerReceiver(temperatureDataReceiver, new IntentFilter( "TemperatureMeasurement" ));
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(dataReceiver);
+        unregisterReceiver(bloodPressureDataReceiver);
     }
 
-    private final BroadcastReceiver dataReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver bloodPressureDataReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             BloodPressureMeasurement measurement = (BloodPressureMeasurement) intent.getSerializableExtra("BloodPressure");
             DateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.ENGLISH);
             String formattedTimestamp = df.format(measurement.timestamp);
-            bloodpressureValue.setText(String.format(Locale.ENGLISH, "%.0f/%.0f %s, %.0f bpm\n%s", measurement.systolic, measurement.diastolic, measurement.isMMHG ? "mmHg" : "kpa", measurement.pulseRate, formattedTimestamp));
+            measurementValue.setText(String.format(Locale.ENGLISH, "%.0f/%.0f %s, %.0f bpm\n%s", measurement.systolic, measurement.diastolic, measurement.isMMHG ? "mmHg" : "kpa", measurement.pulseRate, formattedTimestamp));
+        }
+    };
+
+    private final BroadcastReceiver temperatureDataReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            TemperatureMeasurement measurement = (TemperatureMeasurement) intent.getSerializableExtra("Temperature");
+            DateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.ENGLISH);
+            String formattedTimestamp = df.format(measurement.timestamp);
+            measurementValue.setText(String.format(Locale.ENGLISH, "%.1f %s (%s)\n%s", measurement.temperatureValue, measurement.unit == TemperatureUnit.Celsius ? "celcius" : "fahrenheit", measurement.type, formattedTimestamp));
         }
     };
 

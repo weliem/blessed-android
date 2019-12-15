@@ -138,6 +138,13 @@ public class BluetoothHandler {
                 context.sendBroadcast(intent);
                 Timber.d("%s", measurement);
             }
+            else if(characteristicUUID.equals(TEMPERATURE_MEASUREMENT_CHARACTERISTIC_UUID)) {
+                TemperatureMeasurement measurement = new TemperatureMeasurement(value);
+                Intent intent = new Intent("TemperatureMeasurement");
+                intent.putExtra("Temperature", measurement);
+                context.sendBroadcast(intent);
+                Timber.d("%s", measurement);
+            }
             else if(characteristicUUID.equals(CURRENT_TIME_CHARACTERISTIC_UUID)) {
                 Date currentTime = parser.getDateTime();
                 Timber.i("Received device time: %s", currentTime);
