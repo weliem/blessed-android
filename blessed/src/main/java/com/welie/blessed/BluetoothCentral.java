@@ -990,8 +990,12 @@ public class BluetoothCentral {
                 final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
                 switch (state) {
                     case BluetoothAdapter.STATE_OFF:
-                        expectingBluetoothOffDisconnects = true;
-                        startDisconnectionTimer();
+                        // Check if there are any connected peripherals or connections in progress
+                        if(connectedPeripherals.size() > 0 || unconnectedPeripherals.size() > 0) {
+                            // See if they are automatically disconnect
+                            expectingBluetoothOffDisconnects = true;
+                            startDisconnectionTimer();
+                        }
                         Timber.d("bluetooth turned off");
                         break;
                     case BluetoothAdapter.STATE_TURNING_OFF:
