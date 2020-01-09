@@ -71,5 +71,5 @@ public abstract class BluetoothCentralCallback {
      *
      * @param state the current status code for the adapter
      */
-    public abstract void onBluetoothAdapterStateChanged(final int state);
+    public void onBluetoothAdapterStateChanged(final int state) {};
 }
