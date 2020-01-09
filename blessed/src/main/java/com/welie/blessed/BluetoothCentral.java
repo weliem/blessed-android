@@ -996,18 +996,22 @@ public class BluetoothCentral {
                             expectingBluetoothOffDisconnects = true;
                             startDisconnectionTimer();
                         }
+                        bluetoothCentralCallback.onBluetoothAdapterStateChanged(BluetoothAdapter.STATE_OFF);
                         Timber.d("bluetooth turned off");
                         break;
                     case BluetoothAdapter.STATE_TURNING_OFF:
                         expectingBluetoothOffDisconnects = true;
+                        bluetoothCentralCallback.onBluetoothAdapterStateChanged(BluetoothAdapter.STATE_TURNING_OFF);
                         Timber.d("bluetooth turning off");
                         break;
                     case BluetoothAdapter.STATE_ON:
                         expectingBluetoothOffDisconnects = false;
+                        bluetoothCentralCallback.onBluetoothAdapterStateChanged(BluetoothAdapter.STATE_ON);
                         Timber.d("bluetooth turned on");
                         break;
                     case BluetoothAdapter.STATE_TURNING_ON:
                         expectingBluetoothOffDisconnects = false;
+                        bluetoothCentralCallback.onBluetoothAdapterStateChanged(BluetoothAdapter.STATE_TURNING_ON);
                         Timber.d("bluetooth turning on");
                         break;
                 }

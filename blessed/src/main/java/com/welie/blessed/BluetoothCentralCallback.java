@@ -66,4 +66,10 @@ public abstract class BluetoothCentralCallback {
      */
     public void onScanFailed(final int errorCode) {}
 
+    /**
+     * Bluetooth adapter status changed
+     *
+     * @param state the current status code for the adapter
+     */
+    public abstract void onBluetoothAdapterStateChanged(final int state);
 }
