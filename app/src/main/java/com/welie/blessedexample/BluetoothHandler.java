@@ -1,5 +1,6 @@
 package com.welie.blessedexample;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
@@ -208,6 +209,17 @@ public class BluetoothHandler {
             Timber.i("Found peripheral '%s'", peripheral.getName());
             central.stopScan();
             central.connectPeripheral(peripheral, peripheralCallback);
+        }
+
+        @Override
+        public void onBluetoothAdapterStateChanged(int state) {
+            Timber.i("bluetooth adapter changed state to %d", state);
+            if(state == BluetoothAdapter.STATE_ON) {
+                // Bluetooth is on now, start scanning again
+                // Scan for peripherals with a certain service UUIDs
+                central.startPairingPopupHack();
+                central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID});
+            }
         }
     };
 

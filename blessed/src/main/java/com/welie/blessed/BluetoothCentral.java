@@ -988,6 +988,13 @@ public class BluetoothCentral {
 
             if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
                 final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                callBackHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        bluetoothCentralCallback.onBluetoothAdapterStateChanged(state);
+                    }
+                });
+
                 switch (state) {
                     case BluetoothAdapter.STATE_OFF:
                         // Check if there are any connected peripherals or connections in progress
@@ -996,22 +1003,26 @@ public class BluetoothCentral {
                             expectingBluetoothOffDisconnects = true;
                             startDisconnectionTimer();
                         }
-                        bluetoothCentralCallback.onBluetoothAdapterStateChanged(BluetoothAdapter.STATE_OFF);
                         Timber.d("bluetooth turned off");
                         break;
                     case BluetoothAdapter.STATE_TURNING_OFF:
                         expectingBluetoothOffDisconnects = true;
-                        bluetoothCentralCallback.onBluetoothAdapterStateChanged(BluetoothAdapter.STATE_TURNING_OFF);
+
+                        // Stop all scans so that we are back in a clean state
+                        // Note that we can't call stopScan if the adapter is off
+                        cancelTimeoutTimer();
+                        cancelAutoConnectTimer();
+                        currentCallback = null;
+                        currentFilters = null;
+                        autoConnectScanner = null;
                         Timber.d("bluetooth turning off");
                         break;
                     case BluetoothAdapter.STATE_ON:
                         expectingBluetoothOffDisconnects = false;
-                        bluetoothCentralCallback.onBluetoothAdapterStateChanged(BluetoothAdapter.STATE_ON);
                         Timber.d("bluetooth turned on");
                         break;
                     case BluetoothAdapter.STATE_TURNING_ON:
                         expectingBluetoothOffDisconnects = false;
-                        bluetoothCentralCallback.onBluetoothAdapterStateChanged(BluetoothAdapter.STATE_TURNING_ON);
                         Timber.d("bluetooth turning on");
                         break;
                 }
