@@ -9,6 +9,7 @@ import org.robolectric.annotation.Config;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_FLOAT;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_SFLOAT;
@@ -712,6 +713,7 @@ public class BluetoothBytesParserTest {
     public void setDateTimeTest() {
         BluetoothBytesParser parser = new BluetoothBytesParser();
         Calendar calendar = Calendar.getInstance();
+        calendar.setTimeZone(TimeZone.getTimeZone("Europe/Amsterdam"));
         long timestamp = 1578310812218L;
         calendar.setTimeInMillis(timestamp);
 
@@ -732,6 +734,7 @@ public class BluetoothBytesParserTest {
     public void setCurrentTimeTest() {
         BluetoothBytesParser parser = new BluetoothBytesParser();
         Calendar calendar = Calendar.getInstance();
+        calendar.setTimeZone(TimeZone.getTimeZone("Europe/Amsterdam"));
         long timestamp = 1578310812218L;
         calendar.setTimeInMillis(timestamp);
 
