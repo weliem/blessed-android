@@ -62,9 +62,9 @@ public void connectPeripheral(BluetoothPeripheral peripheral, BluetoothPeriphera
 public void autoConnectPeripheral(BluetoothPeripheral peripheral, BluetoothPeripheralCallback peripheralCallback)
 ```
 
-The method `connectPeripheral` will try to immediately connect to a device that has already been found using a scan. This method will time out after 30 seconds or less depending on the device manufacturer. 
+The method `connectPeripheral` will try to immediately connect to a device that has already been found using a scan. This method will time out after 30 seconds or less depending on the device manufacturer. Note that there can be **only 1 outstanding** `connectPeripheral`. So if it is called multiple times only 1 will succeed.
 
-The method `autoConnectPeripheral` is for re-connecting to known devices for which you already know the device's mac address. The BLE stack will automatically connect to the device when it sees it in its internal scan. Therefore, it may take longer to connect to a device but this call will never time out! So you can issue the autoConnect command and the device will be connected whenever it is found. This call will **also work** when the device is not cached by the Android stack, as BLESSED takes care of it!
+The method `autoConnectPeripheral` is for re-connecting to known devices for which you already know the device's mac address. The BLE stack will automatically connect to the device when it sees it in its internal scan. Therefore, it may take longer to connect to a device but this call will never time out! So you can issue the autoConnect command and the device will be connected whenever it is found. This call will **also work** when the device is not cached by the Android stack, as BLESSED takes care of it! In contrary to `connectPeripheral`, there can be multiple outstanding `autoConnectPeripheral` requests.
 
 If you know the mac address of your peripheral you can obtain a `BluetoothPeripheral` object using:
 ```java
@@ -110,7 +110,7 @@ public void onCharacteristicWrite(BluetoothPeripheral peripheral, byte[] value, 
 
 ```
 
-In these callbacks, the *value* parameter is the threadsafe byte array that was received. Use this value instead of the value that is part of the BluetoothGattCharacteristic object since that one may have changed in the mean time because of incoming notifications or write operations.
+In these callbacks, the *value* parameter is the threadsafe byte array that was received. Use this value instead of the value that is part of the BluetoothGattCharacteristic object, since that one may have changed in the mean time because of incoming notifications or write operations.
 
 ## Turning notifications on/off
 
