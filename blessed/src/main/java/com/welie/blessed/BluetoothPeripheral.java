@@ -221,19 +221,19 @@ public class BluetoothPeripheral {
     /**
      * The profile is in disconnected state
      */
-    public int STATE_DISCONNECTED = 0;
+    public static final int STATE_DISCONNECTED = 0;
     /**
      * The profile is in connecting state
      */
-    public int STATE_CONNECTING = 1;
+    public static final int STATE_CONNECTING = 1;
     /**
      * The profile is in connected state
      */
-    public int STATE_CONNECTED = 2;
+    public static final int STATE_CONNECTED = 2;
     /**
      * The profile is in disconnecting state
      */
-    public int STATE_DISCONNECTING = 3;
+    public static final int STATE_DISCONNECTING = 3;
 
     // Maximum number of retries of commands
     private static final int MAX_TRIES = 2;
