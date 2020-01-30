@@ -50,6 +50,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import timber.log.Timber;
 
+import static android.bluetooth.le.ScanCallback.SCAN_FAILED_ALREADY_STARTED;
+import static android.bluetooth.le.ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED;
+import static android.bluetooth.le.ScanCallback.SCAN_FAILED_FEATURE_UNSUPPORTED;
+import static android.bluetooth.le.ScanCallback.SCAN_FAILED_INTERNAL_ERROR;
+
 /**
  * Central class to connect and communicate with bluetooth peripherals.
  */
@@ -64,6 +69,7 @@ public class BluetoothCentral {
 
     // Scanning error codes
     public static final int SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES = 5;
+    public static final int SCAN_FAILED_SCANNING_TOO_FREQUENTLY = 6;
 
     // Private variables
     private final Context context;
@@ -122,7 +128,7 @@ public class BluetoothCentral {
 
         @Override
         public void onScanFailed(final int errorCode) {
-            Timber.e("scan failed with error code %d", errorCode);
+            Timber.e("scan failed with error code %d (%s)", errorCode, scanErrorToString(errorCode));
             callBackHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -153,7 +159,7 @@ public class BluetoothCentral {
 
         @Override
         public void onScanFailed(final int errorCode) {
-            Timber.e("scan failed with error code %d", errorCode);
+            Timber.e("scan failed with error code %d (%s)", errorCode, scanErrorToString(errorCode));
             callBackHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -197,7 +203,7 @@ public class BluetoothCentral {
 
         @Override
         public void onScanFailed(final int errorCode) {
-            Timber.e("autoconnect scan failed with error code %d", errorCode);
+            Timber.e("scan failed with error code %d (%s)", errorCode, scanErrorToString(errorCode));
             callBackHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -1029,4 +1035,23 @@ public class BluetoothCentral {
             }
         }
     };
+
+    private String scanErrorToString(final int errorCode) {
+        switch (errorCode) {
+            case SCAN_FAILED_ALREADY_STARTED:
+                return "ALREADY STARTED";
+            case SCAN_FAILED_APPLICATION_REGISTRATION_FAILED:
+                return "APPLICATION REGISTRATION FAILED";
+            case SCAN_FAILED_INTERNAL_ERROR:
+                return "INTERNAL ERROR";
+            case SCAN_FAILED_FEATURE_UNSUPPORTED:
+                return "FEATURE UNSUPPORTED";
+            case SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES:
+                return "OUT OF HARDWARE RESOURCES";
+            case SCAN_FAILED_SCANNING_TOO_FREQUENTLY:
+                return "SCANNING TOO FREQUENTLY";
+            default:
+                return "UNKNOWN";
+        }
+    }
 }
