@@ -50,11 +50,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import timber.log.Timber;
 
-import static android.bluetooth.le.ScanCallback.SCAN_FAILED_ALREADY_STARTED;
-import static android.bluetooth.le.ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED;
-import static android.bluetooth.le.ScanCallback.SCAN_FAILED_FEATURE_UNSUPPORTED;
-import static android.bluetooth.le.ScanCallback.SCAN_FAILED_INTERNAL_ERROR;
-
 /**
  * Central class to connect and communicate with bluetooth peripherals.
  */
@@ -67,10 +62,36 @@ public class BluetoothCentral {
     private static final int MAX_CONNECTION_RETRIES = 1;
     private static final int MAX_CONNECTED_PERIPHERALS = 7;
 
-    // Scanning error codes
+    /**
+     * Fails to start scan as BLE scan with the same settings is already started by the app.
+     */
+    public static final int SCAN_FAILED_ALREADY_STARTED = 1;
+
+    /**
+     * Fails to start scan as app cannot be registered.
+     */
+    public static final int SCAN_FAILED_APPLICATION_REGISTRATION_FAILED = 2;
+
+    /**
+     * Fails to start scan due an internal error
+     */
+    public static final int SCAN_FAILED_INTERNAL_ERROR = 3;
+
+    /**
+     * Fails to start power optimized scan as this feature is not supported.
+     */
+    public static final int SCAN_FAILED_FEATURE_UNSUPPORTED = 4;
+
+    /**
+     * Fails to start scan as it is out of hardware resources.
+     */
     public static final int SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES = 5;
-    @SuppressWarnings("WeakerAccess")
+
+    /**
+     * Fails to start scan as application tries to scan too frequently.
+     */
     public static final int SCAN_FAILED_SCANNING_TOO_FREQUENTLY = 6;
+
 
     // Private variables
     private final Context context;
@@ -539,6 +560,10 @@ public class BluetoothCentral {
         currentFilters = null;
     }
 
+    /**
+     * Check if a scanning is active
+     * @return true if a scan is active, otherwise false
+     */
     public boolean isScanning() {
         return (bluetoothScanner != null && currentCallback != null)  ;
     }
