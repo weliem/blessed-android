@@ -58,7 +58,7 @@ import static android.bluetooth.le.ScanCallback.SCAN_FAILED_INTERNAL_ERROR;
 /**
  * Central class to connect and communicate with bluetooth peripherals.
  */
-@SuppressWarnings("SpellCheckingInspection")
+@SuppressWarnings({"SpellCheckingInspection", "unused", "WeakerAccess"})
 public class BluetoothCentral {
 
     // Private constants
@@ -69,6 +69,7 @@ public class BluetoothCentral {
 
     // Scanning error codes
     public static final int SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES = 5;
+    @SuppressWarnings("WeakerAccess")
     public static final int SCAN_FAILED_SCANNING_TOO_FREQUENTLY = 6;
 
     // Private variables
@@ -528,7 +529,7 @@ public class BluetoothCentral {
      */
     public void stopScan() {
         cancelTimeoutTimer();
-        if (bluetoothScanner != null & currentCallback != null) {
+        if (isScanning()) {
             bluetoothScanner.stopScan(currentCallback);
             Timber.i("scan stopped");
         } else {
@@ -536,6 +537,10 @@ public class BluetoothCentral {
         }
         currentCallback = null;
         currentFilters = null;
+    }
+
+    public boolean isScanning() {
+        return (bluetoothScanner != null && currentCallback != null)  ;
     }
 
     /**
