@@ -422,9 +422,9 @@ public class BluetoothCentral {
         if (!isBleReady()) return;
 
         // Make sure we are not already scanning, we only want one scan at the time
-        if (currentCallback != null) {
-            Timber.e("other scan still active, please stop other scan first");
-            return;
+        if (isScanning()) {
+            Timber.e("other scan still active, stopping scan");
+            stopScan();
         }
 
         // Get a new scanner object
