@@ -22,6 +22,7 @@ import timber.log.Timber;
 import static android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_HIGH;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE;
 import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
+import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT16;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT8;
 import static com.welie.blessed.BluetoothBytesParser.bytes2String;
 import static com.welie.blessed.BluetoothPeripheral.GATT_SUCCESS;
@@ -36,6 +37,10 @@ public class BluetoothHandler {
     // UUIDs for the Health Thermometer service (HTS)
     private static final UUID HTS_SERVICE_UUID = UUID.fromString("00001809-0000-1000-8000-00805f9b34fb");
     private static final UUID TEMPERATURE_MEASUREMENT_CHARACTERISTIC_UUID = UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb");
+
+    // UUIDs for the Heart Rate service (HRS)
+    private static final UUID HRS_SERVICE_UUID = UUID.fromString("0000180D-0000-1000-8000-00805f9b34fb");
+    private static final UUID HEARTRATE_MEASUREMENT_CHARACTERISTIC_UUID = UUID.fromString("00002A37-0000-1000-8000-00805f9b34fb");
 
     // UUIDs for the Device Information service (DIS)
     private static final UUID DIS_SERVICE_UUID = UUID.fromString("0000180A-0000-1000-8000-00805f9b34fb");
@@ -102,6 +107,11 @@ public class BluetoothHandler {
             if(peripheral.getService(HTS_SERVICE_UUID) != null) {
                 peripheral.setNotify(peripheral.getCharacteristic(HTS_SERVICE_UUID, TEMPERATURE_MEASUREMENT_CHARACTERISTIC_UUID), true);
             }
+
+            // Turn on notification for Heart Rate  Service
+            if(peripheral.getService(HRS_SERVICE_UUID) != null) {
+                peripheral.setNotify(peripheral.getCharacteristic(HRS_SERVICE_UUID, HEARTRATE_MEASUREMENT_CHARACTERISTIC_UUID), true);
+            }
         }
 
         @Override
@@ -143,6 +153,13 @@ public class BluetoothHandler {
                 TemperatureMeasurement measurement = new TemperatureMeasurement(value);
                 Intent intent = new Intent("TemperatureMeasurement");
                 intent.putExtra("Temperature", measurement);
+                context.sendBroadcast(intent);
+                Timber.d("%s", measurement);
+            }
+            else if(characteristicUUID.equals(HEARTRATE_MEASUREMENT_CHARACTERISTIC_UUID)) {
+               HeartRateMeasurement measurement = new HeartRateMeasurement(value);
+                Intent intent = new Intent("HeartRateMeasurement");
+                intent.putExtra("HeartRate", measurement);
                 context.sendBroadcast(intent);
                 Timber.d("%s", measurement);
             }
@@ -218,7 +235,7 @@ public class BluetoothHandler {
                 // Bluetooth is on now, start scanning again
                 // Scan for peripherals with a certain service UUIDs
                 central.startPairingPopupHack();
-                central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID});
+                central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID, HRS_SERVICE_UUID});
             }
         }
     };
@@ -238,6 +255,6 @@ public class BluetoothHandler {
 
         // Scan for peripherals with a certain service UUIDs
         central.startPairingPopupHack();
-        central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID});
+        central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID, HRS_SERVICE_UUID});
     }
 }
