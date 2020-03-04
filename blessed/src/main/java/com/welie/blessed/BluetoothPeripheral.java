@@ -1392,7 +1392,7 @@ public class BluetoothPeripheral {
      * @param enable         true for setting notification on, false for turning it off
      * @return true if the operation was enqueued, false if the characteristic doesn't support notification or indications or
      */
-    public boolean setNotify(BluetoothGattCharacteristic characteristic, final boolean enable) {
+    public boolean setNotify(final BluetoothGattCharacteristic characteristic, final boolean enable) {
         // Check if characteristic is valid
         if (characteristic == null) {
             Timber.e("characteristic is 'null', ignoring setNotify request");
@@ -1423,9 +1423,14 @@ public class BluetoothPeripheral {
         boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
+                // Double check if gatt is still valid
+                if(bluetoothGatt == null) {
+                    completedCommand();
+                    return;
+                }
                 // First set notification for Gatt object
-                if (!bluetoothGatt.setCharacteristicNotification(descriptor.getCharacteristic(), enable)) {
-                    Timber.e("setCharacteristicNotification failed for characteristic: %s", descriptor.getCharacteristic().getUuid());
+                if (!bluetoothGatt.setCharacteristicNotification(characteristic, enable)) {
+                    Timber.e("setCharacteristicNotification failed for characteristic: %s", characteristic.getUuid());
                 }
 
                 // Then write to descriptor
