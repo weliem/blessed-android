@@ -502,10 +502,10 @@ public class BluetoothPeripheral {
         @Override
         public void onDescriptorRead(BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int status) {
             if (status != GATT_SUCCESS) {
-                Timber.e("write descriptor failed device: %s", getAddress());
+                Timber.e("writing <%s> to descriptor <%s> failed for device '%s'", bytes2String(descriptor.getValue()), descriptor.getUuid(), getAddress());
             }
-            final byte[] value = new byte[descriptor.getValue().length];
-            System.arraycopy(descriptor.getValue(), 0, value, 0, descriptor.getValue().length);
+
+            final byte[] value = copyOf(descriptor.getValue());
             bleHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -524,11 +524,7 @@ public class BluetoothPeripheral {
          */
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
-            // Copy the byte array so we have a threadsafe copy
-            final byte[] value = new byte[characteristic.getValue().length];
-            System.arraycopy(characteristic.getValue(), 0, value, 0, characteristic.getValue().length);
-
-            // Characteristic has new value so pass it on to the right service handler
+            final byte[] value = copyOf(characteristic.getValue());
             bleHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -536,7 +532,6 @@ public class BluetoothPeripheral {
                 }
             });
         }
-
 
         /**
          * Callback reporting the result of a characteristic read operation.
@@ -549,7 +544,6 @@ public class BluetoothPeripheral {
          */
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
-            // Perform some checks on the status field
             if (status != GATT_SUCCESS) {
                 if (status == GATT_AUTH_FAIL || status == GATT_INSUFFICIENT_AUTHENTICATION) {
                     // Characteristic encrypted and needs bonding,
@@ -564,11 +558,7 @@ public class BluetoothPeripheral {
                 }
             }
 
-            // Copy the byte array so we have a threadsafe copy
-            final byte[] value = new byte[characteristic.getValue().length];
-            System.arraycopy(characteristic.getValue(), 0, value, 0, characteristic.getValue().length);
-
-            // Characteristic has been read, pass it on to service handler
+            final byte[] value = copyOf(characteristic.getValue());
             bleHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -590,7 +580,6 @@ public class BluetoothPeripheral {
          */
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
-            // Perform some checks on the status field
             if (status != GATT_SUCCESS) {
                 if (status == GATT_AUTH_FAIL || status == GATT_INSUFFICIENT_AUTHENTICATION) {
                     // Characteristic encrypted and needs bonding,
@@ -603,12 +592,8 @@ public class BluetoothPeripheral {
                 }
             }
 
-            // Copy the byte array so we have a threadsafe copy
-            final byte[] value = new byte[currentWriteBytes.length];
-            System.arraycopy(currentWriteBytes, 0, value, 0, currentWriteBytes.length);
+            final byte[] value = copyOf(currentWriteBytes);
             currentWriteBytes = null;
-
-            // Inform the service handler of the write
             bleHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -1229,8 +1214,7 @@ public class BluetoothPeripheral {
         }
 
         // Copy the value to avoid race conditions
-        final byte[] bytesToWrite = new byte[value.length];
-        System.arraycopy(value, 0, bytesToWrite, 0, value.length);
+        final byte[] bytesToWrite = copyOf(value);
 
         // Check if this characteristic actually supports this writeType
         int writeProperty;
@@ -1351,8 +1335,7 @@ public class BluetoothPeripheral {
         }
 
         // Copy the value to avoid race conditions
-        final byte[] bytesToWrite = new byte[value.length];
-        System.arraycopy(value, 0, bytesToWrite, 0, value.length);
+        final byte[] bytesToWrite = copyOf(value);
 
         // Enqueue the write command now that all checks have been passed
         boolean result = commandQueue.add(new Runnable() {
@@ -1428,6 +1411,7 @@ public class BluetoothPeripheral {
                     completedCommand();
                     return;
                 }
+
                 // First set notification for Gatt object
                 if (!bluetoothGatt.setCharacteristicNotification(characteristic, enable)) {
                     Timber.e("setCharacteristicNotification failed for characteristic: %s", characteristic.getUuid());
@@ -1934,5 +1918,12 @@ public class BluetoothPeripheral {
         } else {
             return TIMEOUT_THRESHOLD_DEFAULT;
         }
+    }
+
+    private byte[] copyOf(byte[] source) {
+        final int sourceLength = source.length;
+        final byte[] copy = new byte[sourceLength];
+        System.arraycopy(source, 0, copy, 0, sourceLength);
+        return copy;
     }
 }
