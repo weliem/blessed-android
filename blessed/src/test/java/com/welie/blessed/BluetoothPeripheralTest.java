@@ -177,6 +177,7 @@ public class BluetoothPeripheralTest {
         characteristic.addDescriptor(descriptor);
 
         when(gatt.getServices()).thenReturn(Arrays.asList(service));
+        callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
 
         peripheral.setNotify(characteristic, true);
         verify(gatt).setCharacteristicNotification(characteristic, true);
@@ -191,6 +192,7 @@ public class BluetoothPeripheralTest {
     @Test
     public void setNotifyNotificationTest() throws Exception {
         BluetoothGattCallback callback = connectAndGetCallback();
+        callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
 
         BluetoothGattService service = new BluetoothGattService(SERVICE_UUID, 0);
         BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"),PROPERTY_NOTIFY,0);
@@ -213,6 +215,7 @@ public class BluetoothPeripheralTest {
     @Test
     public void setNotifyDisableTest() throws Exception {
         BluetoothGattCallback callback = connectAndGetCallback();
+        callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
 
         BluetoothGattService service = new BluetoothGattService(SERVICE_UUID, 0);
         BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"),PROPERTY_NOTIFY,0);
@@ -236,6 +239,7 @@ public class BluetoothPeripheralTest {
     @Test
     public void readCharacteristicTest() throws Exception {
         BluetoothGattCallback callback = connectAndGetCallback();
+        callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
 
         BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"), PROPERTY_READ,0);
         characteristic.setValue(new byte[]{0x00});
@@ -290,6 +294,7 @@ public class BluetoothPeripheralTest {
     @Test
     public void writeCharacteristicTest() throws Exception {
         BluetoothGattCallback callback = connectAndGetCallback();
+        callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
 
         BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"), PROPERTY_WRITE,0);
 
@@ -361,6 +366,7 @@ public class BluetoothPeripheralTest {
     @Test
     public void queueTestConsecutiveReads() throws Exception {
         BluetoothGattCallback callback = connectAndGetCallback();
+        callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
 
         BluetoothGattService service = new BluetoothGattService(SERVICE_UUID, 0);
         BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"),PROPERTY_READ,0);
@@ -391,6 +397,7 @@ public class BluetoothPeripheralTest {
     @Test
     public void queueTestConsecutiveReadsWithError() throws Exception {
         BluetoothGattCallback callback = connectAndGetCallback();
+        callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
 
         BluetoothGattService service = new BluetoothGattService(SERVICE_UUID, 0);
         BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"),PROPERTY_READ,0);
@@ -421,6 +428,7 @@ public class BluetoothPeripheralTest {
     @Test
     public void queueTestConsecutiveReadsNoResponse() throws Exception {
         BluetoothGattCallback callback = connectAndGetCallback();
+        callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
 
         BluetoothGattService service = new BluetoothGattService(SERVICE_UUID, 0);
         BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"),PROPERTY_READ,0);
@@ -469,6 +477,7 @@ public class BluetoothPeripheralTest {
     @Test
     public void readDescriptor() {
         BluetoothGattCallback callback = connectAndGetCallback();
+        callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
 
         BluetoothGattService service = new BluetoothGattService(SERVICE_UUID, 0);
         BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"),PROPERTY_INDICATE,0);
@@ -504,6 +513,7 @@ public class BluetoothPeripheralTest {
     @Test
     public void writeDescriptor() {
         BluetoothGattCallback callback = connectAndGetCallback();
+        callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
 
         BluetoothGattService service = new BluetoothGattService(SERVICE_UUID, 0);
         BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"),PROPERTY_INDICATE,0);
@@ -592,6 +602,7 @@ public class BluetoothPeripheralTest {
     @Test
     public void queueTestRetryCommand() throws Exception {
         BluetoothGattCallback callback = connectAndGetCallback();
+        callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
 
         BluetoothGattService service = new BluetoothGattService(SERVICE_UUID, 0);
         BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"),PROPERTY_READ,0);
