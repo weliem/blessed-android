@@ -339,6 +339,19 @@ public class BluetoothCentral {
     }
 
     /**
+     * Closes BluetoothCentral and cleans up internals. BluetoothCentral will not work anymore after this is called.
+     */
+    public void close() {
+        unconnectedPeripherals.clear();
+        connectedPeripherals.clear();
+        reconnectCallbacks.clear();
+        reconnectPeripheralAddresses.clear();
+        if (context != null) {
+            context.unregisterReceiver(adapterStateReceiver);
+        }
+    }
+    
+    /**
      * Set the default scanMode.
      *
      * <p>Must be ScanSettings.SCAN_MODE_LOW_POWER, ScanSettings.SCAN_MODE_LOW_LATENCY, ScanSettings.SCAN_MODE_BALANCED or ScanSettings.SCAN_MODE_OPPORTUNISTIC.
