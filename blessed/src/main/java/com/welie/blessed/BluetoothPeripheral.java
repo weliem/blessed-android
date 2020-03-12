@@ -1637,7 +1637,9 @@ public class BluetoothPeripheral {
             final Runnable bluetoothCommand = commandQueue.peek();
             if (bluetoothCommand != null) {
                 commandQueueBusy = true;
-                nrTries = 0;
+                if(!isRetrying) {
+                    nrTries = 0;
+                }
 
                 bleHandler.post(new Runnable() {
                     @Override
