@@ -106,9 +106,8 @@ public class BluetoothCentral {
     private final List<String> reconnectPeripheralAddresses = new ArrayList<>();
     private final Map<String, BluetoothPeripheralCallback> reconnectCallbacks = new ConcurrentHashMap<>();
     private String[] scanPeripheralNames;
-    private final Handler timeoutHandler = new Handler(Looper.getMainLooper());
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private Runnable timeoutRunnable;
-    private final Handler autoConnectHandler = new Handler(Looper.getMainLooper());
     private Runnable autoConnectRunnable;
     private final Object connectLock = new Object();
     private ScanCallback currentCallback;
@@ -117,7 +116,6 @@ public class BluetoothCentral {
     private final ScanSettings autoConnectScanSettings;
     private final Map<String, Integer> connectionRetries = new ConcurrentHashMap<>();
     private boolean expectingBluetoothOffDisconnects = false;
-    private final Handler disconnectHandler = new Handler(Looper.getMainLooper());
     private Runnable disconnectRunnable;
 
     //region Callbacks
@@ -807,7 +805,7 @@ public class BluetoothCentral {
             }
         };
 
-        timeoutHandler.postDelayed(timeoutRunnable, SCAN_TIMEOUT);
+        mainHandler.postDelayed(timeoutRunnable, SCAN_TIMEOUT);
     }
 
     /**
@@ -815,7 +813,7 @@ public class BluetoothCentral {
      */
     private void cancelTimeoutTimer() {
         if (timeoutRunnable != null) {
-            timeoutHandler.removeCallbacks(timeoutRunnable);
+            mainHandler.removeCallbacks(timeoutRunnable);
             timeoutRunnable = null;
         }
     }
@@ -826,7 +824,6 @@ public class BluetoothCentral {
      */
     private void setAutoConnectTimer() {
         cancelAutoConnectTimer();
-
         autoConnectRunnable = new Runnable() {
             @Override
             public void run() {
@@ -839,7 +836,7 @@ public class BluetoothCentral {
                 }
 
                 // Restart the auto connect scan and timer
-                callBackHandler.postDelayed(new Runnable() {
+                mainHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         scanForAutoConnectPeripherals();
@@ -848,7 +845,7 @@ public class BluetoothCentral {
             }
         };
 
-        autoConnectHandler.postDelayed(autoConnectRunnable, SCAN_TIMEOUT);
+        mainHandler.postDelayed(autoConnectRunnable, SCAN_TIMEOUT);
     }
 
     /**
@@ -856,7 +853,7 @@ public class BluetoothCentral {
      */
     private void cancelAutoConnectTimer() {
         if (autoConnectRunnable != null) {
-            autoConnectHandler.removeCallbacks(autoConnectRunnable);
+            mainHandler.removeCallbacks(autoConnectRunnable);
             autoConnectRunnable = null;
         }
     }
@@ -952,10 +949,7 @@ public class BluetoothCentral {
      * Timer to determine if manual disconnection in case of bluetooth off is needed
      */
     private void startDisconnectionTimer() {
-        if (disconnectRunnable != null) {
-            disconnectHandler.removeCallbacks(disconnectRunnable);
-        }
-
+        cancelDisconnectionTimer();
         disconnectRunnable = new Runnable() {
             @Override
             public void run() {
@@ -965,7 +959,7 @@ public class BluetoothCentral {
             }
         };
 
-        disconnectHandler.postDelayed(disconnectRunnable, 1000);
+        mainHandler.postDelayed(disconnectRunnable, 1000);
     }
 
     /**
@@ -973,7 +967,7 @@ public class BluetoothCentral {
      */
     private void cancelDisconnectionTimer() {
         if (disconnectRunnable != null) {
-            disconnectHandler.removeCallbacks(disconnectRunnable);
+            mainHandler.removeCallbacks(disconnectRunnable);
             disconnectRunnable = null;
         }
     }

@@ -294,7 +294,7 @@ public class BluetoothPeripheral {
 
     // Member variables
     private final Context context;
-    private final Handler bleHandler;
+    private final Handler callbackHandler;
     private final BluetoothDevice device;
     private final InternalCallback listener;
     private BluetoothPeripheralCallback peripheralCallback;
@@ -308,7 +308,7 @@ public class BluetoothPeripheral {
     private int nrTries;
     private byte[] currentWriteBytes;
     private final Set<UUID> notifyingCharacteristics = new HashSet<>();
-    private final Handler timeoutHandler = new Handler(Looper.getMainLooper());
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private Runnable timeoutRunnable;
     private Runnable discoverServicesRunnable;
     private long connectTimestamp;
@@ -365,7 +365,7 @@ public class BluetoothPeripheral {
                 listener.connected(BluetoothPeripheral.this);
             }
 
-            bleHandler.post(new Runnable() {
+            callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     peripheralCallback.onServicesDiscovered(BluetoothPeripheral.this);
@@ -398,14 +398,14 @@ public class BluetoothPeripheral {
                     }
                 }
 
-                bleHandler.post(new Runnable() {
+                callbackHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         peripheralCallback.onNotificationStateUpdate(BluetoothPeripheral.this, parentCharacteristic, status);
                     }
                 });
             } else {
-                bleHandler.post(new Runnable() {
+                callbackHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         peripheralCallback.onDescriptorWrite(BluetoothPeripheral.this, currentWriteBytes, descriptor, status);
@@ -422,7 +422,7 @@ public class BluetoothPeripheral {
             }
 
             final byte[] value = copyOf(descriptor.getValue());
-            bleHandler.post(new Runnable() {
+            callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     peripheralCallback.onDescriptorRead(BluetoothPeripheral.this, value, descriptor, status);
@@ -434,7 +434,7 @@ public class BluetoothPeripheral {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
             final byte[] value = copyOf(characteristic.getValue());
-            bleHandler.post(new Runnable() {
+            callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     peripheralCallback.onCharacteristicUpdate(BluetoothPeripheral.this, value, characteristic, GATT_SUCCESS);
@@ -459,7 +459,7 @@ public class BluetoothPeripheral {
             }
 
             final byte[] value = copyOf(characteristic.getValue());
-            bleHandler.post(new Runnable() {
+            callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     peripheralCallback.onCharacteristicUpdate(BluetoothPeripheral.this, value, characteristic, status);
@@ -484,7 +484,7 @@ public class BluetoothPeripheral {
 
             final byte[] value = copyOf(currentWriteBytes);
             currentWriteBytes = null;
-            bleHandler.post(new Runnable() {
+            callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     peripheralCallback.onCharacteristicWrite(BluetoothPeripheral.this, value, characteristic, status);
@@ -495,7 +495,7 @@ public class BluetoothPeripheral {
 
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, final int rssi, final int status) {
-            bleHandler.post(new Runnable() {
+            callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     peripheralCallback.onReadRemoteRssi(BluetoothPeripheral.this, rssi, status);
@@ -506,7 +506,7 @@ public class BluetoothPeripheral {
 
         @Override
         public void onMtuChanged(BluetoothGatt gatt, final int mtu, final int status) {
-            bleHandler.post(new Runnable() {
+            callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     peripheralCallback.onMtuChanged(BluetoothPeripheral.this, mtu, status);
@@ -536,7 +536,7 @@ public class BluetoothPeripheral {
                 discoverServicesRunnable = null;
             }
         };
-        bleHandler.postDelayed(discoverServicesRunnable, delay);
+        mainHandler.postDelayed(discoverServicesRunnable, delay);
     }
 
     private long getServiceDiscoveryDelay(int bondstate) {
@@ -562,7 +562,7 @@ public class BluetoothPeripheral {
             completeDisconnect(false, GATT_SUCCESS);
             if (listener != null) {
                 // Consider the loss of the bond a connection failure so that a connection retry will take place
-                bleHandler.postDelayed(new Runnable() {
+                callbackHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         listener.connectFailed(BluetoothPeripheral.this, GATT_SUCCESS);
@@ -578,7 +578,7 @@ public class BluetoothPeripheral {
         // Check if service discovery completed
         if (discoverServicesRunnable != null) {
             // Service discovery is still pending so cancel it
-            bleHandler.removeCallbacks(discoverServicesRunnable);
+            mainHandler.removeCallbacks(discoverServicesRunnable);
             discoverServicesRunnable = null;
         }
         List<BluetoothGattService> services = getServices();
@@ -631,7 +631,7 @@ public class BluetoothPeripheral {
                 switch (bondState) {
                     case BOND_BONDING:
                         Timber.d("starting bonding with '%s' (%s)", device.getName(), device.getAddress());
-                        bleHandler.post(new Runnable() {
+                        callbackHandler.post(new Runnable() {
                             @Override
                             public void run() {
                                 peripheralCallback.onBondingStarted(BluetoothPeripheral.this);
@@ -641,7 +641,7 @@ public class BluetoothPeripheral {
                     case BOND_BONDED:
                         // Bonding succeeded
                         Timber.d("bonded with '%s' (%s)", device.getName(), device.getAddress());
-                        bleHandler.post(new Runnable() {
+                        callbackHandler.post(new Runnable() {
                             @Override
                             public void run() {
                                 peripheralCallback.onBondingSucceeded(BluetoothPeripheral.this);
@@ -656,7 +656,7 @@ public class BluetoothPeripheral {
                         // If bonding was triggered by a read/write, we must retry it
                         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
                             if (commandQueueBusy && !manuallyBonding) {
-                                bleHandler.postDelayed(new Runnable() {
+                                mainHandler.postDelayed(new Runnable() {
                                     @Override
                                     public void run() {
                                         Timber.d("retrying command after bonding");
@@ -675,7 +675,7 @@ public class BluetoothPeripheral {
                     case BOND_NONE:
                         if (previousBondState == BOND_BONDING) {
                             Timber.e("bonding failed for '%s', disconnecting device", getName());
-                            bleHandler.post(new Runnable() {
+                            callbackHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
                                     peripheralCallback.onBondingFailed(BluetoothPeripheral.this);
@@ -687,11 +687,11 @@ public class BluetoothPeripheral {
 
                             // Cancel the discoverServiceRunnable if it is still pending
                             if (discoverServicesRunnable != null) {
-                                bleHandler.removeCallbacks(discoverServicesRunnable);
+                                mainHandler.removeCallbacks(discoverServicesRunnable);
                                 discoverServicesRunnable = null;
                             }
 
-                            bleHandler.post(new Runnable() {
+                            callbackHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
                                     peripheralCallback.onBondLost(BluetoothPeripheral.this);
@@ -721,7 +721,6 @@ public class BluetoothPeripheral {
         }
     };
 
-
     /**
      * Constructs a new device wrapper around {@code device}.
      *
@@ -738,9 +737,9 @@ public class BluetoothPeripheral {
         this.peripheralCallback = peripheralCallback;
         this.listener = listener;
         if (callbackHandler != null) {
-            this.bleHandler = callbackHandler;
+            this.callbackHandler = callbackHandler;
         } else {
-            this.bleHandler = new Handler(Looper.getMainLooper());
+            this.callbackHandler = new Handler(Looper.getMainLooper());
         }
         this.commandQueue = new ConcurrentLinkedQueue<>();
         this.state = BluetoothProfile.STATE_DISCONNECTED;
@@ -762,7 +761,7 @@ public class BluetoothPeripheral {
             context.registerReceiver(pairingRequestBroadcastReceiver, new IntentFilter("android.bluetooth.device.action.PAIRING_REQUEST"/*BluetoothDevice.ACTION_PAIRING_REQUEST*/));
 
             this.state = BluetoothProfile.STATE_CONNECTING;
-            bleHandler.postDelayed(new Runnable() {
+            mainHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     // Connect to device with autoConnect = false
@@ -787,7 +786,7 @@ public class BluetoothPeripheral {
         if (state == BluetoothProfile.STATE_DISCONNECTED) {
             state = BluetoothProfile.STATE_CONNECTING;
             if (bluetoothGatt == null) {
-                bleHandler.post(new Runnable() {
+                mainHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         context.registerReceiver(bondStateReceiver, new IntentFilter(ACTION_BOND_STATE_CHANGED));
@@ -927,7 +926,7 @@ public class BluetoothPeripheral {
             disconnect();
 
             // Since we will not get a callback on onConnectionStateChange for this, we complete the disconnect ourselves
-            bleHandler.postDelayed(new Runnable() {
+            mainHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     completeDisconnect(true, GATT_SUCCESS);
@@ -947,7 +946,7 @@ public class BluetoothPeripheral {
     private void disconnect() {
         if (state == BluetoothProfile.STATE_CONNECTED || state == BluetoothProfile.STATE_CONNECTING) {
             this.state = BluetoothProfile.STATE_DISCONNECTING;
-            bleHandler.post(new Runnable() {
+            mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     if (bluetoothGatt != null) {
@@ -1582,7 +1581,7 @@ public class BluetoothPeripheral {
                     nrTries = 0;
                 }
 
-                bleHandler.post(new Runnable() {
+                mainHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         try {
@@ -1832,8 +1831,6 @@ public class BluetoothPeripheral {
             throws IllegalAccessException, InvocationTargetException, InstantiationException {
         Constructor bluetoothGattConstructor = BluetoothGatt.class.getDeclaredConstructors()[0];
         bluetoothGattConstructor.setAccessible(true);
-        //      Log.i(TAG,"Found constructor with args count = " + bluetoothGattConstructor.getParameterTypes().length);
-
         if (bluetoothGattConstructor.getParameterTypes().length == 4) {
             return (BluetoothGatt) (bluetoothGattConstructor.newInstance(context, iBluetoothGatt, remoteDevice, TRANSPORT_LE));
         } else {
@@ -1877,10 +1874,7 @@ public class BluetoothPeripheral {
     }
 
     private void startConnectionTimer(final BluetoothPeripheral peripheral) {
-        if (timeoutRunnable != null) {
-            timeoutHandler.removeCallbacks(timeoutRunnable);
-        }
-
+        cancelConnectionTimer();
         timeoutRunnable = new Runnable() {
             @Override
             public void run() {
@@ -1891,12 +1885,12 @@ public class BluetoothPeripheral {
             }
         };
 
-        timeoutHandler.postDelayed(timeoutRunnable, CONNECTION_TIMEOUT_IN_MS);
+        mainHandler.postDelayed(timeoutRunnable, CONNECTION_TIMEOUT_IN_MS);
     }
 
     private void cancelConnectionTimer() {
         if (timeoutRunnable != null) {
-            timeoutHandler.removeCallbacks(timeoutRunnable);
+            mainHandler.removeCallbacks(timeoutRunnable);
             timeoutRunnable = null;
         }
     }
