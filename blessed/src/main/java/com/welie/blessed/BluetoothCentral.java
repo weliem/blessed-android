@@ -501,7 +501,7 @@ public class BluetoothCentral {
 
             // Start the scanner
             autoConnectScanner.startScan(filters, autoConnectScanSettings, autoConnectScanCallback);
-            Timber.d("started scanning for autoconnect");
+            Timber.d("started scanning to autoconnect peripherals (" + reconnectPeripheralAddresses.size() + ")");
             setAutoConnectTimer();
         } else {
             Timber.e("starting autoconnect scan failed");
