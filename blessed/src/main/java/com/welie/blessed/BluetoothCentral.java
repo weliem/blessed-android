@@ -38,6 +38,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.ParcelUuid;
 
 import java.lang.reflect.Method;
@@ -105,9 +106,9 @@ public class BluetoothCentral {
     private final List<String> reconnectPeripheralAddresses = new ArrayList<>();
     private final Map<String, BluetoothPeripheralCallback> reconnectCallbacks = new ConcurrentHashMap<>();
     private String[] scanPeripheralNames;
-    private final Handler timeoutHandler = new Handler();
+    private final Handler timeoutHandler = new Handler(Looper.getMainLooper());
     private Runnable timeoutRunnable;
-    private final Handler autoConnectHandler = new Handler();
+    private final Handler autoConnectHandler = new Handler(Looper.getMainLooper());
     private Runnable autoConnectRunnable;
     private final Object connectLock = new Object();
     private ScanCallback currentCallback;
@@ -116,7 +117,7 @@ public class BluetoothCentral {
     private final ScanSettings autoConnectScanSettings;
     private final Map<String, Integer> connectionRetries = new ConcurrentHashMap<>();
     private boolean expectingBluetoothOffDisconnects = false;
-    private final Handler disconnectHandler = new Handler();
+    private final Handler disconnectHandler = new Handler(Looper.getMainLooper());
     private Runnable disconnectRunnable;
 
     //region Callbacks

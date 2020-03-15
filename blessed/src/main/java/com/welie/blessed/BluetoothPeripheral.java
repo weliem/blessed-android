@@ -37,6 +37,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 
 import java.lang.reflect.Constructor;
@@ -307,7 +308,7 @@ public class BluetoothPeripheral {
     private int nrTries;
     private byte[] currentWriteBytes;
     private final Set<UUID> notifyingCharacteristics = new HashSet<>();
-    private final Handler timeoutHandler = new Handler();
+    private final Handler timeoutHandler = new Handler(Looper.getMainLooper());
     private Runnable timeoutRunnable;
     private Runnable discoverServicesRunnable;
     private long connectTimestamp;
@@ -739,7 +740,7 @@ public class BluetoothPeripheral {
         if (callbackHandler != null) {
             this.bleHandler = callbackHandler;
         } else {
-            this.bleHandler = new Handler();
+            this.bleHandler = new Handler(Looper.getMainLooper());
         }
         this.commandQueue = new ConcurrentLinkedQueue<>();
         this.state = BluetoothProfile.STATE_DISCONNECTED;
