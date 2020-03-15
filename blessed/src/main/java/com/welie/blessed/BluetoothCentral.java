@@ -706,6 +706,49 @@ public class BluetoothCentral {
         }
     }
 
+    /**
+     * Autoconnect to a batch of peripherals.
+     *
+     * Use this function to autoConnect to a batch of peripherals, instead of calling autoConnect on each of them.
+     * Calling autoConnect on many peripherals may cause Android scanning limits to kick in, which is avoided by using autoConnectPeripheralsBatch.
+     *
+     * @param peripherals the list of peripherals to autoconnect to
+     * @param bluetoothPeripheralCallback the callback to use for each device
+     */
+    public void autoConnectPeripheralsBatch(List<BluetoothPeripheral> peripherals, BluetoothPeripheralCallback bluetoothPeripheralCallback) {
+        List<BluetoothPeripheral> uncachedPeripherals = new ArrayList<>();
+        List<BluetoothPeripheral> cachedPeripherals = new ArrayList<>();
+
+        // Split the list in cached and uncached peripherals
+        for (BluetoothPeripheral peripheral : peripherals) {
+            if (peripheral.getType() == BluetoothDevice.DEVICE_TYPE_UNKNOWN) {
+                uncachedPeripherals.add(peripheral);
+            } else {
+                cachedPeripherals.add(peripheral);
+            }
+        }
+
+        // Issue autoconnect for cached peripherals
+        for (BluetoothPeripheral peripheral : cachedPeripherals) {
+            autoConnectPeripheral(peripheral, bluetoothPeripheralCallback);
+        }
+
+        // Add uncached peripherals to list of peripherals to scan for
+        if(uncachedPeripherals.size() > 0) {
+            for (BluetoothPeripheral peripheral : uncachedPeripherals) {
+                String peripheralAddress = peripheral.getAddress();
+
+                // Check if this peripheral is already on the list or not
+                if (reconnectPeripheralAddresses.contains(peripheralAddress)) {
+                    Timber.w("peripheral already on list for reconnection");
+                } else {
+                    reconnectPeripheralAddresses.add(peripheralAddress);
+                }
+                reconnectCallbacks.put(peripheralAddress, bluetoothPeripheralCallback);
+            }
+            scanForAutoConnectPeripherals();
+        }
+    }
 
     /**
      * Get a peripheral object matching the specified mac address.
