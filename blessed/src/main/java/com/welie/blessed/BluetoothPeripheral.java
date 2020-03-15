@@ -285,6 +285,9 @@ public class BluetoothPeripheral {
     // Most other phone time out after 30 seconds
     private static final int TIMEOUT_THRESHOLD_DEFAULT = 25000;
 
+    // When a bond is lost, the bluetooth stack needs some time to update its internal state
+    private static final long DELAY_AFTER_BOND_LOST = 1000L;
+
     // The maximum number of enabled notifications Android supports (BTA_GATTC_NOTIF_REG_MAX)
     private static final int MAX_NOTIFYING_CHARACTERISTICS = 15;
 
@@ -314,140 +317,42 @@ public class BluetoothPeripheral {
      * This abstract class is used to implement BluetoothGatt callbacks.
      */
     private final BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
-
-        /**
-         * Callback indicating when GATT client has connected/disconnected to/from a remote
-         * GATT server.
-         *
-         * @param gatt GATT client
-         * @param status Status of the connect or disconnect operation.
-         *               {@link BluetoothGatt#GATT_SUCCESS} if the operation succeeds.
-         * @param newState Returns the new connection state. Can be one of
-         *                  {@link BluetoothProfile#STATE_DISCONNECTED} or
-         *                  {@link BluetoothProfile#STATE_CONNECTED}
-         */
         @Override
         public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState) {
             long timePassed = SystemClock.elapsedRealtime() - connectTimestamp;
             cancelConnectionTimer();
 
             if (status == GATT_SUCCESS) {
-                if (newState == BluetoothProfile.STATE_CONNECTED) {
-                    state = BluetoothProfile.STATE_CONNECTED;
-                    int bondstate = device.getBondState();
-                    Timber.i("connected to '%s' (%s) in %.1fs", getName(), bondStateToString(bondstate), timePassed / 1000.0f);
-
-                    // Take action depending on the bond state
-                    if (bondstate == BOND_NONE || bondstate == BOND_BONDED) {
-
-                        // Connected to device, now proceed to discover it's services but delay a bit if needed
-                        int delayWhenBonded = 0;
-                        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N) {
-                            // It seems delays when bonded are only needed in versions Nougat or lower
-                            // This issue was observed on a Nexus 5 (M) and Sony Xperia L1 (N) when connecting to a A&D UA-651BLE
-                            // The delay is needed when devices have the Service Changed Characteristic.
-                            // If they don't have it the delay isn't needed but we do it anyway to keep code simple
-                            delayWhenBonded = 1000;
-                        }
-                        final int delay = bondstate == BOND_BONDED ? delayWhenBonded : 0;
-                        discoverServicesRunnable = new Runnable() {
-                            @Override
-                            public void run() {
-                                Timber.d("discovering services of '%s' with delay of %d ms", getName(), delay);
-                                boolean result = gatt.discoverServices();
-                                if (!result) {
-                                    Timber.e("discoverServices failed to start");
-                                }
-                                discoverServicesRunnable = null;
-                            }
-                        };
-                        bleHandler.postDelayed(discoverServicesRunnable, delay);
-                    } else if (bondstate == BOND_BONDING) {
-                        // Apparently the bonding process has already started let it complete
-                        Timber.i("waiting for bonding to complete");
-                    }
-                } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                    if (state == BluetoothProfile.STATE_CONNECTED || state == BluetoothProfile.STATE_DISCONNECTING) {
-                        Timber.i("disconnected '%s' on request", getName());
-                    } else if (state == BluetoothProfile.STATE_CONNECTING) {
-                        Timber.i("cancelling connect attempt");
-                    }
-                    if (bondLost) {
-                        completeDisconnect(false, status);
-                        if (listener != null) {
-                            // Consider the loss of the bond a connection failure so that a connection retry will take place
-                            bleHandler.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    listener.connectFailed(BluetoothPeripheral.this, status);
-                                }
-                            }, 1000); // Give the stack some time to register the bond loss internally. This is needed on most phones...
-                        }
-                    } else {
-                        completeDisconnect(true, status);
-                    }
-                } else if (newState == BluetoothProfile.STATE_DISCONNECTING) {
-                    // Device is disconnection, let it finish...
-                    Timber.i("peripheral is disconnecting");
-                    state = BluetoothProfile.STATE_DISCONNECTING;
-                } else if (newState == BluetoothProfile.STATE_CONNECTING) {
-                    // Device is connection, let it finish...
-                    Timber.i("peripheral is connecting");
-                    state = BluetoothProfile.STATE_CONNECTING;
+                switch (newState) {
+                    case BluetoothProfile.STATE_CONNECTED:
+                        state = BluetoothProfile.STATE_CONNECTED;
+                        int bondstate = device.getBondState();
+                        Timber.i("connected to '%s' (%s) in %.1fs", getName(), bondStateToString(bondstate), timePassed / 1000.0f);
+                        successfullyConnected(bondstate);
+                        break;
+                    case BluetoothProfile.STATE_DISCONNECTED:
+                        successfullyDisconnected();
+                        break;
+                    case BluetoothProfile.STATE_DISCONNECTING:
+                        Timber.i("peripheral is disconnecting");
+                        state = BluetoothProfile.STATE_DISCONNECTING;
+                        break;
+                    case BluetoothProfile.STATE_CONNECTING:
+                        Timber.i("peripheral is connecting");
+                        state = BluetoothProfile.STATE_CONNECTING;
+                    default:
+                        Timber.e("unknown state received");
+                        break;
                 }
             } else {
-                // Check if service discovery completed
-                if (discoverServicesRunnable != null) {
-                    // Service discovery is still pending so cancel it
-                    bleHandler.removeCallbacks(discoverServicesRunnable);
-                    discoverServicesRunnable = null;
-                }
-                List<BluetoothGattService> services = getServices();
-                boolean servicesDiscovered = !services.isEmpty();
-
-                // See if the initial connection failed
-                if (state == BluetoothProfile.STATE_CONNECTING) {
-                    boolean isTimeout = timePassed > getTimoutThreshold();
-                    Timber.i("connection failed with status '%s' (%s)", statusToString(status), isTimeout ? "TIMEOUT" : "ERROR");
-                    final int adjustedStatus = (status == GATT_ERROR && isTimeout) ? GATT_CONN_TIMEOUT : status;
-                    completeDisconnect(false, adjustedStatus);
-                    if (listener != null) {
-                        listener.connectFailed(BluetoothPeripheral.this, adjustedStatus);
-                    }
-                } else if (state == BluetoothProfile.STATE_CONNECTED && newState == BluetoothProfile.STATE_DISCONNECTED && !servicesDiscovered) {
-                    // We got a disconnection before the services were even discovered
-                    Timber.i("peripheral '%s' disconnected with status '%s' before completing service discovery", getName(), statusToString(status));
-                    completeDisconnect(false, status);
-                    if (listener != null) {
-                        listener.connectFailed(BluetoothPeripheral.this, status);
-                    }
-                } else {
-                    // See if we got connection drop
-                    if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                        Timber.i("peripheral '%s' disconnected with status '%s'", getName(), statusToString(status));
-                    } else {
-                        Timber.i("unexpected connection state change for '%s' status '%s'", getName(), statusToString(status));
-                    }
-                    completeDisconnect(true, status);
-                }
+                connectionStateChangeUnsuccessful(status, newState, timePassed);
             }
         }
 
-
-        /**
-         * Callback invoked when the list of remote services, characteristics and descriptors
-         * for the remote device have been updated, ie new services have been discovered.
-         *
-         * @param gatt GATT client invoked {@link BluetoothGatt#discoverServices}
-         * @param status {@link BluetoothGatt#GATT_SUCCESS} if the remote device
-         *               has been explored successfully.
-         */
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-
-            // Check if the service discovery succeeded. If not disconnect
             if (status == GATT_INTERNAL_ERROR) {
-                Timber.e("service discovery failed due to internal error");
+                Timber.e("service discovery failed due to internal error, disconnecting");
                 disconnect();
                 return;
             }
@@ -455,7 +360,6 @@ public class BluetoothPeripheral {
             final List<BluetoothGattService> services = gatt.getServices();
             Timber.i("discovered %d services for '%s'", services.size(), getName());
 
-            // Let the listeners know we are now properly connected
             if (listener != null) {
                 listener.connected(BluetoothPeripheral.this);
             }
@@ -468,19 +372,8 @@ public class BluetoothPeripheral {
             });
         }
 
-
-        /**
-         * Callback indicating the result of a descriptor write operation.
-         *
-         * @param gatt GATT client invoked {@link BluetoothGatt#writeDescriptor}
-         * @param descriptor Descriptor that was written to the associated
-         *                   remote device.
-         * @param status The result of the write operation
-         *               {@link BluetoothGatt#GATT_SUCCESS} if the operation succeeds.
-         */
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int status) {
-            // Do some checks first
             final BluetoothGattCharacteristic parentCharacteristic = descriptor.getCharacteristic();
             if (status != GATT_SUCCESS) {
                 Timber.e("write descriptor failed value <%s>, device: %s, characteristic: %s", bytes2String(currentWriteBytes), getAddress(), parentCharacteristic.getUuid());
@@ -489,7 +382,6 @@ public class BluetoothPeripheral {
             // Check if this was the Client Configuration Descriptor
             if (descriptor.getUuid().equals(UUID.fromString(CCC_DESCRIPTOR_UUID))) {
                 if (status == GATT_SUCCESS) {
-                    // Check if we were turning notify on or off
                     byte[] value = descriptor.getValue();
                     if (value != null) {
                         if (value[0] != 0) {
@@ -505,7 +397,6 @@ public class BluetoothPeripheral {
                     }
                 }
 
-                // Propagate to callback, even when there was an error
                 bleHandler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -513,7 +404,6 @@ public class BluetoothPeripheral {
                     }
                 });
             } else {
-                // Propagate to callback, even when there was an error
                 bleHandler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -524,15 +414,6 @@ public class BluetoothPeripheral {
             completedCommand();
         }
 
-        /**
-         * Callback indicating the result of a descriptor write operation.
-         *
-         * @param gatt GATT client invoked {@link BluetoothGatt#writeDescriptor}
-         * @param descriptor Descriptor that was written to the associated
-         *                   remote device.
-         * @param status The result of the write operation
-         *               {@link BluetoothGatt#GATT_SUCCESS} if the operation succeeds.
-         */
         @Override
         public void onDescriptorRead(BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int status) {
             if (status != GATT_SUCCESS) {
@@ -549,13 +430,6 @@ public class BluetoothPeripheral {
             completedCommand();
         }
 
-        /**
-         * Callback triggered as a result of a remote characteristic notification.
-         *
-         * @param gatt GATT client the characteristic is associated with
-         * @param characteristic Characteristic that has been updated as a result
-         *                       of a remote notification event.
-         */
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
             final byte[] value = copyOf(characteristic.getValue());
@@ -567,15 +441,6 @@ public class BluetoothPeripheral {
             });
         }
 
-        /**
-         * Callback reporting the result of a characteristic read operation.
-         *
-         * @param gatt GATT client invoked {@link BluetoothGatt#readCharacteristic}
-         * @param characteristic Characteristic that was read from the associated
-         *                       remote device.
-         * @param status {@link BluetoothGatt#GATT_SUCCESS} if the read operation
-         *               was completed successfully.
-         */
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
             if (status != GATT_SUCCESS) {
@@ -602,16 +467,6 @@ public class BluetoothPeripheral {
             completedCommand();
         }
 
-
-        /**
-         * Callback indicating the result of a characteristic write operation.
-         *
-         * @param gatt GATT client invoked {@link BluetoothGatt#writeCharacteristic}
-         * @param characteristic Characteristic that was written to the associated
-         *                       remote device.
-         * @param status The result of the write operation
-         *               {@link BluetoothGatt#GATT_SUCCESS} if the operation succeeds.
-         */
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
             if (status != GATT_SUCCESS) {
@@ -660,18 +515,112 @@ public class BluetoothPeripheral {
         }
     };
 
+    private void successfullyConnected(int bondstate) {
+        if (bondstate == BOND_NONE || bondstate == BOND_BONDED) {
+            delayedDiscoverServices(getServiceDiscoveryDelay(bondstate));
+        } else if (bondstate == BOND_BONDING) {
+            // Apparently the bonding process has already started let it complete, we'll do discoverServices once bonding finished
+            Timber.i("waiting for bonding to complete");
+        }
+    }
+
+    private void delayedDiscoverServices(final long delay) {
+        discoverServicesRunnable = new Runnable() {
+            @Override
+            public void run() {
+                Timber.d("discovering services of '%s' with delay of %d ms", getName(), delay);
+                if (!bluetoothGatt.discoverServices()) {
+                    Timber.e("discoverServices failed to start");
+                }
+                discoverServicesRunnable = null;
+            }
+        };
+        bleHandler.postDelayed(discoverServicesRunnable, delay);
+    }
+
+    private long getServiceDiscoveryDelay(int bondstate) {
+        long delayWhenBonded = 0;
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N) {
+            // It seems delays when bonded are only needed in versions Nougat or lower
+            // This issue was observed on a Nexus 5 (M) and Sony Xperia L1 (N) when connecting to a A&D UA-651BLE
+            // The delay is needed when devices have the Service Changed Characteristic.
+            // If they don't have it the delay isn't needed but we do it anyway to keep code simple
+            delayWhenBonded = 1000L;
+        }
+        return bondstate == BOND_BONDED ? delayWhenBonded : 0;
+    }
+
+    private void successfullyDisconnected() {
+        if (state == BluetoothProfile.STATE_CONNECTED || state == BluetoothProfile.STATE_DISCONNECTING) {
+            Timber.i("disconnected '%s' on request", getName());
+        } else if (state == BluetoothProfile.STATE_CONNECTING) {
+            Timber.i("cancelling connect attempt");
+        }
+
+        if (bondLost) {
+            completeDisconnect(false, GATT_SUCCESS);
+            if (listener != null) {
+                // Consider the loss of the bond a connection failure so that a connection retry will take place
+                bleHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.connectFailed(BluetoothPeripheral.this, GATT_SUCCESS);
+                    }
+                }, DELAY_AFTER_BOND_LOST); // Give the stack some time to register the bond loss internally. This is needed on most phones...
+            }
+        } else {
+            completeDisconnect(true, GATT_SUCCESS);
+        }
+    }
+
+    private void connectionStateChangeUnsuccessful(int status, int newState, long timePassed) {
+        // Check if service discovery completed
+        if (discoverServicesRunnable != null) {
+            // Service discovery is still pending so cancel it
+            bleHandler.removeCallbacks(discoverServicesRunnable);
+            discoverServicesRunnable = null;
+        }
+        List<BluetoothGattService> services = getServices();
+        boolean servicesDiscovered = !services.isEmpty();
+
+        // See if the initial connection failed
+        if (state == BluetoothProfile.STATE_CONNECTING) {
+            boolean isTimeout = timePassed > getTimoutThreshold();
+            Timber.i("connection failed with status '%s' (%s)", statusToString(status), isTimeout ? "TIMEOUT" : "ERROR");
+            final int adjustedStatus = (status == GATT_ERROR && isTimeout) ? GATT_CONN_TIMEOUT : status;
+            completeDisconnect(false, adjustedStatus);
+            if (listener != null) {
+                listener.connectFailed(BluetoothPeripheral.this, adjustedStatus);
+            }
+        } else if (state == BluetoothProfile.STATE_CONNECTED && newState == BluetoothProfile.STATE_DISCONNECTED && !servicesDiscovered) {
+            // We got a disconnection before the services were even discovered
+            Timber.i("peripheral '%s' disconnected with status '%s' before completing service discovery", getName(), statusToString(status));
+            completeDisconnect(false, status);
+            if (listener != null) {
+                listener.connectFailed(BluetoothPeripheral.this, status);
+            }
+        } else {
+            // See if we got connection drop
+            if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                Timber.i("peripheral '%s' disconnected with status '%s'", getName(), statusToString(status));
+            } else {
+                Timber.i("unexpected connection state change for '%s' status '%s'", getName(), statusToString(status));
+            }
+            completeDisconnect(true, status);
+        }
+    }
+
     private final BroadcastReceiver bondStateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
+            if(action == null) return;
             final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+            if(device == null) return;
 
             // Ignore updates for other devices
             if (bluetoothGatt == null || !device.getAddress().equals(bluetoothGatt.getDevice().getAddress()))
                 return;
-
-            // Check if action is valid
-            if (action == null) return;
 
             // Take action depending on new bond state
             if (action.equals(ACTION_BOND_STATE_CHANGED)) {
@@ -700,17 +649,7 @@ public class BluetoothPeripheral {
 
                         // If bonding was started at connection time, we may still have to discover the services
                         if (bluetoothGatt.getServices().isEmpty()) {
-                            // No services discovered yet so proceed with discovering services
-                            bleHandler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Timber.d("discovering services of '%s'", getName());
-                                    boolean result = bluetoothGatt.discoverServices();
-                                    if (!result) {
-                                        Timber.e("discoverServices failed to start");
-                                    }
-                                }
-                            });
+                            delayedDiscoverServices(0);
                         }
 
                         // If bonding was triggered by a read/write, we must retry it
@@ -769,6 +708,7 @@ public class BluetoothPeripheral {
         @Override
         public void onReceive(final Context context, final Intent intent) {
             final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+            if(device == null) return;
 
             // Skip other devices
             if (bluetoothGatt == null || !device.getAddress().equals(bluetoothGatt.getDevice().getAddress()))
@@ -806,12 +746,12 @@ public class BluetoothPeripheral {
         this.commandQueueBusy = false;
     }
 
-    public void setPeripheralCallback(BluetoothPeripheralCallback peripheralCallback) {
+    void setPeripheralCallback(BluetoothPeripheralCallback peripheralCallback) {
         this.peripheralCallback = peripheralCallback;
     }
 
     /**
-     * Connect directly with the bluetooth device. This call will timeout in max 30 seconds
+     * Connect directly with the bluetooth device. This call will timeout in max 30 seconds (5 seconds on Samsung phones)
      */
     void connect() {
         // Make sure we are disconnected before we start making a connection
@@ -832,7 +772,7 @@ public class BluetoothPeripheral {
                 }
             }, DIRECT_CONNECTION_DELAY_IN_MS);
         } else {
-            Timber.e("device not disconnected, ignoring connect");
+            Timber.e("peripheral not disconnected, ignoring connect");
         }
     }
 
@@ -844,6 +784,7 @@ public class BluetoothPeripheral {
         // Note that this will only work for devices that are known! After turning BT on/off Android doesn't know the device anymore!
         // https://stackoverflow.com/questions/43476369/android-save-ble-device-to-reconnect-after-app-close
         if (state == BluetoothProfile.STATE_DISCONNECTED) {
+            state = BluetoothProfile.STATE_CONNECTING;
             if (bluetoothGatt == null) {
                 bleHandler.post(new Runnable() {
                     @Override
@@ -853,7 +794,6 @@ public class BluetoothPeripheral {
 
                         // Connect to device with autoConnect = true
                         Timber.i("autoConnect to '%s' (%s) using TRANSPORT_LE", getName(), getAddress());
-                        state = BluetoothProfile.STATE_CONNECTING;
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                             bluetoothGatt = device.connectGatt(context, true, bluetoothGattCallback, TRANSPORT_LE);
                         } else {
@@ -1637,7 +1577,7 @@ public class BluetoothPeripheral {
             final Runnable bluetoothCommand = commandQueue.peek();
             if (bluetoothCommand != null) {
                 commandQueueBusy = true;
-                if(!isRetrying) {
+                if (!isRetrying) {
                     nrTries = 0;
                 }
 
