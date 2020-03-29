@@ -377,7 +377,7 @@ public class BluetoothPeripheral {
         public void onDescriptorWrite(BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int status) {
             final BluetoothGattCharacteristic parentCharacteristic = descriptor.getCharacteristic();
             if (status != GATT_SUCCESS) {
-                Timber.e("write descriptor failed value <%s>, device: %s, characteristic: %s", bytes2String(currentWriteBytes), getAddress(), parentCharacteristic.getUuid());
+                Timber.e("failed to write <%s> to descriptor of characteristic: <%s> for device: '%s', ", bytes2String(currentWriteBytes), parentCharacteristic.getUuid(), getAddress());
             }
 
             // Check if this was the Client Configuration Descriptor
@@ -418,7 +418,7 @@ public class BluetoothPeripheral {
         @Override
         public void onDescriptorRead(BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int status) {
             if (status != GATT_SUCCESS) {
-                Timber.e("writing <%s> to descriptor <%s> failed for device '%s'", bytes2String(descriptor.getValue()), descriptor.getUuid(), getAddress());
+                Timber.e("reading descriptor <%s> failed for device '%s'", descriptor.getUuid(), getAddress());
             }
 
             final byte[] value = copyOf(descriptor.getValue());
