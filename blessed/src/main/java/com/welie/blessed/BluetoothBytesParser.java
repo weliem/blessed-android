@@ -718,6 +718,8 @@ public class BluetoothBytesParser {
      * @return String object that represents the byte array
      */
     public static String bytes2String(final byte[] bytes) {
+        if (bytes == null) return "-";
+
         StringBuilder sb = new StringBuilder();
         for (byte b : bytes) {
             sb.append(String.format("%02x", b & 0xff));
