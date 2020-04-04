@@ -1905,6 +1905,7 @@ public class BluetoothPeripheral {
     }
 
     private byte[] copyOf(byte[] source) {
+        if( source == null) return new byte[0];
         final int sourceLength = source.length;
         final byte[] copy = new byte[sourceLength];
         System.arraycopy(source, 0, copy, 0, sourceLength);
