@@ -616,94 +616,95 @@ public class BluetoothPeripheral {
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             if(action == null) return;
-            final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-            if(device == null) return;
+            final BluetoothDevice receivedDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+            if(receivedDevice == null) return;
 
             // Ignore updates for other devices
-            if (bluetoothGatt == null || !device.getAddress().equals(bluetoothGatt.getDevice().getAddress()))
-                return;
+            if (!receivedDevice.getAddress().equalsIgnoreCase(getAddress())) return;
 
-            // Take action depending on new bond state
             if (action.equals(ACTION_BOND_STATE_CHANGED)) {
                 final int bondState = intent.getIntExtra(EXTRA_BOND_STATE, ERROR);
                 final int previousBondState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, -1);
-
-                switch (bondState) {
-                    case BOND_BONDING:
-                        Timber.d("starting bonding with '%s' (%s)", device.getName(), device.getAddress());
-                        callbackHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                peripheralCallback.onBondingStarted(BluetoothPeripheral.this);
-                            }
-                        });
-                        break;
-                    case BOND_BONDED:
-                        // Bonding succeeded
-                        Timber.d("bonded with '%s' (%s)", device.getName(), device.getAddress());
-                        callbackHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                peripheralCallback.onBondingSucceeded(BluetoothPeripheral.this);
-                            }
-                        });
-
-                        // If bonding was started at connection time, we may still have to discover the services
-                        if (bluetoothGatt.getServices().isEmpty()) {
-                            delayedDiscoverServices(0);
-                        }
-
-                        // If bonding was triggered by a read/write, we must retry it
-                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                            if (commandQueueBusy && !manuallyBonding) {
-                                mainHandler.postDelayed(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        Timber.d("retrying command after bonding");
-                                        retryCommand();
-                                    }
-                                }, 50);
-                            }
-                        }
-
-                        // If we are doing a manual bond, complete the command
-                        if (manuallyBonding) {
-                            manuallyBonding = false;
-                            completedCommand();
-                        }
-                        break;
-                    case BOND_NONE:
-                        if (previousBondState == BOND_BONDING) {
-                            Timber.e("bonding failed for '%s', disconnecting device", getName());
-                            callbackHandler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    peripheralCallback.onBondingFailed(BluetoothPeripheral.this);
-                                }
-                            });
-                        } else {
-                            Timber.e("bond lost for '%s'", getName());
-                            bondLost = true;
-
-                            // Cancel the discoverServiceRunnable if it is still pending
-                            if (discoverServicesRunnable != null) {
-                                mainHandler.removeCallbacks(discoverServicesRunnable);
-                                discoverServicesRunnable = null;
-                            }
-
-                            callbackHandler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    peripheralCallback.onBondLost(BluetoothPeripheral.this);
-                                }
-                            });
-                        }
-                        disconnect();
-                        break;
-                }
+                handleBondStateChange(bondState, previousBondState);
             }
         }
     };
+
+    private void handleBondStateChange(int bondState, int previousBondState) {
+        switch (bondState) {
+            case BOND_BONDING:
+                Timber.d("starting bonding with '%s' (%s)", getName(), getAddress());
+                callbackHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        peripheralCallback.onBondingStarted(BluetoothPeripheral.this);
+                    }
+                });
+                break;
+            case BOND_BONDED:
+                // Bonding succeeded
+                Timber.d("bonded with '%s' (%s)", getName(), getAddress());
+                callbackHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        peripheralCallback.onBondingSucceeded(BluetoothPeripheral.this);
+                    }
+                });
+
+                // If bonding was started at connection time, we may still have to discover the services
+                if (bluetoothGatt.getServices().isEmpty()) {
+                    delayedDiscoverServices(0);
+                }
+
+                // If bonding was triggered by a read/write, we must retry it
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                    if (commandQueueBusy && !manuallyBonding) {
+                        mainHandler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                Timber.d("retrying command after bonding");
+                                retryCommand();
+                            }
+                        }, 50);
+                    }
+                }
+
+                // If we are doing a manual bond, complete the command
+                if (manuallyBonding) {
+                    manuallyBonding = false;
+                    completedCommand();
+                }
+                break;
+            case BOND_NONE:
+                if (previousBondState == BOND_BONDING) {
+                    Timber.e("bonding failed for '%s', disconnecting device", getName());
+                    callbackHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            peripheralCallback.onBondingFailed(BluetoothPeripheral.this);
+                        }
+                    });
+                } else {
+                    Timber.e("bond lost for '%s'", getName());
+                    bondLost = true;
+
+                    // Cancel the discoverServiceRunnable if it is still pending
+                    if (discoverServicesRunnable != null) {
+                        mainHandler.removeCallbacks(discoverServicesRunnable);
+                        discoverServicesRunnable = null;
+                    }
+
+                    callbackHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            peripheralCallback.onBondLost(BluetoothPeripheral.this);
+                        }
+                    });
+                }
+                disconnect();
+                break;
+        }
+    }
 
     private final BroadcastReceiver pairingRequestBroadcastReceiver = new BroadcastReceiver() {
         @Override
