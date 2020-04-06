@@ -57,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
         registerReceiver(bloodPressureDataReceiver, new IntentFilter( "BluetoothMeasurement" ));
         registerReceiver(temperatureDataReceiver, new IntentFilter( "TemperatureMeasurement" ));
         registerReceiver(heartRateDataReceiver, new IntentFilter( "HeartRateMeasurement" ));
+        registerReceiver(bloodSugarDataReceiver, new IntentFilter( "BloodSugarMeasurement" ));
     }
 
     @Override
@@ -90,6 +91,14 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             HeartRateMeasurement measurement = (HeartRateMeasurement) intent.getSerializableExtra("HeartRate");
             measurementValue.setText(String.format(Locale.ENGLISH, "%d bpm", measurement.pulse));
+        }
+    };
+
+    private final BroadcastReceiver bloodSugarDataReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            GlucoseMeasurement measurement = (GlucoseMeasurement) intent.getSerializableExtra("Glucose");
+            measurementValue.setText(String.format(Locale.ENGLISH, "%d mgdl", measurement.mgdl));
         }
     };
 

@@ -55,6 +55,10 @@ public class BluetoothHandler {
     private static final UUID BTS_SERVICE_UUID = UUID.fromString("0000180F-0000-1000-8000-00805f9b34fb");
     private static final UUID BATTERY_LEVEL_CHARACTERISTIC_UUID = UUID.fromString("00002A19-0000-1000-8000-00805f9b34fb");
 
+    // UUIDs for the Blood Sugar service (BLS)
+    private static final UUID BLG_SERVICE_UUID = UUID.fromString("00001808-0000-1000-8000-00805f9b34fb");
+    private static final UUID BLOOD_SUGAR_MEASUREMENT_CHARACTERISTIC_UUID = UUID.fromString("00002A18-0000-1000-8000-00805f9b34fb");
+
     // Local variables
     private BluetoothCentral central;
     private static BluetoothHandler instance = null;
@@ -112,6 +116,11 @@ public class BluetoothHandler {
             if(peripheral.getService(HRS_SERVICE_UUID) != null) {
                 peripheral.setNotify(peripheral.getCharacteristic(HRS_SERVICE_UUID, HEARTRATE_MEASUREMENT_CHARACTERISTIC_UUID), true);
             }
+
+            // Turn on notification for Blood Sugar Service
+            if(peripheral.getService(BLG_SERVICE_UUID) != null) {
+                peripheral.setNotify(peripheral.getCharacteristic(BLG_SERVICE_UUID, BLOOD_SUGAR_MEASUREMENT_CHARACTERISTIC_UUID), true);
+            }
         }
 
         @Override
@@ -160,6 +169,13 @@ public class BluetoothHandler {
                HeartRateMeasurement measurement = new HeartRateMeasurement(value);
                 Intent intent = new Intent("HeartRateMeasurement");
                 intent.putExtra("HeartRate", measurement);
+                context.sendBroadcast(intent);
+                Timber.d("%s", measurement);
+            }
+            else if(characteristicUUID.equals(BLOOD_SUGAR_MEASUREMENT_CHARACTERISTIC_UUID)) {
+                GlucoseMeasurement measurement = new GlucoseMeasurement(value);
+                Intent intent = new Intent("GlucoseMeasurement");
+                intent.putExtra("Glucose", measurement);
                 context.sendBroadcast(intent);
                 Timber.d("%s", measurement);
             }
@@ -235,7 +251,7 @@ public class BluetoothHandler {
                 // Bluetooth is on now, start scanning again
                 // Scan for peripherals with a certain service UUIDs
                 central.startPairingPopupHack();
-                central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID, HRS_SERVICE_UUID});
+                central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID, HRS_SERVICE_UUID, BLG_SERVICE_UUID});
             }
         }
     };
@@ -255,6 +271,6 @@ public class BluetoothHandler {
 
         // Scan for peripherals with a certain service UUIDs
         central.startPairingPopupHack();
-        central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID, HRS_SERVICE_UUID});
+        central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID, HRS_SERVICE_UUID, BLG_SERVICE_UUID});
     }
 }
