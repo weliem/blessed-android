@@ -979,8 +979,12 @@ public class BluetoothPeripheral {
         }
         commandQueue.clear();
         commandQueueBusy = false;
-        context.unregisterReceiver(bondStateReceiver);
-        context.unregisterReceiver(pairingRequestBroadcastReceiver);
+        try {
+            context.unregisterReceiver(bondStateReceiver);
+            context.unregisterReceiver(pairingRequestBroadcastReceiver);
+        } catch (IllegalArgumentException e) {
+            // In case bluetooth is off, unregisering broadcast receivers may fail
+        }
         bondLost = false;
         if (listener != null && notify) {
             listener.disconnected(BluetoothPeripheral.this, status);
