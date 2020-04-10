@@ -734,7 +734,7 @@ public class BluetoothCentral {
         }
 
         // Add uncached peripherals to list of peripherals to scan for
-        if(uncachedPeripherals.size() > 0) {
+        if(!uncachedPeripherals.isEmpty()) {
             for (BluetoothPeripheral peripheral : uncachedPeripherals.keySet()) {
                 String peripheralAddress = peripheral.getAddress();
 
@@ -745,6 +745,7 @@ public class BluetoothCentral {
                     reconnectPeripheralAddresses.add(peripheralAddress);
                 }
                 reconnectCallbacks.put(peripheralAddress, uncachedPeripherals.get(peripheral));
+                unconnectedPeripherals.put(peripheral.getAddress(), peripheral);
             }
             scanForAutoConnectPeripherals();
         }
