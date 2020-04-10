@@ -43,6 +43,7 @@ import android.os.ParcelUuid;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -712,30 +713,29 @@ public class BluetoothCentral {
      * Use this function to autoConnect to a batch of peripherals, instead of calling autoConnect on each of them.
      * Calling autoConnect on many peripherals may cause Android scanning limits to kick in, which is avoided by using autoConnectPeripheralsBatch.
      *
-     * @param peripherals the list of peripherals to autoconnect to
-     * @param bluetoothPeripheralCallback the callback to use for each device
+     * @param batch the map of peripherals and their callbacks to autoconnect to
      */
-    public void autoConnectPeripheralsBatch(List<BluetoothPeripheral> peripherals, BluetoothPeripheralCallback bluetoothPeripheralCallback) {
-        List<BluetoothPeripheral> uncachedPeripherals = new ArrayList<>();
-        List<BluetoothPeripheral> cachedPeripherals = new ArrayList<>();
+    public void autoConnectPeripheralsBatch(Map<BluetoothPeripheral, BluetoothPeripheralCallback> batch ) {
+        Map<BluetoothPeripheral, BluetoothPeripheralCallback> uncachedPeripherals = new HashMap<>();
+        Map<BluetoothPeripheral, BluetoothPeripheralCallback> cachedPeripherals = new HashMap<>();
 
         // Split the list in cached and uncached peripherals
-        for (BluetoothPeripheral peripheral : peripherals) {
+        for (BluetoothPeripheral peripheral : batch.keySet()) {
             if (peripheral.getType() == BluetoothDevice.DEVICE_TYPE_UNKNOWN) {
-                uncachedPeripherals.add(peripheral);
+                uncachedPeripherals.put(peripheral, batch.get(peripheral));
             } else {
-                cachedPeripherals.add(peripheral);
+                cachedPeripherals.put(peripheral, batch.get(peripheral));
             }
         }
 
         // Issue autoconnect for cached peripherals
-        for (BluetoothPeripheral peripheral : cachedPeripherals) {
-            autoConnectPeripheral(peripheral, bluetoothPeripheralCallback);
+        for (BluetoothPeripheral peripheral : cachedPeripherals.keySet()) {
+            autoConnectPeripheral(peripheral, cachedPeripherals.get(peripheral));
         }
 
         // Add uncached peripherals to list of peripherals to scan for
         if(uncachedPeripherals.size() > 0) {
-            for (BluetoothPeripheral peripheral : uncachedPeripherals) {
+            for (BluetoothPeripheral peripheral : uncachedPeripherals.keySet()) {
                 String peripheralAddress = peripheral.getAddress();
 
                 // Check if this peripheral is already on the list or not
@@ -744,7 +744,7 @@ public class BluetoothCentral {
                 } else {
                     reconnectPeripheralAddresses.add(peripheralAddress);
                 }
-                reconnectCallbacks.put(peripheralAddress, bluetoothPeripheralCallback);
+                reconnectCallbacks.put(peripheralAddress, uncachedPeripherals.get(peripheral));
             }
             scanForAutoConnectPeripherals();
         }
