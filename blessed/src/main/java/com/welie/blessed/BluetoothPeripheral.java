@@ -615,9 +615,9 @@ public class BluetoothPeripheral {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
-            if(action == null) return;
+            if (action == null) return;
             final BluetoothDevice receivedDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-            if(receivedDevice == null) return;
+            if (receivedDevice == null) return;
 
             // Ignore updates for other devices
             if (!receivedDevice.getAddress().equalsIgnoreCase(getAddress())) return;
@@ -710,7 +710,7 @@ public class BluetoothPeripheral {
         @Override
         public void onReceive(final Context context, final Intent intent) {
             final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-            if(device == null) return;
+            if (device == null) return;
 
             // Skip other devices
             if (bluetoothGatt == null || !device.getAddress().equals(bluetoothGatt.getDevice().getAddress()))
@@ -1563,12 +1563,13 @@ public class BluetoothPeripheral {
      * If the read or write fails, the next command in the queue is executed.
      */
     private void nextCommand() {
-        // Make sure only one thread can execute this method
         synchronized (this) {
-            // If there is still a command being executed then bail out
-            if (commandQueueBusy) {
-                return;
-            }
+            // If there is still a command being executed, then bail out
+            if (commandQueueBusy) return;
+
+            // Check if there is something to do at all
+            final Runnable bluetoothCommand = commandQueue.peek();
+            if (bluetoothCommand == null) return;
 
             // Check if we still have a valid gatt object
             if (bluetoothGatt == null) {
@@ -1579,25 +1580,21 @@ public class BluetoothPeripheral {
             }
 
             // Execute the next command in the queue
-            final Runnable bluetoothCommand = commandQueue.peek();
-            if (bluetoothCommand != null) {
-                commandQueueBusy = true;
-                if (!isRetrying) {
-                    nrTries = 0;
-                }
-
-                mainHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            bluetoothCommand.run();
-                        } catch (Exception ex) {
-                            Timber.e(ex, "command exception for device '%s'", getName());
-                            completedCommand();
-                        }
-                    }
-                });
+            commandQueueBusy = true;
+            if (!isRetrying) {
+                nrTries = 0;
             }
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        bluetoothCommand.run();
+                    } catch (Exception ex) {
+                        Timber.e(ex, "command exception for device '%s'", getName());
+                        completedCommand();
+                    }
+                }
+            });
         }
     }
 
@@ -1910,7 +1907,7 @@ public class BluetoothPeripheral {
     }
 
     private byte[] copyOf(byte[] source) {
-        if( source == null) return new byte[0];
+        if (source == null) return new byte[0];
         final int sourceLength = source.length;
         final byte[] copy = new byte[sourceLength];
         System.arraycopy(source, 0, copy, 0, sourceLength);
