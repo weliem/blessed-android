@@ -911,7 +911,7 @@ public class BluetoothCentral {
     /**
      * Add a fixed PIN code for a peripheral
      */
-    public void addPinForPeripheral(String peripheralAddress, String pin) {
+    public void setPinCodeForPeripheral(String peripheralAddress, String pin) {
         pinCodes.put(peripheralAddress, pin);
     }
 

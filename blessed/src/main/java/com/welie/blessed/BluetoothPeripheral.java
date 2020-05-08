@@ -725,6 +725,7 @@ public class BluetoothPeripheral {
                 if (pin != null) {
                     Timber.d("Setting PIN code for this peripheral using '%s'", pin);
                     device.setPin(pin.getBytes());
+                    abortBroadcast();
                 }
             }
         }
