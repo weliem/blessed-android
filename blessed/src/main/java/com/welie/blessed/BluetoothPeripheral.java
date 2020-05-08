@@ -717,8 +717,16 @@ public class BluetoothPeripheral {
                 return;
 
             // String values are used as the constants are not available for Android 4.3.
-            final int variant = intent.getIntExtra("android.bluetooth.device.extra.PAIRING_VARIANT"/*BluetoothDevice.EXTRA_PAIRING_VARIANT*/, 0);
+            final int variant = intent.getIntExtra("android.bluetooth.device.extra.PAIRING_VARIANT", 0);
             Timber.d("pairing request received " + ", pairing variant: " + pairingVariantToString(variant) + " (" + variant + ")");
+
+            if (variant == PAIRING_VARIANT_PIN) {
+                String pin = listener.getPincode(BluetoothPeripheral.this);
+                if (pin != null) {
+                    Timber.d("Setting PIN code for this peripheral using '%s'", pin);
+                    device.setPin(pin.getBytes());
+                }
+            }
         }
     };
 
@@ -1741,6 +1749,8 @@ public class BluetoothPeripheral {
          * @param device {@link BluetoothPeripheral} that disconnected.
          */
         void disconnected(BluetoothPeripheral device, final int status);
+
+        String getPincode(BluetoothPeripheral device);
 
     }
 

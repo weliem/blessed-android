@@ -118,6 +118,7 @@ public class BluetoothCentral {
     private final Map<String, Integer> connectionRetries = new ConcurrentHashMap<>();
     private boolean expectingBluetoothOffDisconnects = false;
     private Runnable disconnectRunnable;
+    private Map<String, String> pinCodes = new ConcurrentHashMap<>();
 
     //region Callbacks
 
@@ -288,6 +289,11 @@ public class BluetoothCentral {
                     bluetoothCentralCallback.onDisconnectedPeripheral(peripheral, status);
                 }
             });
+        }
+
+        @Override
+        public String getPincode(BluetoothPeripheral device) {
+            return pinCodes.get(device.getAddress());
         }
     };
 
@@ -900,6 +906,13 @@ public class BluetoothCentral {
             mainHandler.removeCallbacks(autoConnectRunnable);
             autoConnectRunnable = null;
         }
+    }
+
+    /**
+     * Add a fixed PIN code for a peripheral
+     */
+    public void addPinForPeripheral(String peripheralAddress, String pin) {
+        pinCodes.put(peripheralAddress, pin);
     }
 
     /**
