@@ -356,7 +356,7 @@ public class BluetoothCentral {
             context.unregisterReceiver(adapterStateReceiver);
         }
     }
-    
+
     /**
      * Set the default scanMode.
      *
@@ -715,13 +715,13 @@ public class BluetoothCentral {
 
     /**
      * Autoconnect to a batch of peripherals.
-     *
+     * <p>
      * Use this function to autoConnect to a batch of peripherals, instead of calling autoConnect on each of them.
      * Calling autoConnect on many peripherals may cause Android scanning limits to kick in, which is avoided by using autoConnectPeripheralsBatch.
      *
      * @param batch the map of peripherals and their callbacks to autoconnect to
      */
-    public void autoConnectPeripheralsBatch(Map<BluetoothPeripheral, BluetoothPeripheralCallback> batch ) {
+    public void autoConnectPeripheralsBatch(Map<BluetoothPeripheral, BluetoothPeripheralCallback> batch) {
         Map<BluetoothPeripheral, BluetoothPeripheralCallback> uncachedPeripherals = new HashMap<>();
         Map<BluetoothPeripheral, BluetoothPeripheralCallback> cachedPeripherals = new HashMap<>();
 
@@ -740,7 +740,7 @@ public class BluetoothCentral {
         }
 
         // Add uncached peripherals to list of peripherals to scan for
-        if(!uncachedPeripherals.isEmpty()) {
+        if (!uncachedPeripherals.isEmpty()) {
             for (BluetoothPeripheral peripheral : uncachedPeripherals.keySet()) {
                 String peripheralAddress = peripheral.getAddress();
 
@@ -909,10 +909,26 @@ public class BluetoothCentral {
     }
 
     /**
-     * Add a fixed PIN code for a peripheral
+     * Set a fixed PIN code for a peripheral that asks fir a PIN code during bonding.
+     * <p>
+     * This PIN code will be used to programmatically bond with the peripheral when it asks for a PIN code.
+     * Note that this only works for devices with a fixed PIN code.
+     *
+     * @param peripheralAddress the address of the peripheral
+     * @param pin               the 6 digit PIN code as a string, e.g. "123456"
      */
-    public void setPinCodeForPeripheral(String peripheralAddress, String pin) {
+    public boolean setPinCodeForPeripheral(String peripheralAddress, String pin) {
+        if (!BluetoothAdapter.checkBluetoothAddress(peripheralAddress)) {
+            Timber.e("%s is not a valid address. Make sure all alphabetic characters are uppercase.", peripheralAddress);
+            return false;
+        }
+
+        if (pin.length() != 6) {
+            Timber.e("%s is not 6 digits long", pin);
+            return false;
+        }
         pinCodes.put(peripheralAddress, pin);
+        return true;
     }
 
     /**

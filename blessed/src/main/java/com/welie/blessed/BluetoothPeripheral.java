@@ -53,9 +53,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import timber.log.Timber;
 
-import static android.bluetooth.BluetoothDevice.ACTION_BOND_STATE_CHANGED;
-import static android.bluetooth.BluetoothDevice.ERROR;
-import static android.bluetooth.BluetoothDevice.EXTRA_BOND_STATE;
 import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_INDICATE;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_NOTIFY;
@@ -622,8 +619,8 @@ public class BluetoothPeripheral {
             // Ignore updates for other devices
             if (!receivedDevice.getAddress().equalsIgnoreCase(getAddress())) return;
 
-            if (action.equals(ACTION_BOND_STATE_CHANGED)) {
-                final int bondState = intent.getIntExtra(EXTRA_BOND_STATE, ERROR);
+            if (action.equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED)) {
+                final int bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR);
                 final int previousBondState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, -1);
                 handleBondStateChange(bondState, previousBondState);
             }
@@ -713,11 +710,9 @@ public class BluetoothPeripheral {
             if (device == null) return;
 
             // Skip other devices
-            if (bluetoothGatt == null || !device.getAddress().equals(bluetoothGatt.getDevice().getAddress()))
-                return;
+            if (!device.getAddress().equalsIgnoreCase(getAddress())) return;
 
-            // String values are used as the constants are not available for Android 4.3.
-            final int variant = intent.getIntExtra("android.bluetooth.device.extra.PAIRING_VARIANT", 0);
+            final int variant = intent.getIntExtra(BluetoothDevice.EXTRA_PAIRING_VARIANT, BluetoothDevice.ERROR);
             Timber.d("pairing request received " + ", pairing variant: " + pairingVariantToString(variant) + " (" + variant + ")");
 
             if (variant == PAIRING_VARIANT_PIN) {
@@ -767,8 +762,8 @@ public class BluetoothPeripheral {
         // Make sure we are disconnected before we start making a connection
         if (state == BluetoothProfile.STATE_DISCONNECTED) {
             // Register bonding broadcast receiver
-            context.registerReceiver(bondStateReceiver, new IntentFilter(ACTION_BOND_STATE_CHANGED));
-            context.registerReceiver(pairingRequestBroadcastReceiver, new IntentFilter("android.bluetooth.device.action.PAIRING_REQUEST"/*BluetoothDevice.ACTION_PAIRING_REQUEST*/));
+            context.registerReceiver(bondStateReceiver, new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED));
+            context.registerReceiver(pairingRequestBroadcastReceiver, new IntentFilter(BluetoothDevice.ACTION_PAIRING_REQUEST));
 
             this.state = BluetoothProfile.STATE_CONNECTING;
             mainHandler.postDelayed(new Runnable() {
@@ -799,8 +794,8 @@ public class BluetoothPeripheral {
                 mainHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        context.registerReceiver(bondStateReceiver, new IntentFilter(ACTION_BOND_STATE_CHANGED));
-                        context.registerReceiver(pairingRequestBroadcastReceiver, new IntentFilter("android.bluetooth.device.action.PAIRING_REQUEST"/*BluetoothDevice.ACTION_PAIRING_REQUEST*/));
+                        context.registerReceiver(bondStateReceiver, new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED));
+                        context.registerReceiver(pairingRequestBroadcastReceiver, new IntentFilter(BluetoothDevice.ACTION_PAIRING_REQUEST));
 
                         // Connect to device with autoConnect = true
                         Timber.i("autoConnect to '%s' (%s) using TRANSPORT_LE", getName(), getAddress());
