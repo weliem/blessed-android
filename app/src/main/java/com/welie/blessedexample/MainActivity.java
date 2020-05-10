@@ -63,6 +63,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(bloodPressureDataReceiver);
+        unregisterReceiver(temperatureDataReceiver);
+        unregisterReceiver(heartRateDataReceiver);
     }
 
     private final BroadcastReceiver bloodPressureDataReceiver = new BroadcastReceiver() {
