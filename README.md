@@ -159,7 +159,7 @@ In most cases, the peripheral will initiate bonding either at the time of connec
 * Calling `createBond` when not yet connected to a peripheral. In this case, a connection is made and bonding is requested.
 * Calling `createBond` when already connected to a peripheral. In this case, only the bond is created.
 
-It is also possible to remove a bond by calling `removeBond`. Note that this method uses a hidden Android API and may stop working in the future. When calling the `removeBand` method, the peripheral will also disappear from the settings menu on the phone.
+It is also possible to remove a bond by calling `removeBond`. Note that this method uses a hidden Android API and may stop working in the future. When calling the `removeBond` method, the peripheral will also disappear from the settings menu on the phone.
 
 Lastly, it is also possible to automatically issue a PIN code when pairing. Use the method `setPinForPeripheral` to register a 6 digit PIN code. Once bonding starts, BLESSED will automatically issue the PIN code and the UI dialog to enter the PIN code will not appear anymore.
 
