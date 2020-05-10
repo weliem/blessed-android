@@ -146,6 +146,24 @@ When notifications arrive you will receive a callback on:
 public void onCharacteristicUpdate(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic characteristic)
 ```
 
+## Bonding
+BLESSED handles bonding for you and will make sure all bonding variants work smoothly. During the process of bonding, you will be informed of the process via a number of callbacks:
+
+```java
+    public void onBondingStarted(final BluetoothPeripheral peripheral)
+    public void onBondingSucceeded(final BluetoothPeripheral peripheral)
+    public void onBondingFailed(final BluetoothPeripheral peripheral) 
+    public void onBondLost(final BluetoothPeripheral peripheral) 
+```
+In most cases, the peripheral will initiate bonding either at the time of connection, or when trying to read/write protected characteristics. However, if you want you can also initiate bonding yourself by calling `createBond` on a peripheral. There are two ways to do this:
+* Calling `createBond` when not yet connected to a peripheral. In this case, a connection is made and bonding is requested.
+* Calling `createBond` when already connected to a peripheral. In this case, only the bond is created.
+
+It is also possible to remove a bond by calling `removeBond`. Note that this method uses a hidden Android API and may stop working in the future. When calling the `removeBond` method, the peripheral will also disappear from the settings menu on the phone.
+
+Lastly, it is also possible to automatically issue a PIN code when pairing. Use the method `setPinForPeripheral` to register a 6 digit PIN code. Once bonding starts, BLESSED will automatically issue the PIN code and the UI dialog to enter the PIN code will not appear anymore.
+
+
 ## Example application
 
 An example application is provided in the repo. It shows how to connect to Blood Pressure meters and Thermometers, read the data and show it on screen.
