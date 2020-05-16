@@ -300,7 +300,7 @@ public class BluetoothPeripheral {
     private boolean isRetrying;
     private boolean bondLost = false;
     private boolean manuallyBonding = false;
-    private BluetoothGatt bluetoothGatt;
+    private volatile BluetoothGatt bluetoothGatt;
     private int state;
     private int nrTries;
     private byte[] currentWriteBytes;
