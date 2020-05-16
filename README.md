@@ -56,15 +56,18 @@ central.scanForPeripheralsWithServices(new UUID[]{BLOODPRESSURE_SERVICE_UUID});
 
 ## Connecting to devices
 
-There are 2 ways to connect to a device:
+There are 3 ways to connect to a device:
 ```java
 public void connectPeripheral(BluetoothPeripheral peripheral, BluetoothPeripheralCallback peripheralCallback)
 public void autoConnectPeripheral(BluetoothPeripheral peripheral, BluetoothPeripheralCallback peripheralCallback)
+public void autoConnectPeripheralsBatch(Map<BluetoothPeripheral, BluetoothPeripheralCallback> batch) 
 ```
 
 The method `connectPeripheral` will try to immediately connect to a device that has already been found using a scan. This method will time out after 30 seconds or less depending on the device manufacturer. Note that there can be **only 1 outstanding** `connectPeripheral`. So if it is called multiple times only 1 will succeed.
 
 The method `autoConnectPeripheral` is for re-connecting to known devices for which you already know the device's mac address. The BLE stack will automatically connect to the device when it sees it in its internal scan. Therefore, it may take longer to connect to a device but this call will never time out! So you can issue the autoConnect command and the device will be connected whenever it is found. This call will **also work** when the device is not cached by the Android stack, as BLESSED takes care of it! In contrary to `connectPeripheral`, there can be multiple outstanding `autoConnectPeripheral` requests.
+
+The method `autoConnectPeripheralsBatch` is for re-connecting to a multiple peripherals in one go. Since the normal `autoConnectPeripheral` may involve scanning if peripherals are uncached, it is not suitable for calling very fast after each other since it may trigger scanner limitations of Android. So use `autoConnectPeripheralsBatch` if the want to re-connect to many know peripherals.
 
 If you know the mac address of your peripheral you can obtain a `BluetoothPeripheral` object using:
 ```java
@@ -104,7 +107,7 @@ For read operations you will get a callback on:
 ```java
 public void onCharacteristicUpdate(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic characteristic)
 ```
-And for write operations you will get a callback on:
+If you want to write to a characteristic, you need to provide a `value` and a `writeType`. The `writeType` is usually `WRITE_TYPE_DEFAULT` or `WRITE_TYPE_NO_RESPONSE`. If the write type you specify is not supported by the characteristic you will see an error in your log. For write operations you will get a callback on:
 ```java
 public void onCharacteristicWrite(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic characteristic, final int status)
 
@@ -114,7 +117,7 @@ In these callbacks, the *value* parameter is the threadsafe byte array that was 
 
 ## Turning notifications on/off
 
-BLESSED provides a convenience method `setNotify` to turn notifications on or off. It will perform all the necessary operations like writing to the Client Characteristic Configuration descriptor for you. So all you need to do is:
+BLESSED provides a convenience method `setNotify` to turn notifications/indications on or off. It will perform all the necessary operations like writing to the Client Characteristic Configuration descriptor for you. So all you need to do is:
 
 ```java
 // See if this peripheral has the Current Time service
@@ -124,7 +127,7 @@ if(peripheral.getService(CTS_SERVICE_UUID) != null) {
 }
 ```
 
-Since this is an asynchronous operation you will receive a callback that indicates success or failure:
+Since this is an asynchronous operation you will receive a callback that indicates success or failure. You can use the method `isNotifying` to check if the characteristic is currently notifying or not:
 
 ```java
 @Override
@@ -166,7 +169,7 @@ Lastly, it is also possible to automatically issue a PIN code when pairing. Use 
 
 ## Example application
 
-An example application is provided in the repo. It shows how to connect to Blood Pressure meters and Thermometers, read the data and show it on screen.
+An example application is provided in the repo. It shows how to connect to Blood Pressure meters, Heart Rate monitors and Thermometers, read the data and show it on screen.
 
 ## Acknowledgements
 
