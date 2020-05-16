@@ -739,7 +739,7 @@ public class BluetoothPeripheral {
         this.device = device;
         this.peripheralCallback = peripheralCallback;
         this.listener = listener;
-        this.callbackHandler =  (callbackHandler != null) ? callbackHandler : new Handler(Looper.getMainLooper());
+        this.callbackHandler = (callbackHandler != null) ? callbackHandler : new Handler(Looper.getMainLooper());
         this.commandQueue = new ConcurrentLinkedQueue<>();
         this.state = BluetoothProfile.STATE_DISCONNECTED;
         this.commandQueueBusy = false;
@@ -755,16 +755,13 @@ public class BluetoothPeripheral {
     void connect() {
         // Make sure we are disconnected before we start making a connection
         if (state == BluetoothProfile.STATE_DISCONNECTED) {
-            // Register bonding broadcast receiver
-            context.registerReceiver(bondStateReceiver, new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED));
-            context.registerReceiver(pairingRequestBroadcastReceiver, new IntentFilter(BluetoothDevice.ACTION_PAIRING_REQUEST));
-
-            this.state = BluetoothProfile.STATE_CONNECTING;
             mainHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     // Connect to device with autoConnect = false
                     Timber.i("connect to '%s' (%s) using TRANSPORT_LE", getName(), getAddress());
+                    registerBondingBroadcastReceivers();
+                    state = BluetoothProfile.STATE_CONNECTING;
                     bluetoothGatt = connectGattHelper(device, false, bluetoothGattCallback);
                     connectTimestamp = SystemClock.elapsedRealtime();
                     startConnectionTimer(BluetoothPeripheral.this);
@@ -783,31 +780,25 @@ public class BluetoothPeripheral {
         // Note that this will only work for devices that are known! After turning BT on/off Android doesn't know the device anymore!
         // https://stackoverflow.com/questions/43476369/android-save-ble-device-to-reconnect-after-app-close
         if (state == BluetoothProfile.STATE_DISCONNECTED) {
-            state = BluetoothProfile.STATE_CONNECTING;
-            if (bluetoothGatt == null) {
-                mainHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        context.registerReceiver(bondStateReceiver, new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED));
-                        context.registerReceiver(pairingRequestBroadcastReceiver, new IntentFilter(BluetoothDevice.ACTION_PAIRING_REQUEST));
-
-                        // Connect to device with autoConnect = true
-                        Timber.i("autoConnect to '%s' (%s) using TRANSPORT_LE", getName(), getAddress());
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            bluetoothGatt = device.connectGatt(context, true, bluetoothGattCallback, TRANSPORT_LE);
-                        } else {
-                            // Versions below Nougat had a race condition bug in autoconnect, so use special workaround
-                            bluetoothGatt = connectGattHelper(device, true, bluetoothGattCallback);
-                        }
-                        connectTimestamp = SystemClock.elapsedRealtime();
-                    }
-                });
-            } else {
-                Timber.e("already have Gatt object for '%s'", getName());
-            }
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    // Connect to device with autoConnect = true
+                    Timber.i("autoConnect to '%s' (%s) using TRANSPORT_LE", getName(), getAddress());
+                    registerBondingBroadcastReceivers();
+                    state = BluetoothProfile.STATE_CONNECTING;
+                    bluetoothGatt = connectGattHelper(device, true, bluetoothGattCallback);
+                    connectTimestamp = SystemClock.elapsedRealtime();
+                }
+            });
         } else {
             Timber.e("peripheral '%s' not yet disconnected", getName());
         }
+    }
+
+    private void registerBondingBroadcastReceivers() {
+        context.registerReceiver(bondStateReceiver, new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED));
+        context.registerReceiver(pairingRequestBroadcastReceiver, new IntentFilter(BluetoothDevice.ACTION_PAIRING_REQUEST));
     }
 
     /**
