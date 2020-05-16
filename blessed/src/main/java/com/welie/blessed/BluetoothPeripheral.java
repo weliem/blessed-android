@@ -768,7 +768,7 @@ public class BluetoothPeripheral {
                 }
             }, DIRECT_CONNECTION_DELAY_IN_MS);
         } else {
-            Timber.e("peripheral not disconnected, ignoring connect");
+            Timber.e("peripheral '%s' not yet disconnected, will not connect", getName());
         }
     }
 
@@ -792,7 +792,7 @@ public class BluetoothPeripheral {
                 }
             });
         } else {
-            Timber.e("peripheral '%s' not yet disconnected", getName());
+            Timber.e("peripheral '%s' not yet disconnected, will not connect", getName());
         }
     }
 
