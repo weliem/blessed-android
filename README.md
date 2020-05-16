@@ -107,7 +107,7 @@ For read operations you will get a callback on:
 ```java
 public void onCharacteristicUpdate(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic characteristic)
 ```
-And for write operations you will get a callback on:
+If you want to write to a characteristic, you need to provide a `value` and a `writeType`. The `writeType` is usually `WRITE_TYPE_DEFAULT` or `WRITE_TYPE_NO_RESPONSE`. If the write type you specify is not supported by the characteristic you will see an error in your log. For write operations you will get a callback on:
 ```java
 public void onCharacteristicWrite(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic characteristic, final int status)
 
@@ -117,7 +117,7 @@ In these callbacks, the *value* parameter is the threadsafe byte array that was 
 
 ## Turning notifications on/off
 
-BLESSED provides a convenience method `setNotify` to turn notifications on or off. It will perform all the necessary operations like writing to the Client Characteristic Configuration descriptor for you. So all you need to do is:
+BLESSED provides a convenience method `setNotify` to turn notifications/indications on or off. It will perform all the necessary operations like writing to the Client Characteristic Configuration descriptor for you. So all you need to do is:
 
 ```java
 // See if this peripheral has the Current Time service
@@ -127,7 +127,7 @@ if(peripheral.getService(CTS_SERVICE_UUID) != null) {
 }
 ```
 
-Since this is an asynchronous operation you will receive a callback that indicates success or failure:
+Since this is an asynchronous operation you will receive a callback that indicates success or failure. You can use the method `isNotifying` to check if the characteristic is currently notifying or not:
 
 ```java
 @Override
@@ -169,7 +169,7 @@ Lastly, it is also possible to automatically issue a PIN code when pairing. Use 
 
 ## Example application
 
-An example application is provided in the repo. It shows how to connect to Blood Pressure meters and Thermometers, read the data and show it on screen.
+An example application is provided in the repo. It shows how to connect to Blood Pressure meters, Heart Rate monitors and Thermometers, read the data and show it on screen.
 
 ## Acknowledgements
 
