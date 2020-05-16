@@ -1249,7 +1249,7 @@ public class BluetoothPeripheral {
             return false;
         }
 
-        // Check if characteristic is valid
+        // Check if descriptor is valid
         if (descriptor == null) {
             Timber.e("descriptor is 'null', ignoring read request");
             return false;
@@ -1259,7 +1259,6 @@ public class BluetoothPeripheral {
         boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
-                // Double check if gatt is still valid
                 if (isConnected()) {
                     if (!bluetoothGatt.readDescriptor(descriptor)) {
                         Timber.e("readDescriptor failed for characteristic: %s", descriptor.getUuid());
