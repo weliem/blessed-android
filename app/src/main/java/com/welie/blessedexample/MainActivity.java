@@ -31,13 +31,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        Log.d(TAG, "onCreate called");
-
-        Timber.plant(new Timber.DebugTree());
-
-        setContentView(R.layout.activity_main);
         measurementValue = (TextView) findViewById(R.id.bloodPressureValue);
+
+        registerReceiver(bloodPressureDataReceiver, new IntentFilter( "BluetoothMeasurement" ));
+        registerReceiver(temperatureDataReceiver, new IntentFilter( "TemperatureMeasurement" ));
+        registerReceiver(heartRateDataReceiver, new IntentFilter( "HeartRateMeasurement" ));
 
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if(bluetoothAdapter == null) return;
@@ -54,9 +52,6 @@ public class MainActivity extends AppCompatActivity {
     private void initBluetoothHandler()
     {
         BluetoothHandler.getInstance(getApplicationContext());
-        registerReceiver(bloodPressureDataReceiver, new IntentFilter( "BluetoothMeasurement" ));
-        registerReceiver(temperatureDataReceiver, new IntentFilter( "TemperatureMeasurement" ));
-        registerReceiver(heartRateDataReceiver, new IntentFilter( "HeartRateMeasurement" ));
     }
 
     @Override
@@ -71,6 +66,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             BloodPressureMeasurement measurement = (BloodPressureMeasurement) intent.getSerializableExtra("BloodPressure");
+            if (measurement == null) return;
+
             DateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.ENGLISH);
             String formattedTimestamp = df.format(measurement.timestamp);
             measurementValue.setText(String.format(Locale.ENGLISH, "%.0f/%.0f %s, %.0f bpm\n%s", measurement.systolic, measurement.diastolic, measurement.isMMHG ? "mmHg" : "kpa", measurement.pulseRate, formattedTimestamp));
@@ -81,6 +78,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             TemperatureMeasurement measurement = (TemperatureMeasurement) intent.getSerializableExtra("Temperature");
+            if (measurement == null) return;
+
             DateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.ENGLISH);
             String formattedTimestamp = df.format(measurement.timestamp);
             measurementValue.setText(String.format(Locale.ENGLISH, "%.1f %s (%s)\n%s", measurement.temperatureValue, measurement.unit == TemperatureUnit.Celsius ? "celcius" : "fahrenheit", measurement.type, formattedTimestamp));
@@ -91,6 +90,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             HeartRateMeasurement measurement = (HeartRateMeasurement) intent.getSerializableExtra("HeartRate");
+            if (measurement == null) return;
+
             measurementValue.setText(String.format(Locale.ENGLISH, "%d bpm", measurement.pulse));
         }
     };

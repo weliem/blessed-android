@@ -22,13 +22,12 @@ import timber.log.Timber;
 import static android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_HIGH;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE;
 import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
-import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT16;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT8;
 import static com.welie.blessed.BluetoothBytesParser.bytes2String;
 import static com.welie.blessed.BluetoothPeripheral.GATT_SUCCESS;
 import static java.lang.Math.abs;
 
-public class BluetoothHandler {
+class BluetoothHandler {
 
     // UUIDs for the Blood Pressure service (BLP)
     private static final UUID BLP_SERVICE_UUID = UUID.fromString("00001810-0000-1000-8000-00805f9b34fb");
@@ -37,6 +36,7 @@ public class BluetoothHandler {
     // UUIDs for the Health Thermometer service (HTS)
     private static final UUID HTS_SERVICE_UUID = UUID.fromString("00001809-0000-1000-8000-00805f9b34fb");
     private static final UUID TEMPERATURE_MEASUREMENT_CHARACTERISTIC_UUID = UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb");
+    private static final UUID PNP_ID_CHARACTERISTIC_UUID = UUID.fromString("00002A50-0000-1000-8000-00805f9b34fb");
 
     // UUIDs for the Heart Rate service (HRS)
     private static final UUID HRS_SERVICE_UUID = UUID.fromString("0000180D-0000-1000-8000-00805f9b34fb");
@@ -192,6 +192,10 @@ public class BluetoothHandler {
                 String modelNumber = parser.getStringValue(0);
                 Timber.i("Received modelnumber: %s", modelNumber);
             }
+            else if(characteristicUUID.equals(PNP_ID_CHARACTERISTIC_UUID)) {
+                String modelNumber = parser.getStringValue(0);
+                Timber.i("Received pnp: %s", modelNumber);
+            }
         }
     };
 
@@ -249,6 +253,9 @@ public class BluetoothHandler {
 
     private BluetoothHandler(Context context) {
         this.context = context;
+
+        // Plant a tree
+        Timber.plant(new Timber.DebugTree());
 
         // Create BluetoothCentral
         central = new BluetoothCentral(context, bluetoothCentralCallback, new Handler());
