@@ -44,6 +44,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
@@ -379,15 +381,18 @@ public class BluetoothPeripheral {
                 if (status == GATT_SUCCESS) {
                     byte[] value = descriptor.getValue();
                     if (value != null) {
-                        if (value[0] != 0) {
+                        if (Arrays.equals(value, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) ||
+                            Arrays.equals(value, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)){
                             // Notify set to on, add it to the set of notifying characteristics
                             notifyingCharacteristics.add(parentCharacteristic.getUuid());
                             if (notifyingCharacteristics.size() > MAX_NOTIFYING_CHARACTERISTICS) {
                                 Timber.e("too many (%d) notifying characteristics. The maximum Android can handle is %d", notifyingCharacteristics.size(), MAX_NOTIFYING_CHARACTERISTICS);
                             }
-                        } else {
+                        } else if (Arrays.equals(value, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)){
                             // Notify was turned off, so remove it from the set of notifying characteristics
                             notifyingCharacteristics.remove(parentCharacteristic.getUuid());
+                        } else {
+                            Timber.e("unexpected CCC descriptor value");
                         }
                     }
                 }
