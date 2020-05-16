@@ -70,7 +70,7 @@ import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_SIGNED;
  * <p>A {@link BluetoothPeripheral} lets you create a connection with the peripheral or query information about it.
  * This class is a wrapper around the {@link BluetoothDevice} and takes care of operation queueing, some Android bugs, and provides several convenience functions.
  */
-@SuppressWarnings("SpellCheckingInspection")
+@SuppressWarnings({"SpellCheckingInspection", "unused", "UnusedReturnValue"})
 public class BluetoothPeripheral {
 
     // CCC descriptor UUID
@@ -319,31 +319,28 @@ public class BluetoothPeripheral {
         public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState) {
             long timePassed = SystemClock.elapsedRealtime() - connectTimestamp;
             cancelConnectionTimer();
+            final int previousState = state;
+            state = newState;
 
             if (status == GATT_SUCCESS) {
                 switch (newState) {
                     case BluetoothProfile.STATE_CONNECTED:
-                        state = BluetoothProfile.STATE_CONNECTED;
-                        int bondstate = device.getBondState();
-                        Timber.i("connected to '%s' (%s) in %.1fs", getName(), bondStateToString(bondstate), timePassed / 1000.0f);
-                        successfullyConnected(bondstate);
+                        successfullyConnected(device.getBondState(), timePassed);
                         break;
                     case BluetoothProfile.STATE_DISCONNECTED:
-                        successfullyDisconnected();
+                        successfullyDisconnected(previousState);
                         break;
                     case BluetoothProfile.STATE_DISCONNECTING:
                         Timber.i("peripheral is disconnecting");
-                        state = BluetoothProfile.STATE_DISCONNECTING;
                         break;
                     case BluetoothProfile.STATE_CONNECTING:
                         Timber.i("peripheral is connecting");
-                        state = BluetoothProfile.STATE_CONNECTING;
                     default:
                         Timber.e("unknown state received");
                         break;
                 }
             } else {
-                connectionStateChangeUnsuccessful(status, newState, timePassed);
+                connectionStateChangeUnsuccessful(status, previousState, newState, timePassed);
             }
         }
 
@@ -513,11 +510,13 @@ public class BluetoothPeripheral {
         }
     };
 
-    private void successfullyConnected(int bondstate) {
+    private void successfullyConnected(int bondstate, long timePassed) {
+        Timber.i("connected to '%s' (%s) in %.1fs", getName(), bondStateToString(bondstate), timePassed / 1000.0f);
+
         if (bondstate == BOND_NONE || bondstate == BOND_BONDED) {
             delayedDiscoverServices(getServiceDiscoveryDelay(bondstate));
         } else if (bondstate == BOND_BONDING) {
-            // Apparently the bonding process has already started let it complete, we'll do discoverServices once bonding finished
+            // Apparently the bonding process has already started, so let it complete. We'll do discoverServices once bonding finished
             Timber.i("waiting for bonding to complete");
         }
     }
@@ -548,10 +547,10 @@ public class BluetoothPeripheral {
         return bondstate == BOND_BONDED ? delayWhenBonded : 0;
     }
 
-    private void successfullyDisconnected() {
-        if (state == BluetoothProfile.STATE_CONNECTED || state == BluetoothProfile.STATE_DISCONNECTING) {
+    private void successfullyDisconnected(int previousState) {
+        if (previousState == BluetoothProfile.STATE_CONNECTED || previousState == BluetoothProfile.STATE_DISCONNECTING) {
             Timber.i("disconnected '%s' on request", getName());
-        } else if (state == BluetoothProfile.STATE_CONNECTING) {
+        } else if (previousState == BluetoothProfile.STATE_CONNECTING) {
             Timber.i("cancelling connect attempt");
         }
 
@@ -571,18 +570,17 @@ public class BluetoothPeripheral {
         }
     }
 
-    private void connectionStateChangeUnsuccessful(int status, int newState, long timePassed) {
+    private void connectionStateChangeUnsuccessful(int status, int previousState, int newState, long timePassed) {
         // Check if service discovery completed
         if (discoverServicesRunnable != null) {
             // Service discovery is still pending so cancel it
             mainHandler.removeCallbacks(discoverServicesRunnable);
             discoverServicesRunnable = null;
         }
-        List<BluetoothGattService> services = getServices();
-        boolean servicesDiscovered = !services.isEmpty();
+        boolean servicesDiscovered = !getServices().isEmpty();
 
         // See if the initial connection failed
-        if (state == BluetoothProfile.STATE_CONNECTING) {
+        if (previousState == BluetoothProfile.STATE_CONNECTING) {
             boolean isTimeout = timePassed > getTimoutThreshold();
             Timber.i("connection failed with status '%s' (%s)", statusToString(status), isTimeout ? "TIMEOUT" : "ERROR");
             final int adjustedStatus = (status == GATT_ERROR && isTimeout) ? GATT_CONN_TIMEOUT : status;
@@ -590,7 +588,7 @@ public class BluetoothPeripheral {
             if (listener != null) {
                 listener.connectFailed(BluetoothPeripheral.this, adjustedStatus);
             }
-        } else if (state == BluetoothProfile.STATE_CONNECTED && newState == BluetoothProfile.STATE_DISCONNECTED && !servicesDiscovered) {
+        } else if (previousState == BluetoothProfile.STATE_CONNECTED && newState == BluetoothProfile.STATE_DISCONNECTED && !servicesDiscovered) {
             // We got a disconnection before the services were even discovered
             Timber.i("peripheral '%s' disconnected with status '%s' before completing service discovery", getName(), statusToString(status));
             completeDisconnect(false, status);
@@ -621,7 +619,7 @@ public class BluetoothPeripheral {
 
             if (action.equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED)) {
                 final int bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR);
-                final int previousBondState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, -1);
+                final int previousBondState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, BluetoothDevice.ERROR);
                 handleBondStateChange(bondState, previousBondState);
             }
         }
@@ -741,11 +739,7 @@ public class BluetoothPeripheral {
         this.device = device;
         this.peripheralCallback = peripheralCallback;
         this.listener = listener;
-        if (callbackHandler != null) {
-            this.callbackHandler = callbackHandler;
-        } else {
-            this.callbackHandler = new Handler(Looper.getMainLooper());
-        }
+        this.callbackHandler =  (callbackHandler != null) ? callbackHandler : new Handler(Looper.getMainLooper());
         this.commandQueue = new ConcurrentLinkedQueue<>();
         this.state = BluetoothProfile.STATE_DISCONNECTED;
         this.commandQueueBusy = false;
@@ -976,7 +970,6 @@ public class BluetoothPeripheral {
      * Complete the disconnect after getting connectionstate = disconnected
      */
     private void completeDisconnect(boolean notify, final int status) {
-        state = BluetoothProfile.STATE_DISCONNECTED;
         if (bluetoothGatt != null) {
             bluetoothGatt.close();
             bluetoothGatt = null;
