@@ -347,8 +347,8 @@ public class BluetoothPeripheral {
 
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            if (status == GATT_INTERNAL_ERROR) {
-                Timber.e("service discovery failed due to internal error, disconnecting");
+            if (status != GATT_SUCCESS) {
+                Timber.e("service discovery failed due to internal error '%s', disconnecting", statusToString(status));
                 disconnect();
                 return;
             }
@@ -1647,7 +1647,7 @@ public class BluetoothPeripheral {
             case GATT_CONN_TERMINATE_LOCAL_HOST:
                 return "GATT CONN TERMINATE LOCAL HOST";
             case BLE_HCI_CONN_TERMINATED_DUE_TO_MIC_FAILURE:
-                return "BLE_HCI_CONN_TERMINATED_DUE_TO_MIC_FAILURE";
+                return "BLE HCI CONN TERMINATED DUE TO MIC FAILURE";
             case GATT_CONN_FAIL_ESTABLISH:
                 return "GATT CONN FAIL ESTABLISH";
             case GATT_CONN_LMP_TIMEOUT:
@@ -1661,7 +1661,9 @@ public class BluetoothPeripheral {
             case GATT_AUTH_FAIL:
                 return "GATT AUTH FAIL";  // Device needs to be bonded
             case GATT_NO_RESOURCES:
-                return "GATT_NO_RESOURCES";
+                return "GATT NO RESOURCES";
+            case GATT_INTERNAL_ERROR:
+                return "GATT INTERNAL ERROR";
             default:
                 return "UNKNOWN (" + error + ")";
         }
