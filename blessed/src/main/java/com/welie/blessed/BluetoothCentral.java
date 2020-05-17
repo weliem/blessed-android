@@ -315,11 +315,7 @@ public class BluetoothCentral {
         }
         this.context = context;
         this.bluetoothCentralCallback = bluetoothCentralCallback;
-        if (handler != null) {
-            this.callBackHandler = handler;
-        } else {
-            this.callBackHandler = new Handler();
-        }
+        this.callBackHandler = (handler != null) ? handler : new Handler();
         this.bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             this.autoConnectScanSettings = new ScanSettings.Builder()
@@ -566,6 +562,12 @@ public class BluetoothCentral {
                 return;
             }
 
+            // Make sure peripheral callback is valid
+            if (peripheralCallback == null) {
+                Timber.e("no valid peripheral callback specified, aborting connection");
+                return;
+            }
+
             // Check if we are already connected to this peripheral
             if (connectedPeripherals.containsKey(peripheral.getAddress())) {
                 Timber.w("already connected to %s'", peripheral.getAddress());
@@ -607,6 +609,12 @@ public class BluetoothCentral {
                 return;
             }
 
+            // Make sure peripheral callback is valid
+            if (peripheralCallback == null) {
+                Timber.e("no valid peripheral callback specified, aborting connection");
+                return;
+            }
+            
             // Check if we are already connected to this peripheral
             if (connectedPeripherals.containsKey(peripheral.getAddress())) {
                 Timber.w("already connected to %s'", peripheral.getAddress());
