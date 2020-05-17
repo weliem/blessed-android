@@ -916,6 +916,7 @@ public class BluetoothCentral {
      *
      * @param peripheralAddress the address of the peripheral
      * @param pin               the 6 digit PIN code as a string, e.g. "123456"
+     * @return true if the pin code and peripheral address are valid and stored internally
      */
     public boolean setPinCodeForPeripheral(String peripheralAddress, String pin) {
         if (!BluetoothAdapter.checkBluetoothAddress(peripheralAddress)) {
@@ -932,7 +933,7 @@ public class BluetoothCentral {
             Timber.e("%s is not 6 digits long", pin);
             return false;
         }
-        
+
         pinCodes.put(peripheralAddress, pin);
         return true;
     }
