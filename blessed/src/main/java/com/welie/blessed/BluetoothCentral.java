@@ -923,10 +923,16 @@ public class BluetoothCentral {
             return false;
         }
 
+        if (pin == null) {
+            Timber.e("pin code is null");
+            return false;
+        }
+
         if (pin.length() != 6) {
             Timber.e("%s is not 6 digits long", pin);
             return false;
         }
+        
         pinCodes.put(peripheralAddress, pin);
         return true;
     }
