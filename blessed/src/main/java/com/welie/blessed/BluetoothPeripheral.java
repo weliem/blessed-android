@@ -1088,8 +1088,8 @@ public class BluetoothPeripheral {
     /**
      * Boolean to indicate if the specified characteristic is currently notifying or indicating.
      *
-     * @param characteristic the characteristic
-     * @return true is the characteristic is notifying or indicating, false if it is not
+     * @param characteristic the characteristic to check
+     * @return true if the characteristic is notifying or indicating, false if it is not
      */
     public boolean isNotifying(BluetoothGattCharacteristic characteristic) {
         return notifyingCharacteristics.contains(characteristic.getUuid());
@@ -1524,9 +1524,9 @@ public class BluetoothPeripheral {
      * The current command has been completed, move to the next command in the queue (if any)
      */
     private void completedCommand() {
-        commandQueueBusy = false;
         isRetrying = false;
         commandQueue.poll();
+        commandQueueBusy = false;
         nextCommand();
     }
 
@@ -1602,12 +1602,6 @@ public class BluetoothPeripheral {
         }
     }
 
-    /**
-     * Converts the connection state to String value
-     *
-     * @param state the connection state
-     * @return state as String
-     */
     private String stateToString(final int state) {
         switch (state) {
             case BluetoothProfile.STATE_CONNECTED:
@@ -1701,8 +1695,8 @@ public class BluetoothPeripheral {
     /**
      * Converts byte array to hex string
      *
-     * @param bytes The data
-     * @return String represents the data in HEX string
+     * @param bytes the byte array to convert
+     * @return String representing the byte array as a HEX string
      */
     private static String bytes2String(final byte[] bytes) {
         StringBuilder sb = new StringBuilder();
