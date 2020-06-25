@@ -118,7 +118,7 @@ public class BluetoothCentral {
     private final Map<String, Integer> connectionRetries = new ConcurrentHashMap<>();
     private boolean expectingBluetoothOffDisconnects = false;
     private Runnable disconnectRunnable;
-    private Map<String, String> pinCodes = new ConcurrentHashMap<>();
+    private final Map<String, String> pinCodes = new ConcurrentHashMap<>();
 
     //region Callbacks
 
@@ -797,7 +797,7 @@ public class BluetoothCentral {
 
     private boolean isBleReady() {
         if (isBleSupported()) {
-            if (isBleEnabled()) {
+            if (isBluetoothEnabled()) {
                 return permissionsGranted();
             }
         }
@@ -813,7 +813,11 @@ public class BluetoothCentral {
         return false;
     }
 
-    private boolean isBleEnabled() {
+    /**
+     * Check if Bluetooth is enabled
+     * @return true is Bluetooth is enabled, otherwise false
+     */
+    public boolean isBluetoothEnabled() {
         if (bluetoothAdapter.isEnabled()) {
             return true;
         }
