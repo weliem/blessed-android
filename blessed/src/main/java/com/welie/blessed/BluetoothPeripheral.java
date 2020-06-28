@@ -296,7 +296,7 @@ public class BluetoothPeripheral {
     private final BluetoothDevice device;
     private final InternalCallback listener;
     private BluetoothPeripheralCallback peripheralCallback;
-    private final Queue<Runnable> commandQueue;
+    private final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
     private boolean commandQueueBusy;
     private boolean isRetrying;
     private boolean bondLost = false;
@@ -744,7 +744,6 @@ public class BluetoothPeripheral {
         this.peripheralCallback = peripheralCallback;
         this.listener = listener;
         this.callbackHandler = (callbackHandler != null) ? callbackHandler : new Handler(Looper.getMainLooper());
-        this.commandQueue = new ConcurrentLinkedQueue<>();
         this.state = BluetoothProfile.STATE_DISCONNECTED;
         this.commandQueueBusy = false;
     }
