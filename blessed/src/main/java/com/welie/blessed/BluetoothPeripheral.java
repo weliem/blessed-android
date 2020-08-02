@@ -918,15 +918,15 @@ public class BluetoothPeripheral {
             // Cancel the connection by calling disconnect
             disconnect();
 
-            // Since we will not get a callback on onConnectionStateChange for this, we complete the disconnect ourselves
+            // Since we will not get a callback on onConnectionStateChange for this, we issue the disconnect ourselves
             mainHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    completeDisconnect(true, GATT_SUCCESS);
+                    bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, GATT_SUCCESS, BluetoothProfile.STATE_DISCONNECTED);
                 }
             }, 50);
         } else {
-            // Cancel active connection
+            // Cancel active connection and onConnectionStateChange will be called by Android
             disconnect();
         }
     }

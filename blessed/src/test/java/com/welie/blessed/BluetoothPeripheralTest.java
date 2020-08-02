@@ -150,6 +150,29 @@ public class BluetoothPeripheralTest {
         callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_DISCONNECTED);
 
         verify(gatt).close();
+
+        assertEquals(STATE_DISCONNECTED,  peripheral.getState());
+    }
+
+    @Test
+    public void cancelConnectionAutoConnectTest() throws Exception {
+        peripheral.autoConnect();
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        ArgumentCaptor<BluetoothGattCallback> captor = ArgumentCaptor.forClass(BluetoothGattCallback.class);
+
+        verify(device).connectGatt(any(Context.class), anyBoolean(), captor.capture(), anyInt());
+
+        peripheral.cancelConnection();
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        verify(gatt).disconnect();
+
+        verify(gatt).close();
+
+        assertEquals(STATE_DISCONNECTED,  peripheral.getState());
     }
 
     @Test
