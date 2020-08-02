@@ -264,6 +264,7 @@ public class BluetoothCentral {
                 peripheral.autoConnect();
             } else {
                 Timber.i("connection to '%s' (%s) failed", peripheral.getName(), peripheral.getAddress());
+                connectionRetries.remove(peripheral.getAddress());
                 callBackHandler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -282,6 +283,7 @@ public class BluetoothCentral {
 
             connectedPeripherals.remove(peripheral.getAddress());
             unconnectedPeripherals.remove(peripheral.getAddress());
+            connectionRetries.remove(peripheral.getAddress());
 
             callBackHandler.post(new Runnable() {
                 @Override
