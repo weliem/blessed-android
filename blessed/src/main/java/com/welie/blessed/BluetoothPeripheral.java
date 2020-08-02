@@ -961,7 +961,7 @@ public class BluetoothPeripheral {
     }
 
     /**
-     * Complete the disconnect after getting connectionstate = disconnected
+     * Complete the disconnect after getting connectionstate == disconnected
      */
     private void completeDisconnect(boolean notify, final int status) {
         if (bluetoothGatt != null) {

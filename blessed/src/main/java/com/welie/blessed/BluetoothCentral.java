@@ -685,6 +685,7 @@ public class BluetoothCentral {
             // Clean up first
             reconnectPeripheralAddresses.remove(peripheralAddress);
             reconnectCallbacks.remove(peripheralAddress);
+            unconnectedPeripherals.remove(peripheralAddress);
             stopAutoconnectScan();
             Timber.d("cancelling autoconnect for %s", peripheralAddress);
 
