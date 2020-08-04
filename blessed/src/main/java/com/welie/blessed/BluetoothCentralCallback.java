@@ -25,6 +25,8 @@ package com.welie.blessed;
 
 import android.bluetooth.le.ScanResult;
 
+import org.jetbrains.annotations.NotNull;
+
 public abstract class BluetoothCentralCallback {
 
     /**
@@ -32,7 +34,7 @@ public abstract class BluetoothCentralCallback {
      *
      * @param peripheral the peripheral that was connected.
      */
-    public void onConnectedPeripheral(final BluetoothPeripheral peripheral) {}
+    public void onConnectedPeripheral(@NotNull final BluetoothPeripheral peripheral) {}
 
 
     /**
@@ -41,7 +43,7 @@ public abstract class BluetoothCentralCallback {
      * @param peripheral the peripheral for which the connection was attempted
      * @param status the status code for the connection failure
      */
-    public void onConnectionFailed(final BluetoothPeripheral peripheral, final int status) {}
+    public void onConnectionFailed(@NotNull final BluetoothPeripheral peripheral, final int status) {}
 
 
     /**
@@ -50,7 +52,7 @@ public abstract class BluetoothCentralCallback {
      * @param peripheral the peripheral that disconnected.
      * @param status the status code for the disconnection
      */
-    public void onDisconnectedPeripheral(final BluetoothPeripheral peripheral, final int status) {}
+    public void onDisconnectedPeripheral(@NotNull final BluetoothPeripheral peripheral, final int status) {}
 
 
     /**
@@ -59,7 +61,7 @@ public abstract class BluetoothCentralCallback {
      * @param peripheral the peripheral that was found
      * @param scanResult the scanResult describing the peripheral
      */
-    public void onDiscoveredPeripheral(final BluetoothPeripheral peripheral, final ScanResult scanResult) {}
+    public void onDiscoveredPeripheral(@NotNull final BluetoothPeripheral peripheral, @NotNull final ScanResult scanResult) {}
 
 
     /**
