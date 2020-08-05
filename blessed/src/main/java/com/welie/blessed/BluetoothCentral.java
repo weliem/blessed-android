@@ -560,19 +560,10 @@ public class BluetoothCentral {
      *
      * @param peripheral BLE peripheral to connect with
      */
-    public void connectPeripheral(BluetoothPeripheral peripheral, BluetoothPeripheralCallback peripheralCallback) {
+    public void connectPeripheral(@NotNull BluetoothPeripheral peripheral, @NotNull BluetoothPeripheralCallback peripheralCallback) {
         synchronized (connectLock) {
-            // Make sure peripheral is valid
-            if (peripheral == null) {
-                Timber.e("no valid peripheral specified, aborting connection");
-                return;
-            }
-
-            // Make sure peripheral callback is valid
-            if (peripheralCallback == null) {
-                Timber.e("no valid peripheral callback specified, aborting connection");
-                return;
-            }
+            Objects.requireNonNull(peripheral, "no valid peripheral specified");
+            Objects.requireNonNull(peripheralCallback, "no valid peripheral callback specified");
 
             // Check if we are already connected to this peripheral
             if (connectedPeripherals.containsKey(peripheral.getAddress())) {
@@ -607,19 +598,10 @@ public class BluetoothCentral {
      *
      * @param peripheral the peripheral
      */
-    public void autoConnectPeripheral(BluetoothPeripheral peripheral, BluetoothPeripheralCallback peripheralCallback) {
+    public void autoConnectPeripheral(@NotNull BluetoothPeripheral peripheral, @NotNull BluetoothPeripheralCallback peripheralCallback) {
         synchronized (connectLock) {
-            // Make sure peripheral is valid
-            if (peripheral == null) {
-                Timber.e("no valid peripheral specified, aborting connection");
-                return;
-            }
-
-            // Make sure peripheral callback is valid
-            if (peripheralCallback == null) {
-                Timber.e("no valid peripheral callback specified, aborting connection");
-                return;
-            }
+            Objects.requireNonNull(peripheral, "no valid peripheral specified");
+            Objects.requireNonNull(peripheralCallback, "no valid peripheral callback specified");
             
             // Check if we are already connected to this peripheral
             if (connectedPeripherals.containsKey(peripheral.getAddress())) {
@@ -676,12 +658,8 @@ public class BluetoothCentral {
      *
      * @param peripheral the peripheral
      */
-    public void cancelConnection(final BluetoothPeripheral peripheral) {
-        // Check if peripheral is valid
-        if (peripheral == null) {
-            Timber.e("cannot cancel connection, peripheral is null");
-            return;
-        }
+    public void cancelConnection(@NotNull final BluetoothPeripheral peripheral) {
+        Objects.requireNonNull(peripheral, "no valid peripheral specified");
 
         // First check if we are doing a reconnection scan for this peripheral
         String peripheralAddress = peripheral.getAddress();
@@ -736,7 +714,9 @@ public class BluetoothCentral {
      *
      * @param batch the map of peripherals and their callbacks to autoconnect to
      */
-    public void autoConnectPeripheralsBatch(Map<BluetoothPeripheral, BluetoothPeripheralCallback> batch) {
+    public void autoConnectPeripheralsBatch(@NotNull Map<BluetoothPeripheral, BluetoothPeripheralCallback> batch) {
+        Objects.requireNonNull(batch, "no valid batch provided");
+
         Map<BluetoothPeripheral, BluetoothPeripheralCallback> uncachedPeripherals = new HashMap<>();
         Map<BluetoothPeripheral, BluetoothPeripheralCallback> cachedPeripherals = new HashMap<>();
 
@@ -778,7 +758,9 @@ public class BluetoothCentral {
      * @param peripheralAddress mac address
      * @return a BluetoothPeripheral object matching the specified mac address or null if it was not found
      */
-    public BluetoothPeripheral getPeripheral(String peripheralAddress) {
+    public BluetoothPeripheral getPeripheral(@NotNull String peripheralAddress) {
+        Objects.requireNonNull(peripheralAddress, "no valid peripheral address provided");
+
         if (!BluetoothAdapter.checkBluetoothAddress(peripheralAddress)) {
             Timber.e("%s is not a valid address. Make sure all alphabetic characters are uppercase.", peripheralAddress);
             return null;
@@ -798,7 +780,7 @@ public class BluetoothCentral {
      *
      * @return list of connected peripherals
      */
-    public List<BluetoothPeripheral> getConnectedPeripherals() {
+    public @NotNull List<BluetoothPeripheral> getConnectedPeripherals() {
         return new ArrayList<>(connectedPeripherals.values());
     }
 
@@ -937,14 +919,12 @@ public class BluetoothCentral {
      * @param pin               the 6 digit PIN code as a string, e.g. "123456"
      * @return true if the pin code and peripheral address are valid and stored internally
      */
-    public boolean setPinCodeForPeripheral(String peripheralAddress, String pin) {
+    public boolean setPinCodeForPeripheral(@NotNull String peripheralAddress, @NotNull String pin) {
+        Objects.requireNonNull(peripheralAddress, "no peripheral address provided");
+        Objects.requireNonNull(pin, "no pin provided");
+
         if (!BluetoothAdapter.checkBluetoothAddress(peripheralAddress)) {
             Timber.e("%s is not a valid address. Make sure all alphabetic characters are uppercase.", peripheralAddress);
-            return false;
-        }
-
-        if (pin == null) {
-            Timber.e("pin code is null");
             return false;
         }
 
@@ -963,7 +943,9 @@ public class BluetoothCentral {
      * @param peripheralAddress the address of the peripheral
      * @return true if the peripheral was succesfully unpaired or it wasn't paired, false if it was paired and removing it failed
      */
-    public boolean removeBond(String peripheralAddress) {
+    public boolean removeBond(@NotNull String peripheralAddress) {
+        Objects.requireNonNull(peripheralAddress, "no peripheral address provided");
+
         boolean result;
         BluetoothDevice peripheralToUnBond = null;
 
