@@ -207,7 +207,9 @@ public class BluetoothCentral {
                 reconnectCallbacks.remove(deviceAddress);
                 unconnectedPeripherals.remove(deviceAddress);
 
-                connectPeripheral(peripheral, callback);
+                if (peripheral != null && callback != null) {
+                    connectPeripheral(peripheral, callback);
+                }
 
                 if (reconnectPeripheralAddresses.size() > 0) {
                     scanForAutoConnectPeripherals();
@@ -312,10 +314,10 @@ public class BluetoothCentral {
      * @param bluetoothCentralCallback the callback to call for updates
      * @param handler                  Handler to use for callbacks.
      */
-    public BluetoothCentral(@NotNull Context context, @NotNull BluetoothCentralCallback bluetoothCentralCallback, Handler handler) {
+    public BluetoothCentral(@NotNull Context context, @NotNull BluetoothCentralCallback bluetoothCentralCallback, @NotNull Handler handler) {
         this.context = Objects.requireNonNull(context, "no valid context provided");
         this.bluetoothCentralCallback = Objects.requireNonNull(bluetoothCentralCallback, "no valid bluetoothCallback provided");
-        this.callBackHandler = (handler != null) ? handler : new Handler();
+        this.callBackHandler = Objects.requireNonNull(handler, "no valid handler provided");
         this.bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             this.autoConnectScanSettings = new ScanSettings.Builder()
@@ -335,9 +337,7 @@ public class BluetoothCentral {
 
         // Register for broadcasts on BluetoothAdapter state change
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
-        if (context != null) {
-            context.registerReceiver(adapterStateReceiver, filter);
-        }
+        context.registerReceiver(adapterStateReceiver, filter);
     }
 
     /**
@@ -725,7 +725,7 @@ public class BluetoothCentral {
 
         // Issue autoconnect for cached peripherals
         for (BluetoothPeripheral peripheral : cachedPeripherals.keySet()) {
-            autoConnectPeripheral(peripheral, cachedPeripherals.get(peripheral));
+            autoConnectPeripheral(peripheral, Objects.requireNonNull(cachedPeripherals.get(peripheral)));
         }
 
         // Add uncached peripherals to list of peripherals to scan for

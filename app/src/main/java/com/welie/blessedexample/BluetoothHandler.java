@@ -90,15 +90,15 @@ class BluetoothHandler {
                 BluetoothGattCharacteristic currentTimeCharacteristic = peripheral.getCharacteristic(CTS_SERVICE_UUID, CURRENT_TIME_CHARACTERISTIC_UUID);
                 if (currentTimeCharacteristic != null) {
                     peripheral.setNotify(currentTimeCharacteristic, true);
-                }
 
-                // If it has the write property we write the current time
-                if((currentTimeCharacteristic.getProperties() & PROPERTY_WRITE) > 0) {
-                    // Write the current time unless it is an Omron device
-                    if(!(peripheral.getName().contains("BLEsmart_"))) {
-                        BluetoothBytesParser parser = new BluetoothBytesParser();
-                        parser.setCurrentTime(Calendar.getInstance());
-                        peripheral.writeCharacteristic(currentTimeCharacteristic, parser.getValue(), WRITE_TYPE_DEFAULT);
+                    // If it has the write property we write the current time
+                    if ((currentTimeCharacteristic.getProperties() & PROPERTY_WRITE) > 0) {
+                        // Write the current time unless it is an Omron device
+                        if (!(peripheral.getName().contains("BLEsmart_"))) {
+                            BluetoothBytesParser parser = new BluetoothBytesParser();
+                            parser.setCurrentTime(Calendar.getInstance());
+                            peripheral.writeCharacteristic(currentTimeCharacteristic, parser.getValue(), WRITE_TYPE_DEFAULT);
+                        }
                     }
                 }
             }
