@@ -13,7 +13,6 @@ import android.bluetooth.le.ScanSettings;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 
-import org.apache.tools.ant.taskdefs.Sync;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -108,7 +107,7 @@ public class BluetoothCentralTest {
         // Fake scan result
         ScanResult scanResult = mock(ScanResult.class);
         BluetoothDevice device = mock(BluetoothDevice.class);
-        when(device.getAddress()).thenReturn("00:00:00:00");
+        when(device.getAddress()).thenReturn("12:23:34:98:76:54");
         when(scanResult.getDevice()).thenReturn(device);
         scanCallback.onScanResult(CALLBACK_TYPE_ALL_MATCHES, scanResult);
 
@@ -118,7 +117,7 @@ public class BluetoothCentralTest {
         verify(callback).onDiscoveredPeripheral(bluetoothPeripheralCaptor.capture(), scanResultCaptor.capture());
 
         assertEquals(scanResultCaptor.getValue(), scanResult);
-        assertEquals(bluetoothPeripheralCaptor.getValue().getAddress(), "00:00:00:00");
+        assertEquals(bluetoothPeripheralCaptor.getValue().getAddress(), "12:23:34:98:76:54");
     }
 
     @Test
@@ -151,7 +150,7 @@ public class BluetoothCentralTest {
         // Fake scan result
         ScanResult scanResult = mock(ScanResult.class);
         BluetoothDevice device = mock(BluetoothDevice.class);
-        when(device.getAddress()).thenReturn("00:00:00:00");
+        when(device.getAddress()).thenReturn("12:23:34:98:76:54");
         when(scanResult.getDevice()).thenReturn(device);
         scanCallback.onScanResult(CALLBACK_TYPE_ALL_MATCHES, scanResult);
 
@@ -161,7 +160,7 @@ public class BluetoothCentralTest {
         verify(callback).onDiscoveredPeripheral(bluetoothPeripheralCaptor.capture(), scanResultCaptor.capture());
 
         assertEquals(scanResultCaptor.getValue(), scanResult);
-        assertEquals(bluetoothPeripheralCaptor.getValue().getAddress(), "00:00:00:00");
+        assertEquals(bluetoothPeripheralCaptor.getValue().getAddress(), "12:23:34:98:76:54");
     }
 
     @Test
@@ -204,6 +203,32 @@ public class BluetoothCentralTest {
 
         assertEquals(scanResultCaptor.getValue(), scanResult);
         assertEquals(bluetoothPeripheralCaptor.getValue().getAddress(), myAddress);
+    }
+
+    @Test
+    public void scanForPeripheralsWithBadAddressesTest() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+        String validAddress = "12:23:34:98:76:54";
+        String invalidAddress = "23:34:98:76:XX";
+
+        central.scanForPeripheralsWithAddresses(new String[]{validAddress, invalidAddress});
+
+        // Make sure startScan is called
+        ArgumentCaptor<List> scanFiltersCaptor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<ScanSettings> scanSettingsCaptor = ArgumentCaptor.forClass(ScanSettings.class);
+        ArgumentCaptor<ScanCallback> scanCallbackCaptor = ArgumentCaptor.forClass(ScanCallback.class);
+        verify(scanner).startScan(scanFiltersCaptor.capture(), scanSettingsCaptor.capture(), scanCallbackCaptor.capture());
+
+        // Verify there is only 1 filter set
+        List<ScanFilter> filters = scanFiltersCaptor.getValue();
+
+        // Only the valid address should be added so there should be only 1 address
+        assertEquals(1, filters.size());
+
+        // Verify the filter only contains the valid address we added
+        ScanFilter addressFilter = filters.get(0);
+        String address = addressFilter.getDeviceAddress();
+        assertEquals(validAddress, address);
     }
 
     @Test
