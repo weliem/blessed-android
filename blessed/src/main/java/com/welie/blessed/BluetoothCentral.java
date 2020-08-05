@@ -312,15 +312,9 @@ public class BluetoothCentral {
      * @param bluetoothCentralCallback the callback to call for updates
      * @param handler                  Handler to use for callbacks.
      */
-    public BluetoothCentral(Context context, BluetoothCentralCallback bluetoothCentralCallback, Handler handler) {
-        if (context == null) {
-            Timber.e("context is 'null', cannot create BluetoothCentral");
-        }
-        if (bluetoothCentralCallback == null) {
-            Timber.e("callback is 'null', cannot create BluetoothCentral");
-        }
-        this.context = context;
-        this.bluetoothCentralCallback = bluetoothCentralCallback;
+    public BluetoothCentral(@NotNull Context context, @NotNull BluetoothCentralCallback bluetoothCentralCallback, Handler handler) {
+        this.context = Objects.requireNonNull(context, "no valid context provided");
+        this.bluetoothCentralCallback = Objects.requireNonNull(bluetoothCentralCallback, "no valid bluetoothCallback provided");
         this.callBackHandler = (handler != null) ? handler : new Handler();
         this.bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
