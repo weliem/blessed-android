@@ -183,5 +183,6 @@ public class ShadowBluetoothLEAdapter {
     public BluetoothDevice getRemoteDevice(String address) {
         return devices.get(address);
     }
+
 }
 

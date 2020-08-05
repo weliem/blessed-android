@@ -671,6 +671,11 @@ public class BluetoothCentralTest {
 
     @Test
     public void getPeripheralValidMacAddressTest() {
+        // Given
+        BluetoothDevice device = mock(BluetoothDevice.class);
+        when(device.getAddress()).thenReturn("AC:DE:EF:12:34:56");
+        bluetoothAdapter.addDevice(device);
+
         // Get peripheral and supply lowercase mac address
         BluetoothPeripheral peripheral = central.getPeripheral("AC:DE:EF:12:34:56");
         assertNotNull(peripheral);

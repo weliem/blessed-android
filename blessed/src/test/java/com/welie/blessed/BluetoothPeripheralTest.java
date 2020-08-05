@@ -381,7 +381,7 @@ public class BluetoothPeripheralTest {
 
         when(gatt.writeCharacteristic(characteristic)).thenReturn(true);
 
-        peripheral.writeCharacteristic(characteristic, null, WRITE_TYPE_DEFAULT);
+        peripheral.writeCharacteristic(characteristic, new byte[0], WRITE_TYPE_DEFAULT);
 
         verify(gatt, never()).writeCharacteristic(any(BluetoothGattCharacteristic.class));
     }
