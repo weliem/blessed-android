@@ -41,11 +41,14 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.ParcelUuid;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -128,6 +131,7 @@ public class BluetoothCentral {
             synchronized (this) {
                 String deviceName = result.getDevice().getName();
                 if (deviceName == null) return;
+                if (scanPeripheralNames == null) return;
 
                 for (String name : scanPeripheralNames) {
                     if (deviceName.contains(name)) {
@@ -421,19 +425,18 @@ public class BluetoothCentral {
      *
      * @param serviceUUIDs an array of service UUIDs
      */
-    public void scanForPeripheralsWithServices(final UUID[] serviceUUIDs) {
-        currentFilters = null;
-        if (serviceUUIDs != null) {
-            currentFilters = new ArrayList<>();
-            for (UUID serviceUUID : serviceUUIDs) {
-                ScanFilter filter = new ScanFilter.Builder()
-                        .setServiceUuid(new ParcelUuid(serviceUUID))
-                        .build();
-                currentFilters.add(filter);
-            }
+    public void scanForPeripheralsWithServices(@NotNull final UUID[] serviceUUIDs) {
+        Objects.requireNonNull(serviceUUIDs, "no service UUIDs supplied");
+
+        List<ScanFilter> filters = new ArrayList<>();
+        for (UUID serviceUUID : serviceUUIDs) {
+            ScanFilter filter = new ScanFilter.Builder()
+                    .setServiceUuid(new ParcelUuid(serviceUUID))
+                    .build();
+            filters.add(filter);
         }
 
-        startScan(currentFilters, scanSettings, scanByServiceUUIDCallback);
+        startScan(filters, scanSettings, scanByServiceUUIDCallback);
     }
 
     /**
@@ -443,7 +446,9 @@ public class BluetoothCentral {
      *
      * @param peripheralNames array of partial peripheral names
      */
-    public void scanForPeripheralsWithNames(final String[] peripheralNames) {
+    public void scanForPeripheralsWithNames(@NotNull final String[] peripheralNames) {
+        Objects.requireNonNull(peripheralNames, "No peripheral names supplied");
+
         // Start the scanner with no filter because we'll do the filtering ourselves
         scanPeripheralNames = peripheralNames;
         startScan(null, scanSettings, scanByNameCallback);
@@ -454,19 +459,18 @@ public class BluetoothCentral {
      *
      * @param peripheralAddresses array of peripheral mac addresses to scan for
      */
-    public void scanForPeripheralsWithAddresses(final String[] peripheralAddresses) {
-        List<ScanFilter> filters = null;
-        if (peripheralAddresses != null) {
-            filters = new ArrayList<>();
-            for (String address : peripheralAddresses) {
-                if (BluetoothAdapter.checkBluetoothAddress(address)) {
-                    ScanFilter filter = new ScanFilter.Builder()
-                            .setDeviceAddress(address)
-                            .build();
-                    filters.add(filter);
-                } else {
-                    Timber.e("%s is not a valid address. Make sure all alphabetic characters are uppercase.", address);
-                }
+    public void scanForPeripheralsWithAddresses(@NotNull final String[] peripheralAddresses) {
+        Objects.requireNonNull(peripheralAddresses, "No peripheral addresses supplied");
+
+        List<ScanFilter> filters = new ArrayList<>();
+        for (String address : peripheralAddresses) {
+            if (BluetoothAdapter.checkBluetoothAddress(address)) {
+                ScanFilter filter = new ScanFilter.Builder()
+                        .setDeviceAddress(address)
+                        .build();
+                filters.add(filter);
+            } else {
+                Timber.e("%s is not a valid address. Make sure all alphabetic characters are uppercase.", address);
             }
         }
 
