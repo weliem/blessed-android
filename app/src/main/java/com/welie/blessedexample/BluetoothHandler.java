@@ -75,14 +75,22 @@ class BluetoothHandler {
 
             // Read manufacturer and model number from the Device Information Service
             if(peripheral.getService(DIS_SERVICE_UUID) != null) {
-                peripheral.readCharacteristic(peripheral.getCharacteristic(DIS_SERVICE_UUID, MANUFACTURER_NAME_CHARACTERISTIC_UUID));
-                peripheral.readCharacteristic(peripheral.getCharacteristic(DIS_SERVICE_UUID, MODEL_NUMBER_CHARACTERISTIC_UUID));
+                BluetoothGattCharacteristic manufacturerCharacteristic = peripheral.getCharacteristic(DIS_SERVICE_UUID, MANUFACTURER_NAME_CHARACTERISTIC_UUID);
+                if (manufacturerCharacteristic != null) {
+                    peripheral.readCharacteristic(manufacturerCharacteristic);
+                }
+                BluetoothGattCharacteristic modelCharacteristic = peripheral.getCharacteristic(DIS_SERVICE_UUID, MODEL_NUMBER_CHARACTERISTIC_UUID);
+                if (modelCharacteristic != null) {
+                    peripheral.readCharacteristic(modelCharacteristic);
+                }
             }
 
             // Turn on notifications for Current Time Service
             if(peripheral.getService(CTS_SERVICE_UUID) != null) {
                 BluetoothGattCharacteristic currentTimeCharacteristic = peripheral.getCharacteristic(CTS_SERVICE_UUID, CURRENT_TIME_CHARACTERISTIC_UUID);
-                peripheral.setNotify(currentTimeCharacteristic, true);
+                if (currentTimeCharacteristic != null) {
+                    peripheral.setNotify(currentTimeCharacteristic, true);
+                }
 
                 // If it has the write property we write the current time
                 if((currentTimeCharacteristic.getProperties() & PROPERTY_WRITE) > 0) {
@@ -97,22 +105,34 @@ class BluetoothHandler {
 
             // Turn on notifications for Battery Service
             if(peripheral.getService(BTS_SERVICE_UUID) != null) {
-                peripheral.setNotify(peripheral.getCharacteristic(BTS_SERVICE_UUID, BATTERY_LEVEL_CHARACTERISTIC_UUID), true);
+                BluetoothGattCharacteristic batteryCharacteristic = peripheral.getCharacteristic(BTS_SERVICE_UUID, BATTERY_LEVEL_CHARACTERISTIC_UUID);
+                if ( batteryCharacteristic != null) {
+                    peripheral.setNotify(batteryCharacteristic, true);
+                }
             }
 
             // Turn on notifications for Blood Pressure Service
             if(peripheral.getService(BLP_SERVICE_UUID) != null) {
-                peripheral.setNotify(peripheral.getCharacteristic(BLP_SERVICE_UUID, BLOOD_PRESSURE_MEASUREMENT_CHARACTERISTIC_UUID), true);
+                BluetoothGattCharacteristic bloodpressureCharacteristic = peripheral.getCharacteristic(BLP_SERVICE_UUID, BLOOD_PRESSURE_MEASUREMENT_CHARACTERISTIC_UUID);
+                if ( bloodpressureCharacteristic != null) {
+                    peripheral.setNotify(bloodpressureCharacteristic, true);
+                }
             }
 
             // Turn on notification for Health Thermometer Service
             if(peripheral.getService(HTS_SERVICE_UUID) != null) {
-                peripheral.setNotify(peripheral.getCharacteristic(HTS_SERVICE_UUID, TEMPERATURE_MEASUREMENT_CHARACTERISTIC_UUID), true);
+                BluetoothGattCharacteristic temperatureCharacteristic = peripheral.getCharacteristic(HTS_SERVICE_UUID, TEMPERATURE_MEASUREMENT_CHARACTERISTIC_UUID);
+                if ( temperatureCharacteristic != null) {
+                    peripheral.setNotify(temperatureCharacteristic, true);
+                }
             }
 
             // Turn on notification for Heart Rate  Service
             if(peripheral.getService(HRS_SERVICE_UUID) != null) {
-                peripheral.setNotify(peripheral.getCharacteristic(HRS_SERVICE_UUID, HEARTRATE_MEASUREMENT_CHARACTERISTIC_UUID), true);
+                BluetoothGattCharacteristic heartrateCharacteristic = peripheral.getCharacteristic(HRS_SERVICE_UUID, HEARTRATE_MEASUREMENT_CHARACTERISTIC_UUID);
+                if (heartrateCharacteristic != null) {
+                    peripheral.setNotify(heartrateCharacteristic, true);
+                }
             }
         }
 
