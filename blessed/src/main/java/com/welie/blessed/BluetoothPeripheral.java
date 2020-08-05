@@ -40,6 +40,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -47,6 +49,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
@@ -735,10 +738,11 @@ public class BluetoothPeripheral {
      * @param device   Wrapped Android bluetooth device.
      * @param listener Callback to {@link BluetoothCentral}.
      */
-    BluetoothPeripheral(Context context, BluetoothDevice device, InternalCallback listener, BluetoothPeripheralCallback peripheralCallback, Handler callbackHandler) {
-        if (context == null || device == null || listener == null) {
-            Timber.e("cannot create BluetoothPeripheral because of null values");
-        }
+    BluetoothPeripheral(@NotNull Context context, @NotNull BluetoothDevice device, @NotNull InternalCallback listener, BluetoothPeripheralCallback peripheralCallback, Handler callbackHandler) {
+        Objects.requireNonNull(context, "no valid context provided");
+        Objects.requireNonNull(device, "no valid device provided");
+        Objects.requireNonNull(listener, "no valid listener provided");
+
         this.context = context;
         this.device = device;
         this.peripheralCallback = peripheralCallback;
@@ -748,8 +752,8 @@ public class BluetoothPeripheral {
         this.commandQueueBusy = false;
     }
 
-    void setPeripheralCallback(BluetoothPeripheralCallback peripheralCallback) {
-        this.peripheralCallback = peripheralCallback;
+    void setPeripheralCallback(@NotNull BluetoothPeripheralCallback peripheralCallback) {
+        this.peripheralCallback = Objects.requireNonNull(peripheralCallback, "no valid peripheral callback provided");
     }
 
     /**
@@ -1045,7 +1049,9 @@ public class BluetoothPeripheral {
      * @param serviceUUID the UUID of the service
      * @return the BluetoothGattService object for the service UUID or null if the peripheral does not have a service with the specified UUID
      */
-    public BluetoothGattService getService(UUID serviceUUID) {
+    public BluetoothGattService getService(@NotNull UUID serviceUUID) {
+        Objects.requireNonNull(serviceUUID, "no valid service UUID provided");
+
         if (bluetoothGatt != null) {
             return bluetoothGatt.getService(serviceUUID);
         } else {
@@ -1060,7 +1066,10 @@ public class BluetoothPeripheral {
      * @param characteristicUUID the UUID of the chararacteristic
      * @return the BluetoothGattCharacteristic object for the characteristic UUID or null if the peripheral does not have a characteristic with the specified UUID
      */
-    public BluetoothGattCharacteristic getCharacteristic(UUID serviceUUID, UUID characteristicUUID) {
+    public BluetoothGattCharacteristic getCharacteristic(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID) {
+        Objects.requireNonNull(serviceUUID, "no valid service UUID provided");
+        Objects.requireNonNull(characteristicUUID, "no valid characteristic provided");
+
         BluetoothGattService service = getService(serviceUUID);
         if (service != null) {
             return service.getCharacteristic(characteristicUUID);
@@ -1090,7 +1099,8 @@ public class BluetoothPeripheral {
      * @param characteristic the characteristic to check
      * @return true if the characteristic is notifying or indicating, false if it is not
      */
-    public boolean isNotifying(BluetoothGattCharacteristic characteristic) {
+    public boolean isNotifying(@NotNull BluetoothGattCharacteristic characteristic) {
+        Objects.requireNonNull(characteristic, "no valid characteristic provided");
         return notifyingCharacteristics.contains(characteristic.getUuid());
     }
 
@@ -1108,16 +1118,12 @@ public class BluetoothPeripheral {
      * @param characteristic Specifies the characteristic to read.
      * @return true if the operation was enqueued, false if the characteristic does not support reading or the characteristic was invalid
      */
-    public boolean readCharacteristic(final BluetoothGattCharacteristic characteristic) {
+    public boolean readCharacteristic(@NotNull final BluetoothGattCharacteristic characteristic) {
+        Objects.requireNonNull(characteristic, "characteristic is 'null', ignoring read request");
+
         // Check if gatt object is valid
         if (bluetoothGatt == null) {
             Timber.e("gatt is 'null', ignoring read request");
-            return false;
-        }
-
-        // Check if characteristic is valid
-        if (characteristic == null) {
-            Timber.e("characteristic is 'null', ignoring read request");
             return false;
         }
 
@@ -1166,22 +1172,13 @@ public class BluetoothPeripheral {
      * @param writeType      the write type to use when writing. Must be WRITE_TYPE_DEFAULT, WRITE_TYPE_NO_RESPONSE or WRITE_TYPE_SIGNED
      * @return true if a write operation was succesfully enqueued, otherwise false
      */
-    public boolean writeCharacteristic(final BluetoothGattCharacteristic characteristic, final byte[] value, final int writeType) {
+    public boolean writeCharacteristic(@NotNull final BluetoothGattCharacteristic characteristic, @NotNull final byte[] value, final int writeType) {
+        Objects.requireNonNull(characteristic, "no valid characteristic provided");
+        Objects.requireNonNull(value, "no valid value provided");
+
         // Check if gatt object is valid
         if (bluetoothGatt == null) {
             Timber.e("gatt is 'null', ignoring read request");
-            return false;
-        }
-
-        // Check if characteristic is valid
-        if (characteristic == null) {
-            Timber.e("characteristic is 'null', ignoring write request");
-            return false;
-        }
-
-        // Check if byte array is valid
-        if (value == null) {
-            Timber.e("value to write is 'null', ignoring write request");
             return false;
         }
 
@@ -1245,16 +1242,12 @@ public class BluetoothPeripheral {
      * @param descriptor the descriptor to read
      * @return true if a write operation was succesfully enqueued, otherwise false
      */
-    public boolean readDescriptor(final BluetoothGattDescriptor descriptor) {
+    public boolean readDescriptor(@NotNull final BluetoothGattDescriptor descriptor) {
+        Objects.requireNonNull(descriptor, "no valid descriptor provided");
+
         // Check if gatt object is valid
         if (bluetoothGatt == null) {
             Timber.e("gatt is 'null', ignoring read request");
-            return false;
-        }
-
-        // Check if descriptor is valid
-        if (descriptor == null) {
-            Timber.e("descriptor is 'null', ignoring read request");
             return false;
         }
 
@@ -1292,22 +1285,13 @@ public class BluetoothPeripheral {
      * @param value      the value to write
      * @return true if a write operation was succesfully enqueued, otherwise false
      */
-    public boolean writeDescriptor(final BluetoothGattDescriptor descriptor, final byte[] value) {
+    public boolean writeDescriptor(@NotNull final BluetoothGattDescriptor descriptor, @NotNull final byte[] value) {
+        Objects.requireNonNull(descriptor, "no valid descriptor provided");
+        Objects.requireNonNull(value, "no valid value provided");
+
         // Check if gatt object is valid
         if (bluetoothGatt == null) {
             Timber.e("gatt is 'null', ignoring write descriptor request");
-            return false;
-        }
-
-        // Check if characteristic is valid
-        if (descriptor == null) {
-            Timber.e("descriptor is 'null', ignoring write request");
-            return false;
-        }
-
-        // Check if byte array is valid
-        if (value == null) {
-            Timber.e("value to write is 'null', ignoring write request");
             return false;
         }
 
@@ -1351,16 +1335,12 @@ public class BluetoothPeripheral {
      * @param enable         true for setting notification on, false for turning it off
      * @return true if the operation was enqueued, false if the characteristic doesn't support notification or indications or
      */
-    public boolean setNotify(final BluetoothGattCharacteristic characteristic, final boolean enable) {
+    public boolean setNotify(@NotNull final BluetoothGattCharacteristic characteristic, final boolean enable) {
+        Objects.requireNonNull(characteristic, "no valid characteristic provided");
+
         // Check if gatt object is valid
         if (bluetoothGatt == null) {
             Timber.e("gatt is 'null', ignoring set notify request");
-            return false;
-        }
-
-        // Check if characteristic is valid
-        if (characteristic == null) {
-            Timber.e("characteristic is 'null', ignoring setNotify request");
             return false;
         }
 
