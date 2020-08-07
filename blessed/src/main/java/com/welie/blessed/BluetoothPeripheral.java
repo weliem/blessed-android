@@ -906,6 +906,7 @@ public class BluetoothPeripheral {
     public void cancelConnection() {
         // Check if we have a Gatt object
         if (bluetoothGatt == null) {
+            Timber.w("cannot cancel connection because no connection attempt is made yet");
             return;
         }
 
