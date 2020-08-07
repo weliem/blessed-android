@@ -656,18 +656,11 @@ public class BluetoothCentral {
         // First check if we are doing a reconnection scan for this peripheral
         String peripheralAddress = peripheral.getAddress();
         if (reconnectPeripheralAddresses.contains(peripheralAddress)) {
-            // Clean up first
             reconnectPeripheralAddresses.remove(peripheralAddress);
             reconnectCallbacks.remove(peripheralAddress);
             unconnectedPeripherals.remove(peripheralAddress);
             stopAutoconnectScan();
             Timber.d("cancelling autoconnect for %s", peripheralAddress);
-
-            // If there are any devices left, restart the reconnection scan
-            if (reconnectPeripheralAddresses.size() > 0) {
-                scanForAutoConnectPeripherals();
-            }
-
             callBackHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -675,24 +668,16 @@ public class BluetoothCentral {
                 }
             });
 
-            return;
-        }
-
-        // Check if it is an unconnected peripheral
-        if (unconnectedPeripherals.containsKey(peripheralAddress)) {
-            BluetoothPeripheral unconnectedPeripheral = unconnectedPeripherals.get(peripheralAddress);
-            if (unconnectedPeripheral != null) {
-                unconnectedPeripheral.cancelConnection();
+            // If there are any devices left, restart the reconnection scan
+            if (reconnectPeripheralAddresses.size() > 0) {
+                scanForAutoConnectPeripherals();
             }
             return;
         }
 
-        // Check if this is a connected peripheral
-        if (connectedPeripherals.containsKey(peripheralAddress)) {
-            BluetoothPeripheral connectedPeripheral = connectedPeripherals.get(peripheralAddress);
-            if (connectedPeripheral != null) {
-                connectedPeripheral.cancelConnection();
-            }
+        // Only cancel connectioins if it is an known peripheral
+        if (unconnectedPeripherals.containsKey(peripheralAddress) || connectedPeripherals.containsKey(peripheralAddress)) {
+            peripheral.cancelConnection();
         } else {
             Timber.e("cannot cancel connection to unknown peripheral %s", peripheralAddress);
         }
