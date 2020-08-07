@@ -265,9 +265,7 @@ public class BluetoothCentral {
                 nrRetries++;
                 connectionRetries.put(peripheral.getAddress(), nrRetries);
                 unconnectedPeripherals.put(peripheral.getAddress(), peripheral);
-
-                // Retry with autoconnect
-                peripheral.autoConnect();
+                peripheral.connect();
             } else {
                 Timber.i("connection to '%s' (%s) failed", peripheral.getName(), peripheral.getAddress());
                 connectionRetries.remove(peripheral.getAddress());
