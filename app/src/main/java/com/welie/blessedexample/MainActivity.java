@@ -11,21 +11,21 @@ import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.TextView;
+
+import com.welie.blessed.BluetoothCentral;
+import com.welie.blessed.BluetoothPeripheral;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
-import timber.log.Timber;
-
 public class MainActivity extends AppCompatActivity {
 
-    private final String TAG = MainActivity.class.getSimpleName();
     private TextView measurementValue;
     private static final int REQUEST_ENABLE_BT = 1;
     private static final int ACCESS_LOCATION_REQUEST = 2;
+    private final DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.ENGLISH);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,24 +65,22 @@ public class MainActivity extends AppCompatActivity {
     private final BroadcastReceiver bloodPressureDataReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            BluetoothPeripheral peripheral = getPeripheral(intent.getStringExtra("Peripheral"));
             BloodPressureMeasurement measurement = (BloodPressureMeasurement) intent.getSerializableExtra("BloodPressure");
-            if (measurement == null) return;
+            if (measurement == null || peripheral == null) return;
 
-            DateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.ENGLISH);
-            String formattedTimestamp = df.format(measurement.timestamp);
-            measurementValue.setText(String.format(Locale.ENGLISH, "%.0f/%.0f %s, %.0f bpm\n%s", measurement.systolic, measurement.diastolic, measurement.isMMHG ? "mmHg" : "kpa", measurement.pulseRate, formattedTimestamp));
+            measurementValue.setText(String.format(Locale.ENGLISH, "%.0f/%.0f %s, %.0f bpm\n%s\n\nfrom %s", measurement.systolic, measurement.diastolic, measurement.isMMHG ? "mmHg" : "kpa", measurement.pulseRate, dateFormat.format(measurement.timestamp), peripheral.getName()));
         }
     };
 
     private final BroadcastReceiver temperatureDataReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            BluetoothPeripheral peripheral = getPeripheral(intent.getStringExtra("Peripheral"));
             TemperatureMeasurement measurement = (TemperatureMeasurement) intent.getSerializableExtra("Temperature");
-            if (measurement == null) return;
+            if (measurement == null || peripheral == null) return;
 
-            DateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.ENGLISH);
-            String formattedTimestamp = df.format(measurement.timestamp);
-            measurementValue.setText(String.format(Locale.ENGLISH, "%.1f %s (%s)\n%s", measurement.temperatureValue, measurement.unit == TemperatureUnit.Celsius ? "celcius" : "fahrenheit", measurement.type, formattedTimestamp));
+            measurementValue.setText(String.format(Locale.ENGLISH, "%.1f %s (%s)\n%s\n\nfrom %s", measurement.temperatureValue, measurement.unit == TemperatureUnit.Celsius ? "celcius" : "fahrenheit", measurement.type, dateFormat.format(measurement.timestamp), peripheral.getName()));
         }
     };
 
@@ -95,6 +93,11 @@ public class MainActivity extends AppCompatActivity {
             measurementValue.setText(String.format(Locale.ENGLISH, "%d bpm", measurement.pulse));
         }
     };
+
+    private BluetoothPeripheral getPeripheral(String peripheralAddress) {
+        BluetoothCentral central = BluetoothHandler.getInstance(getApplicationContext()).central;
+        return central.getPeripheral(peripheralAddress);
+    }
 
     private boolean hasPermissions() {
         int targetSdkVersion = getApplicationInfo().targetSdkVersion;

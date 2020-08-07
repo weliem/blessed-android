@@ -58,7 +58,7 @@ class BluetoothHandler {
     private static final UUID BATTERY_LEVEL_CHARACTERISTIC_UUID = UUID.fromString("00002A19-0000-1000-8000-00805f9b34fb");
 
     // Local variables
-    private BluetoothCentral central;
+    public BluetoothCentral central;
     private static BluetoothHandler instance = null;
     private Context context;
     private Handler handler = new Handler();
@@ -168,6 +168,7 @@ class BluetoothHandler {
                 BloodPressureMeasurement measurement = new BloodPressureMeasurement(value);
                 Intent intent = new Intent("BluetoothMeasurement");
                 intent.putExtra("BloodPressure", measurement);
+                intent.putExtra("Peripheral", peripheral.getAddress());
                 context.sendBroadcast(intent);
                 Timber.d("%s", measurement);
             }
@@ -175,6 +176,7 @@ class BluetoothHandler {
                 TemperatureMeasurement measurement = new TemperatureMeasurement(value);
                 Intent intent = new Intent("TemperatureMeasurement");
                 intent.putExtra("Temperature", measurement);
+                intent.putExtra("Peripheral", peripheral.getAddress());
                 context.sendBroadcast(intent);
                 Timber.d("%s", measurement);
             }
@@ -182,6 +184,7 @@ class BluetoothHandler {
                HeartRateMeasurement measurement = new HeartRateMeasurement(value);
                 Intent intent = new Intent("HeartRateMeasurement");
                 intent.putExtra("HeartRate", measurement);
+                intent.putExtra("Peripheral", peripheral.getAddress());
                 context.sendBroadcast(intent);
                 Timber.d("%s", measurement);
             }
