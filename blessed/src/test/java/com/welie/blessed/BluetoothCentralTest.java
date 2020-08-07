@@ -422,7 +422,7 @@ public class BluetoothCentralTest {
 
         // We should not get a connection failed but a retry with autoconnect instead
         verify(callback, never()).onConnectionFailed(peripheral, 133);
-        verify(peripheral).autoConnect();
+        verify(peripheral, times(2)).connect();
     }
 
     @Test
