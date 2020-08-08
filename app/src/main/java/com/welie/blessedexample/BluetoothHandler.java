@@ -70,6 +70,9 @@ class BluetoothHandler {
         public void onServicesDiscovered(@NotNull BluetoothPeripheral peripheral) {
             Timber.i("discovered services");
 
+            // Request a higher MTU, iOS always asks for 185
+            peripheral.requestMtu(185);
+
             // Request a new connection priority
             peripheral.requestConnectionPriority(CONNECTION_PRIORITY_HIGH);
 
@@ -221,6 +224,11 @@ class BluetoothHandler {
                 String modelNumber = parser.getStringValue(0);
                 Timber.i("Received pnp: %s", modelNumber);
             }
+        }
+
+        @Override
+        public void onMtuChanged(@NotNull BluetoothPeripheral peripheral, int mtu, int status) {
+            Timber.i("new MTU set: %d", mtu);
         }
     };
 
