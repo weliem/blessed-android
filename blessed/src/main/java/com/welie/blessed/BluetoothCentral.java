@@ -890,7 +890,7 @@ public class BluetoothCentral {
      * Set a fixed PIN code for a peripheral that asks fir a PIN code during bonding.
      * <p>
      * This PIN code will be used to programmatically bond with the peripheral when it asks for a PIN code.
-     * Note that this only works for devices with a fixed PIN code.
+     * Note that this only works for peripherals with a fixed PIN code.
      *
      * @param peripheralAddress the address of the peripheral
      * @param pin               the 6 digit PIN code as a string, e.g. "123456"
