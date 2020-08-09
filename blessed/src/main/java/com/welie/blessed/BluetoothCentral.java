@@ -735,18 +735,18 @@ public class BluetoothCentral {
      * @param peripheralAddress mac address
      * @return a BluetoothPeripheral object matching the specified mac address or null if it was not found
      */
-    public BluetoothPeripheral getPeripheral(@NotNull String peripheralAddress) {
+    public @NotNull BluetoothPeripheral getPeripheral(@NotNull String peripheralAddress) {
         Objects.requireNonNull(peripheralAddress, "no valid peripheral address provided");
 
         if (!BluetoothAdapter.checkBluetoothAddress(peripheralAddress)) {
-            Timber.e("%s is not a valid address. Make sure all alphabetic characters are uppercase.", peripheralAddress);
-            return null;
+            final String message = String.format("%s is not a valid bluetooth address. Make sure all alphabetic characters are uppercase.", peripheralAddress);
+            throw new IllegalArgumentException(message);
         }
 
         if (connectedPeripherals.containsKey(peripheralAddress)) {
-            return connectedPeripherals.get(peripheralAddress);
+            return Objects.requireNonNull(connectedPeripherals.get(peripheralAddress));
         } else if (unconnectedPeripherals.containsKey(peripheralAddress)) {
-            return unconnectedPeripherals.get(peripheralAddress);
+            return Objects.requireNonNull(unconnectedPeripherals.get(peripheralAddress));
         } else {
             return new BluetoothPeripheral(context, bluetoothAdapter.getRemoteDevice(peripheralAddress), internalCallback, null, callBackHandler);
         }

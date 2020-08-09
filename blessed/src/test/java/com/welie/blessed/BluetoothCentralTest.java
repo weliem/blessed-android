@@ -662,11 +662,10 @@ public class BluetoothCentralTest {
         verify(peripheral, never()).autoConnect();
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void getPeripheralWrongMacAddressTest() {
-        // Get peripheral and supply lowercase mac address
+        // Get peripheral and supply lowercase mac address, which is not allowed
         BluetoothPeripheral peripheral = central.getPeripheral("ac:de:ef:12:34:56");
-        assertNull(peripheral);
     }
 
     @Test
