@@ -994,7 +994,7 @@ public class BluetoothPeripheral {
      *
      * @return Address of the bluetooth peripheral
      */
-    public String getAddress() {
+    public @NotNull String getAddress() {
         return device.getAddress();
     }
 
