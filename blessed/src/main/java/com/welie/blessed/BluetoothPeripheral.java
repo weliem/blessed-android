@@ -41,12 +41,14 @@ import android.os.Looper;
 import android.os.SystemClock;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -1040,8 +1042,11 @@ public class BluetoothPeripheral {
      * @return Supported services.
      */
     @SuppressWarnings("WeakerAccess")
-    public List<BluetoothGattService> getServices() {
-        return bluetoothGatt.getServices();
+    public @NotNull List<BluetoothGattService> getServices() {
+        if (bluetoothGatt != null ) {
+            return bluetoothGatt.getServices();
+        }
+        return Collections.emptyList();
     }
 
     /**
@@ -1050,7 +1055,7 @@ public class BluetoothPeripheral {
      * @param serviceUUID the UUID of the service
      * @return the BluetoothGattService object for the service UUID or null if the peripheral does not have a service with the specified UUID
      */
-    public BluetoothGattService getService(@NotNull UUID serviceUUID) {
+    public @Nullable BluetoothGattService getService(@NotNull UUID serviceUUID) {
         Objects.requireNonNull(serviceUUID, "no valid service UUID provided");
 
         if (bluetoothGatt != null) {
@@ -1067,7 +1072,7 @@ public class BluetoothPeripheral {
      * @param characteristicUUID the UUID of the chararacteristic
      * @return the BluetoothGattCharacteristic object for the characteristic UUID or null if the peripheral does not have a characteristic with the specified UUID
      */
-    public BluetoothGattCharacteristic getCharacteristic(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID) {
+    public @Nullable BluetoothGattCharacteristic getCharacteristic(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID) {
         Objects.requireNonNull(serviceUUID, "no valid service UUID provided");
         Objects.requireNonNull(characteristicUUID, "no valid characteristic provided");
 
