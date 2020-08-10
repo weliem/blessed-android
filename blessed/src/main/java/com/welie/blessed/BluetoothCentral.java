@@ -162,7 +162,7 @@ public class BluetoothCentral {
         }
     };
 
-    private final ScanCallback scanByServiceUUIDCallback = new ScanCallback() {
+    private final ScanCallback defaultScanCallback = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, final ScanResult result) {
             synchronized (this) {
@@ -428,7 +428,7 @@ public class BluetoothCentral {
             filters.add(filter);
         }
 
-        startScan(filters, scanSettings, scanByServiceUUIDCallback);
+        startScan(filters, scanSettings, defaultScanCallback);
     }
 
     /**
@@ -466,14 +466,25 @@ public class BluetoothCentral {
             }
         }
 
-        startScan(filters, scanSettings, scanByServiceUUIDCallback);
+        startScan(filters, scanSettings, defaultScanCallback);
+    }
+
+    /**
+     * Scan for any peripheral that matches the supplied filters
+     *
+     * @param filters A list of ScanFilters
+     */
+    public void scanForPeripheralsUsingFilters(@NotNull List<ScanFilter> filters) {
+        Objects.requireNonNull(filters, "no filters supplied");
+
+        startScan(filters, scanSettings, defaultScanCallback);
     }
 
     /**
      * Scan for any peripheral that is advertising.
      */
     public void scanForPeripherals() {
-        startScan(null, scanSettings, scanByServiceUUIDCallback);
+        startScan(null, scanSettings, defaultScanCallback);
     }
 
     /**
