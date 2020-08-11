@@ -1856,7 +1856,14 @@ public class BluetoothPeripheral {
             public void run() {
                 Timber.e("connection timout, disconnecting '%s'", peripheral.getName());
                 disconnect();
-                completeDisconnect(true, GATT_CONN_TIMEOUT);
+
+                mainHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        completeDisconnect(true, GATT_CONN_TIMEOUT);
+                    }
+                }, 50);
+
                 timeoutRunnable = null;
             }
         };
