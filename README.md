@@ -69,7 +69,7 @@ The method `connectPeripheral` will try to immediately connect to a device that 
 
 The method `autoConnectPeripheral` is for re-connecting to known devices for which you already know the device's mac address. The BLE stack will automatically connect to the device when it sees it in its internal scan. Therefore, it may take longer to connect to a device but this call will never time out! So you can issue the autoConnect command and the device will be connected whenever it is found. This call will **also work** when the device is not cached by the Android stack, as BLESSED takes care of it! In contrary to `connectPeripheral`, there can be multiple outstanding `autoConnectPeripheral` requests.
 
-The method `autoConnectPeripheralsBatch` is for re-connecting to a multiple peripherals in one go. Since the normal `autoConnectPeripheral` may involve scanning if peripherals are uncached, it is not suitable for calling very fast after each other since it may trigger scanner limitations of Android. So use `autoConnectPeripheralsBatch` if the want to re-connect to many know peripherals.
+The method `autoConnectPeripheralsBatch` is for re-connecting to multiple peripherals in one go. Since the normal `autoConnectPeripheral` may involve scanning, if peripherals are uncached, it is not suitable for calling very fast after each other, since it may trigger scanner limitations of Android. So use `autoConnectPeripheralsBatch` if the want to re-connect to many known peripherals.
 
 If you know the mac address of your peripheral you can obtain a `BluetoothPeripheral` object using:
 ```java
