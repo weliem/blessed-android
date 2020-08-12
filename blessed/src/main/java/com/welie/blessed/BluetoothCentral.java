@@ -420,6 +420,11 @@ public class BluetoothCentral {
     public void scanForPeripheralsWithServices(@NotNull final UUID[] serviceUUIDs) {
         Objects.requireNonNull(serviceUUIDs, "no service UUIDs supplied");
 
+        // Make sure there is at least 1 service UUID in the list
+        if (serviceUUIDs.length == 0) {
+            throw new IllegalArgumentException("at least one service UUID  must be supplied");
+        }
+
         List<ScanFilter> filters = new ArrayList<>();
         for (UUID serviceUUID : serviceUUIDs) {
             ScanFilter filter = new ScanFilter.Builder()
@@ -441,6 +446,11 @@ public class BluetoothCentral {
     public void scanForPeripheralsWithNames(@NotNull final String[] peripheralNames) {
         Objects.requireNonNull(peripheralNames, "No peripheral names supplied");
 
+        // Make sure there is at least 1 peripheral name in the list
+        if (peripheralNames.length == 0) {
+            throw new IllegalArgumentException("at least one peripheral name must be supplied");
+        }
+
         // Start the scanner with no filter because we'll do the filtering ourselves
         scanPeripheralNames = peripheralNames;
         startScan(null, scanSettings, scanByNameCallback);
@@ -453,6 +463,11 @@ public class BluetoothCentral {
      */
     public void scanForPeripheralsWithAddresses(@NotNull final String[] peripheralAddresses) {
         Objects.requireNonNull(peripheralAddresses, "No peripheral addresses supplied");
+
+        // Make sure there is at least 1 filter in the list
+        if (peripheralAddresses.length == 0) {
+            throw new IllegalArgumentException("at least one peripheral address must be supplied");
+        }
 
         List<ScanFilter> filters = new ArrayList<>();
         for (String address : peripheralAddresses) {
@@ -476,6 +491,11 @@ public class BluetoothCentral {
      */
     public void scanForPeripheralsUsingFilters(@NotNull List<ScanFilter> filters) {
         Objects.requireNonNull(filters, "no filters supplied");
+
+        // Make sure there is at least 1 filter in the list
+        if (filters.isEmpty()) {
+            throw new IllegalArgumentException("at least one scan filter must be supplied");
+        }
 
         startScan(filters, scanSettings, defaultScanCallback);
     }

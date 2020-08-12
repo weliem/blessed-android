@@ -26,6 +26,7 @@ import org.robolectric.shadows.ShadowBluetoothAdapter;
 import org.robolectric.shadows.ShadowPackageManager;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -100,7 +101,7 @@ public class BluetoothCentralTest {
         verify(scanner).startScan(anyList(), any(ScanSettings.class), any(ScanCallback.class));
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("scanByServiceUUIDCallback");
+        Field field = BluetoothCentral.class.getDeclaredField("defaultScanCallback");
         field.setAccessible(true);
         ScanCallback scanCallback = (ScanCallback) field.get(central);
 
@@ -143,7 +144,7 @@ public class BluetoothCentralTest {
         assertEquals(BLP_SERVICE_UUID.toString(), uuid.toString());
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("scanByServiceUUIDCallback");
+        Field field = BluetoothCentral.class.getDeclaredField("defaultScanCallback");
         field.setAccessible(true);
         ScanCallback scanCallback = (ScanCallback) field.get(central);
 
@@ -185,7 +186,7 @@ public class BluetoothCentralTest {
         assertEquals(myAddress, address);
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("scanByServiceUUIDCallback");
+        Field field = BluetoothCentral.class.getDeclaredField("defaultScanCallback");
         field.setAccessible(true);
         ScanCallback scanCallback = (ScanCallback) field.get(central);
 
@@ -269,13 +270,89 @@ public class BluetoothCentralTest {
     }
 
     @Test
+    public void scanForPeripheralsUsingFiltersTest() throws Exception {
+        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+        String myAddress = "12:23:34:98:76:54";
+        List<ScanFilter> myfilters = new ArrayList<>();
+        ScanFilter filter = new ScanFilter.Builder()
+                .setDeviceAddress(myAddress)
+                .build();
+        myfilters.add(filter);
+        central.scanForPeripheralsUsingFilters(myfilters);
+
+        // Make sure startScan is called
+        ArgumentCaptor<List> scanFiltersCaptor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<ScanSettings> scanSettingsCaptor = ArgumentCaptor.forClass(ScanSettings.class);
+        ArgumentCaptor<ScanCallback> scanCallbackCaptor = ArgumentCaptor.forClass(ScanCallback.class);
+        verify(scanner).startScan(scanFiltersCaptor.capture(), scanSettingsCaptor.capture(), scanCallbackCaptor.capture());
+
+        // Verify there is only 1 filter set
+        List<ScanFilter> filters = scanFiltersCaptor.getValue();
+        assertEquals(1, filters.size());
+
+        // Verify the filter only contains the valid address we added
+        ScanFilter addressFilter = filters.get(0);
+        String address = addressFilter.getDeviceAddress();
+        assertEquals(myAddress, address);
+    }
+
+
+        @Test (expected = NullPointerException.class)
+    public void scanForPeripheralsWithServicesTestNullTest() {
+        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+        central.scanForPeripheralsWithServices(null);
+    }
+
+    @Test (expected = IllegalArgumentException.class)
+    public void scanForPeripheralsWithServicesTestEmptyTest() {
+        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+        central.scanForPeripheralsWithServices(new UUID[0]);
+    }
+
+    @Test (expected = NullPointerException.class)
+    public void scanForPeripheralsWithAddressesNullTest() {
+        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+        central.scanForPeripheralsWithAddresses(null);
+    }
+
+    @Test (expected = IllegalArgumentException.class)
+    public void scanForPeripheralsWithAddressesEmptyTest() {
+        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+        central.scanForPeripheralsWithAddresses(new String[0]);
+    }
+
+    @Test (expected = NullPointerException.class)
+    public void scanForPeripheralsWithNamesTestNullTest() {
+        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+        central.scanForPeripheralsWithNames(null);
+    }
+
+    @Test (expected = IllegalArgumentException.class)
+    public void scanForPeripheralsWithNamesEmptyTest() {
+        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+        central.scanForPeripheralsWithNames(new String[0]);
+    }
+
+    @Test (expected = NullPointerException.class)
+    public void scanForPeripheralsUsingFiltersNullTest() {
+        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+        central.scanForPeripheralsUsingFilters(null);
+    }
+
+    @Test (expected = IllegalArgumentException.class)
+    public void scanForPeripheralsUsingFiltersEmptyTest() {
+        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+        central.scanForPeripheralsUsingFilters(new ArrayList<ScanFilter>());
+    }
+
+    @Test
     public void scanFailedTest() throws Exception {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         central.scanForPeripherals();
         verify(scanner).startScan(anyList(), any(ScanSettings.class), any(ScanCallback.class));
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("scanByServiceUUIDCallback");
+        Field field = BluetoothCentral.class.getDeclaredField("defaultScanCallback");
         field.setAccessible(true);
         ScanCallback scanCallback = (ScanCallback) field.get(central);
 
@@ -319,7 +396,7 @@ public class BluetoothCentralTest {
         verify(scanner).startScan(anyList(), any(ScanSettings.class), any(ScanCallback.class));
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("scanByServiceUUIDCallback");
+        Field field = BluetoothCentral.class.getDeclaredField("defaultScanCallback");
         field.setAccessible(true);
         ScanCallback scanCallback = (ScanCallback) field.get(central);
 
