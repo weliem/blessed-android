@@ -1860,7 +1860,7 @@ public class BluetoothPeripheral {
                 mainHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, GATT_SUCCESS, BluetoothProfile.STATE_DISCONNECTED);
+                        bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, GATT_CONN_TIMEOUT, BluetoothProfile.STATE_DISCONNECTED);
                     }
                 }, 50);
 
