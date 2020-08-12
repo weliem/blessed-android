@@ -625,7 +625,7 @@ public class BluetoothCentral {
         synchronized (connectLock) {
             Objects.requireNonNull(peripheral, "no valid peripheral specified");
             Objects.requireNonNull(peripheralCallback, "no valid peripheral callback specified");
-            
+
             // Check if we are already connected to this peripheral
             if (connectedPeripherals.containsKey(peripheral.getAddress())) {
                 Timber.w("already connected to %s'", peripheral.getAddress());
@@ -812,6 +812,7 @@ public class BluetoothCentral {
 
     /**
      * Check if Bluetooth is enabled
+     *
      * @return true is Bluetooth is enabled, otherwise false
      */
     public boolean isBluetoothEnabled() {

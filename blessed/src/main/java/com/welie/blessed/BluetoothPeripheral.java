@@ -386,13 +386,13 @@ public class BluetoothPeripheral {
                     byte[] value = descriptor.getValue();
                     if (value != null) {
                         if (Arrays.equals(value, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) ||
-                            Arrays.equals(value, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)){
+                                Arrays.equals(value, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)) {
                             // Notify set to on, add it to the set of notifying characteristics
                             notifyingCharacteristics.add(parentCharacteristic.getUuid());
                             if (notifyingCharacteristics.size() > MAX_NOTIFYING_CHARACTERISTICS) {
                                 Timber.e("too many (%d) notifying characteristics. The maximum Android can handle is %d", notifyingCharacteristics.size(), MAX_NOTIFYING_CHARACTERISTICS);
                             }
-                        } else if (Arrays.equals(value, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)){
+                        } else if (Arrays.equals(value, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)) {
                             // Notify was turned off, so remove it from the set of notifying characteristics
                             notifyingCharacteristics.remove(parentCharacteristic.getUuid());
                         } else {
@@ -1043,7 +1043,7 @@ public class BluetoothPeripheral {
      */
     @SuppressWarnings("WeakerAccess")
     public @NotNull List<BluetoothGattService> getServices() {
-        if (bluetoothGatt != null ) {
+        if (bluetoothGatt != null) {
             return bluetoothGatt.getServices();
         }
         return Collections.emptyList();
