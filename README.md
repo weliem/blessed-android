@@ -25,13 +25,14 @@ This library is also available for Linux, see [blessed-bluez](https://github.com
 
 ## Scanning
 
-There are 4 different scanning methods:
+There are 5 different scanning methods:
 
 ```java
 public void scanForPeripherals()
 public void scanForPeripheralsWithServices(UUID[] serviceUUIDs)
 public void scanForPeripheralsWithNames(String[] peripheralNames)
 public void scanForPeripheralsWithAddresses(String[] peripheralAddresses)
+public void scanForPeripheralsUsingFilters(List<ScanFilter> filters)
 ```
 
 They all work in the same way and take an array of either service UUIDs, peripheral names or mac addresses. So in order to setup a scan for a device with the Bloodpressure service and connect to it, you do:
@@ -55,6 +56,8 @@ UUID BLOODPRESSURE_SERVICE_UUID = UUID.fromString("00001810-0000-1000-8000-00805
 central.scanForPeripheralsWithServices(new UUID[]{BLOODPRESSURE_SERVICE_UUID});
 ```
 **Note** Only 1 of these 4 types of scans can be active at one time! So call `stopScan()` before calling another scan.
+
+The method `scanForPeripheralsUsingFilters` is for scanning using your own list of filters. See Android documentation for more info on the use of ScanFilters.
 
 ## Connecting to devices
 
