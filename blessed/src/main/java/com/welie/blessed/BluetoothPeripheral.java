@@ -306,6 +306,7 @@ public class BluetoothPeripheral {
     private boolean isRetrying;
     private boolean bondLost = false;
     private boolean manuallyBonding = false;
+    private boolean discoveryStarted = false;
     private volatile BluetoothGatt bluetoothGatt;
     private int state;
     private int nrTries;
@@ -537,6 +538,8 @@ public class BluetoothPeripheral {
                 Timber.d("discovering services of '%s' with delay of %d ms", getName(), delay);
                 if (!bluetoothGatt.discoverServices()) {
                     Timber.e("discoverServices failed to start");
+                } else {
+                    discoveryStarted = true;
                 }
                 discoverServicesRunnable = null;
             }
@@ -656,7 +659,8 @@ public class BluetoothPeripheral {
                 });
 
                 // If bonding was started at connection time, we may still have to discover the services
-                if (bluetoothGatt.getServices().isEmpty()) {
+                // Also make sure we are not starting a discovery while another one is already in progress
+                if (bluetoothGatt.getServices().isEmpty() && !discoveryStarted) {
                     delayedDiscoverServices(0);
                 }
 
@@ -771,6 +775,7 @@ public class BluetoothPeripheral {
                     Timber.i("connect to '%s' (%s) using TRANSPORT_LE", getName(), getAddress());
                     registerBondingBroadcastReceivers();
                     state = BluetoothProfile.STATE_CONNECTING;
+                    discoveryStarted = false;
                     bluetoothGatt = connectGattHelper(device, false, bluetoothGattCallback);
                     connectTimestamp = SystemClock.elapsedRealtime();
                     startConnectionTimer(BluetoothPeripheral.this);
@@ -796,6 +801,7 @@ public class BluetoothPeripheral {
                     Timber.i("autoConnect to '%s' (%s) using TRANSPORT_LE", getName(), getAddress());
                     registerBondingBroadcastReceivers();
                     state = BluetoothProfile.STATE_CONNECTING;
+                    discoveryStarted = false;
                     bluetoothGatt = connectGattHelper(device, true, bluetoothGattCallback);
                     connectTimestamp = SystemClock.elapsedRealtime();
                 }
