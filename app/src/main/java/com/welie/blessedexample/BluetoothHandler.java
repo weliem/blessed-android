@@ -31,6 +31,15 @@ import static java.lang.Math.abs;
 
 class BluetoothHandler {
 
+    // Intent constants
+    public static final String MEASUREMENT_BLOODPRESSURE = "blessed.measurement.bloodpressure";
+    public static final String MEASUREMENT_BLOODPRESSURE_EXTRA = "blessed.measurement.bloodpressure.extra";
+    public static final String MEASUREMENT_TEMPERATURE = "blessed.measurement.temperature";
+    public static final String MEASUREMENT_TEMPERATURE_EXTRA = "blessed.measurement.temperature.extra";
+    public static final String MEASUREMENT_HEARTRATE = "blessed.measurement.heartrate";
+    public static final String MEASUREMENT_HEARTRATE_EXTRA = "blessed.measurement.heartrate.extra";
+    public static final String MEASUREMENT_EXTRA_PERIPHERAL = "blessed.measurement.peripheral";
+
     // UUIDs for the Blood Pressure service (BLP)
     private static final UUID BLP_SERVICE_UUID = UUID.fromString("00001810-0000-1000-8000-00805f9b34fb");
     private static final UUID BLOOD_PRESSURE_MEASUREMENT_CHARACTERISTIC_UUID = UUID.fromString("00002A35-0000-1000-8000-00805f9b34fb");
@@ -169,25 +178,25 @@ class BluetoothHandler {
 
             if (characteristicUUID.equals(BLOOD_PRESSURE_MEASUREMENT_CHARACTERISTIC_UUID)) {
                 BloodPressureMeasurement measurement = new BloodPressureMeasurement(value);
-                Intent intent = new Intent("BluetoothMeasurement");
-                intent.putExtra("BloodPressure", measurement);
-                intent.putExtra("Peripheral", peripheral.getAddress());
+                Intent intent = new Intent(MEASUREMENT_BLOODPRESSURE);
+                intent.putExtra(MEASUREMENT_BLOODPRESSURE_EXTRA, measurement);
+                intent.putExtra(MEASUREMENT_EXTRA_PERIPHERAL, peripheral.getAddress());
                 context.sendBroadcast(intent);
                 Timber.d("%s", measurement);
             }
             else if(characteristicUUID.equals(TEMPERATURE_MEASUREMENT_CHARACTERISTIC_UUID)) {
                 TemperatureMeasurement measurement = new TemperatureMeasurement(value);
-                Intent intent = new Intent("TemperatureMeasurement");
-                intent.putExtra("Temperature", measurement);
-                intent.putExtra("Peripheral", peripheral.getAddress());
+                Intent intent = new Intent(MEASUREMENT_TEMPERATURE);
+                intent.putExtra(MEASUREMENT_TEMPERATURE_EXTRA, measurement);
+                intent.putExtra(MEASUREMENT_EXTRA_PERIPHERAL, peripheral.getAddress());
                 context.sendBroadcast(intent);
                 Timber.d("%s", measurement);
             }
             else if(characteristicUUID.equals(HEARTRATE_MEASUREMENT_CHARACTERISTIC_UUID)) {
                HeartRateMeasurement measurement = new HeartRateMeasurement(value);
-                Intent intent = new Intent("HeartRateMeasurement");
-                intent.putExtra("HeartRate", measurement);
-                intent.putExtra("Peripheral", peripheral.getAddress());
+                Intent intent = new Intent(MEASUREMENT_HEARTRATE);
+                intent.putExtra(MEASUREMENT_HEARTRATE_EXTRA, measurement);
+                intent.putExtra(MEASUREMENT_EXTRA_PERIPHERAL, peripheral.getAddress());
                 context.sendBroadcast(intent);
                 Timber.d("%s", measurement);
             }
