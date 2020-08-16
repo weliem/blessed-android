@@ -42,6 +42,11 @@ public class MainActivity extends AppCompatActivity {
         registerReceiver(bloodPressureDataReceiver, new IntentFilter( BluetoothHandler.MEASUREMENT_BLOODPRESSURE ));
         registerReceiver(temperatureDataReceiver, new IntentFilter( BluetoothHandler.MEASUREMENT_TEMPERATURE ));
         registerReceiver(heartRateDataReceiver, new IntentFilter( BluetoothHandler.MEASUREMENT_HEARTRATE ));
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
 
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if(bluetoothAdapter == null) return;
@@ -159,6 +164,7 @@ public class MainActivity extends AppCompatActivity {
                     .setMessage("Scanning for Bluetooth peripherals requires locations services to be enabled.") // Want to enable?
                     .setPositiveButton("Enable", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.cancel();
                             startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
                         }
                     })
