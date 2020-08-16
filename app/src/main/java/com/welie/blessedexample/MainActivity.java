@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         measurementValue = (TextView) findViewById(R.id.bloodPressureValue);
 
+        registerReceiver(locationServiceStateReceiver, new IntentFilter((LocationManager.MODE_CHANGED_ACTION)));
         registerReceiver(bloodPressureDataReceiver, new IntentFilter( "BluetoothMeasurement" ));
         registerReceiver(temperatureDataReceiver, new IntentFilter( "TemperatureMeasurement" ));
         registerReceiver(heartRateDataReceiver, new IntentFilter( "HeartRateMeasurement" ));
@@ -67,10 +68,23 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        unregisterReceiver(locationServiceStateReceiver);
         unregisterReceiver(bloodPressureDataReceiver);
         unregisterReceiver(temperatureDataReceiver);
         unregisterReceiver(heartRateDataReceiver);
     }
+
+    private final BroadcastReceiver locationServiceStateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action != null && action.equals(LocationManager.MODE_CHANGED_ACTION)) {
+                boolean isEnabled = areLocationServicesEnabled();
+                Timber.i("Location service state changed to: %s", isEnabled ? "on" : "off");
+                checkLocationServices();
+            }
+        }
+    };
 
     private final BroadcastReceiver bloodPressureDataReceiver = new BroadcastReceiver() {
         @Override
