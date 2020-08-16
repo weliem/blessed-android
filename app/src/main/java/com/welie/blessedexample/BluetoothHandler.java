@@ -206,7 +206,10 @@ class BluetoothHandler {
 
                 // Deal with Omron devices where we can only write currentTime under specific conditions
                 if(peripheral.getName().contains("BLEsmart_")) {
-                    boolean isNotifying = peripheral.isNotifying(peripheral.getCharacteristic(BLP_SERVICE_UUID, BLOOD_PRESSURE_MEASUREMENT_CHARACTERISTIC_UUID));
+                    BluetoothGattCharacteristic bloodpressureMeasurement = peripheral.getCharacteristic(BLP_SERVICE_UUID, BLOOD_PRESSURE_MEASUREMENT_CHARACTERISTIC_UUID);
+                    if (bloodpressureMeasurement == null) return;
+
+                    boolean isNotifying = peripheral.isNotifying(bloodpressureMeasurement);
                     if(isNotifying) currentTimeCounter++;
 
                     // We can set device time for Omron devices only if it is the first notification and currentTime is more than 10 min from now
