@@ -110,6 +110,7 @@ public class BluetoothCentralTest {
         BluetoothDevice device = mock(BluetoothDevice.class);
         when(device.getAddress()).thenReturn("12:23:34:98:76:54");
         when(scanResult.getDevice()).thenReturn(device);
+        bluetoothAdapter.addDevice(device);
         scanCallback.onScanResult(CALLBACK_TYPE_ALL_MATCHES, scanResult);
 
         // See if we get it back
@@ -153,6 +154,7 @@ public class BluetoothCentralTest {
         BluetoothDevice device = mock(BluetoothDevice.class);
         when(device.getAddress()).thenReturn("12:23:34:98:76:54");
         when(scanResult.getDevice()).thenReturn(device);
+        bluetoothAdapter.addDevice(device);
         scanCallback.onScanResult(CALLBACK_TYPE_ALL_MATCHES, scanResult);
 
         // See if we get it back
@@ -195,6 +197,7 @@ public class BluetoothCentralTest {
         BluetoothDevice device = mock(BluetoothDevice.class);
         when(device.getAddress()).thenReturn(myAddress);
         when(scanResult.getDevice()).thenReturn(device);
+        bluetoothAdapter.addDevice(device);
         scanCallback.onScanResult(CALLBACK_TYPE_ALL_MATCHES, scanResult);
 
         // See if we get it back
@@ -235,6 +238,7 @@ public class BluetoothCentralTest {
     @Test
     public void scanForPeripheralsWithNamesTest() throws Exception {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+        String myAddress = "12:23:34:98:76:54";
         String myName = "Polar";
         central.scanForPeripheralsWithNames(new String[]{myName});
 
@@ -256,8 +260,10 @@ public class BluetoothCentralTest {
         // Fake scan result
         ScanResult scanResult = mock(ScanResult.class);
         BluetoothDevice device = mock(BluetoothDevice.class);
+        when(device.getAddress()).thenReturn(myAddress);
         when(device.getName()).thenReturn("Polar H7");
         when(scanResult.getDevice()).thenReturn(device);
+        bluetoothAdapter.addDevice(device);
         scanCallback.onScanResult(CALLBACK_TYPE_ALL_MATCHES, scanResult);
 
         // See if we get it back
