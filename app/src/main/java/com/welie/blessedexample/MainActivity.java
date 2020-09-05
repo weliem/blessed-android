@@ -54,13 +54,13 @@ public class MainActivity extends AppCompatActivity {
         if (!bluetoothAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-        }
-
-        // Check if Location services are on because they are required to make scanning work
-        if(checkLocationServices()) {
-            // Check if the app has the right permissions
-            if (hasPermissions()) {
-                initBluetoothHandler();
+        } else {
+            // Check if Location services are on because they are required to make scanning work
+            if (checkLocationServices()) {
+                // Check if the app has the right permissions
+                if (hasPermissions()) {
+                    initBluetoothHandler();
+                }
             }
         }
     }

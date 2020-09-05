@@ -298,7 +298,7 @@ public class BluetoothPeripheral {
     // Member variables
     private final Context context;
     private final Handler callbackHandler;
-    private final BluetoothDevice device;
+    private @NotNull BluetoothDevice device;
     private final InternalCallback listener;
     private BluetoothPeripheralCallback peripheralCallback;
     private final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
@@ -760,6 +760,10 @@ public class BluetoothPeripheral {
 
     void setPeripheralCallback(@NotNull BluetoothPeripheralCallback peripheralCallback) {
         this.peripheralCallback = Objects.requireNonNull(peripheralCallback, "no valid peripheral callback provided");
+    }
+
+    void setDevice(@NotNull BluetoothDevice bluetoothDevice) {
+        this.device = Objects.requireNonNull(bluetoothDevice, "bluetoothdevice is not valid");
     }
 
     /**

@@ -107,6 +107,7 @@ public class BluetoothCentral {
     private final BluetoothCentralCallback bluetoothCentralCallback;
     private final Map<String, BluetoothPeripheral> connectedPeripherals = new ConcurrentHashMap<>();
     private final Map<String, BluetoothPeripheral> unconnectedPeripherals = new ConcurrentHashMap<>();
+    private final Map<String, BluetoothPeripheral> scannedPeripherals = new ConcurrentHashMap<>();
     private final List<String> reconnectPeripheralAddresses = new ArrayList<>();
     private final Map<String, BluetoothPeripheralCallback> reconnectCallbacks = new ConcurrentHashMap<>();
     private String[] scanPeripheralNames;
@@ -139,7 +140,8 @@ public class BluetoothCentral {
                             @Override
                             public void run() {
                                 if (isScanning()) {
-                                    BluetoothPeripheral peripheral = new BluetoothPeripheral(context, result.getDevice(), internalCallback, null, callBackHandler);
+                                    BluetoothPeripheral peripheral = getPeripheral(result.getDevice().getAddress());
+                                    peripheral.setDevice(result.getDevice());
                                     bluetoothCentralCallback.onDiscoveredPeripheral(peripheral, result);
                                 }
                             }
@@ -170,7 +172,8 @@ public class BluetoothCentral {
                     @Override
                     public void run() {
                         if (isScanning()) {
-                            BluetoothPeripheral peripheral = new BluetoothPeripheral(context, result.getDevice(), internalCallback, null, callBackHandler);
+                            BluetoothPeripheral peripheral = getPeripheral(result.getDevice().getAddress());
+                            peripheral.setDevice(result.getDevice());
                             bluetoothCentralCallback.onDiscoveredPeripheral(peripheral, result);
                         }
                     }
@@ -206,6 +209,7 @@ public class BluetoothCentral {
                 reconnectPeripheralAddresses.remove(deviceAddress);
                 reconnectCallbacks.remove(deviceAddress);
                 unconnectedPeripherals.remove(deviceAddress);
+                scannedPeripherals.remove(deviceAddress);
 
                 if (peripheral != null && callback != null) {
                     connectPeripheral(peripheral, callback);
@@ -235,7 +239,9 @@ public class BluetoothCentral {
         public void connected(final BluetoothPeripheral peripheral) {
             connectionRetries.remove(peripheral.getAddress());
             unconnectedPeripherals.remove(peripheral.getAddress());
+            scannedPeripherals.remove((peripheral.getAddress()));
             connectedPeripherals.put(peripheral.getAddress(), peripheral);
+
             if (connectedPeripherals.size() == MAX_CONNECTED_PERIPHERALS) {
                 Timber.w("maximum amount (%d) of connected peripherals reached", MAX_CONNECTED_PERIPHERALS);
             }
@@ -251,6 +257,7 @@ public class BluetoothCentral {
         @Override
         public void connectFailed(final BluetoothPeripheral peripheral, final int status) {
             unconnectedPeripherals.remove(peripheral.getAddress());
+            scannedPeripherals.remove((peripheral.getAddress()));
 
             // Get the number of retries for this peripheral
             int nrRetries = 0;
@@ -287,6 +294,7 @@ public class BluetoothCentral {
 
             connectedPeripherals.remove(peripheral.getAddress());
             unconnectedPeripherals.remove(peripheral.getAddress());
+            scannedPeripherals.remove((peripheral.getAddress()));
             connectionRetries.remove(peripheral.getAddress());
 
             callBackHandler.post(new Runnable() {
@@ -566,6 +574,7 @@ public class BluetoothCentral {
         }
         currentCallback = null;
         currentFilters = null;
+        scannedPeripherals.clear();
     }
 
     /**
@@ -774,12 +783,16 @@ public class BluetoothCentral {
             throw new IllegalArgumentException(message);
         }
 
-        if (connectedPeripherals.containsKey(peripheralAddress)) {
+        if (scannedPeripherals.containsKey(peripheralAddress)) {
+            return Objects.requireNonNull(scannedPeripherals.get(peripheralAddress));
+        } else if (connectedPeripherals.containsKey(peripheralAddress)) {
             return Objects.requireNonNull(connectedPeripherals.get(peripheralAddress));
         } else if (unconnectedPeripherals.containsKey(peripheralAddress)) {
             return Objects.requireNonNull(unconnectedPeripherals.get(peripheralAddress));
         } else {
-            return new BluetoothPeripheral(context, bluetoothAdapter.getRemoteDevice(peripheralAddress), internalCallback, null, callBackHandler);
+            BluetoothPeripheral peripheral = new BluetoothPeripheral(context, bluetoothAdapter.getRemoteDevice(peripheralAddress), internalCallback, null, callBackHandler);
+            scannedPeripherals.put(peripheralAddress, peripheral);
+            return peripheral;
         }
     }
 
