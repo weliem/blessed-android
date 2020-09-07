@@ -618,6 +618,7 @@ public class BluetoothCentral {
 
             // It is all looking good! Set the callback and prepare to connect
             peripheral.setPeripheralCallback(peripheralCallback);
+            scannedPeripherals.remove(peripheral.getAddress());
             unconnectedPeripherals.put(peripheral.getAddress(), peripheral);
 
             // Now connect
@@ -652,6 +653,7 @@ public class BluetoothCentral {
             if (deviceType == BluetoothDevice.DEVICE_TYPE_UNKNOWN) {
                 // The peripheral is not cached so we cannot autoconnect
                 Timber.d("peripheral with address '%s' not in Bluetooth cache, autoconnecting by scanning", peripheral.getAddress());
+                scannedPeripherals.remove(peripheral.getAddress());
                 unconnectedPeripherals.put(peripheral.getAddress(), peripheral);
                 autoConnectPeripheralByScan(peripheral.getAddress(), peripheralCallback);
                 return;
@@ -666,6 +668,7 @@ public class BluetoothCentral {
 
             // It is all looking good! Set the callback and prepare for autoconnect
             peripheral.setPeripheralCallback(peripheralCallback);
+            scannedPeripherals.remove(peripheral.getAddress());
             unconnectedPeripherals.put(peripheral.getAddress(), peripheral);
 
             // Autoconnect to this peripheral
@@ -783,12 +786,12 @@ public class BluetoothCentral {
             throw new IllegalArgumentException(message);
         }
 
-        if (scannedPeripherals.containsKey(peripheralAddress)) {
-            return Objects.requireNonNull(scannedPeripherals.get(peripheralAddress));
-        } else if (connectedPeripherals.containsKey(peripheralAddress)) {
+        if (connectedPeripherals.containsKey(peripheralAddress)) {
             return Objects.requireNonNull(connectedPeripherals.get(peripheralAddress));
         } else if (unconnectedPeripherals.containsKey(peripheralAddress)) {
             return Objects.requireNonNull(unconnectedPeripherals.get(peripheralAddress));
+        } else if (scannedPeripherals.containsKey(peripheralAddress)) {
+            return Objects.requireNonNull(scannedPeripherals.get(peripheralAddress));
         } else {
             BluetoothPeripheral peripheral = new BluetoothPeripheral(context, bluetoothAdapter.getRemoteDevice(peripheralAddress), internalCallback, null, callBackHandler);
             scannedPeripherals.put(peripheralAddress, peripheral);
