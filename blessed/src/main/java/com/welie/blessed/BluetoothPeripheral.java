@@ -1113,7 +1113,7 @@ public class BluetoothPeripheral {
 
     /**
      * Returns the currently set MTU
-     * 
+     *
      * @return the MTU
      */
     public int getCurrentMtu() {
