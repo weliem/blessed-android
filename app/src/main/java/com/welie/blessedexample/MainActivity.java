@@ -21,6 +21,8 @@ import com.welie.blessed.BluetoothPeripheral;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import timber.log.Timber;
@@ -48,21 +50,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if(bluetoothAdapter == null) return;
-
-        if (!bluetoothAdapter.isEnabled()) {
+        if (!isBluetoothEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         } else {
-            // Check if Location services are on because they are required to make scanning work
-            if (checkLocationServices()) {
-                // Check if the app has the right permissions
-                if (hasPermissions()) {
-                    initBluetoothHandler();
-                }
-            }
+            checkPermissions();
         }
+    }
+
+    private boolean isBluetoothEnabled() {
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if(bluetoothAdapter == null) return false;
+
+        return bluetoothAdapter.isEnabled();
     }
 
     private void initBluetoothHandler()
@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
             if (action != null && action.equals(LocationManager.MODE_CHANGED_ACTION)) {
                 boolean isEnabled = areLocationServicesEnabled();
                 Timber.i("Location service state changed to: %s", isEnabled ? "on" : "off");
-                checkLocationServices();
+                checkPermissions();
             }
         }
     };
@@ -128,20 +128,35 @@ public class MainActivity extends AppCompatActivity {
         return central.getPeripheral(peripheralAddress);
     }
 
-    private boolean hasPermissions() {
-        int targetSdkVersion = getApplicationInfo().targetSdkVersion;
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && targetSdkVersion >= Build.VERSION_CODES.Q) {
-            if (getApplicationContext().checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_LOCATION_REQUEST);
-                return false;
+    private void checkPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            List<String> missingPermissions = new ArrayList<>();
+            for (String requiredPermission : getRequiredPermissions()) {
+                if (getApplicationContext().checkSelfPermission(requiredPermission) != PackageManager.PERMISSION_GRANTED) {
+                    missingPermissions.add(requiredPermission);
+                }
             }
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (getApplicationContext().checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[] { Manifest.permission.ACCESS_COARSE_LOCATION }, ACCESS_LOCATION_REQUEST);
-                return false;
+
+            if (!missingPermissions.isEmpty()) {
+                requestPermissions(missingPermissions.toArray(new String[0]), ACCESS_LOCATION_REQUEST);
+            } else {
+                permissionsGranted();
             }
         }
-        return true;
+    }
+
+    private String[] getRequiredPermissions() {
+        int targetSdkVersion = getApplicationInfo().targetSdkVersion;
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && targetSdkVersion >= Build.VERSION_CODES.Q)
+            return new String[] {Manifest.permission.ACCESS_FINE_LOCATION};
+        else return new String[] {Manifest.permission.ACCESS_COARSE_LOCATION};
+    }
+
+    private void permissionsGranted() {
+        // Check if Location services are on because they are required to make scanning work
+        if (checkLocationServices()) {
+            initBluetoothHandler();
+        }
     }
 
     private boolean areLocationServicesEnabled() {
@@ -186,17 +201,31 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case ACCESS_LOCATION_REQUEST:
-                if(grantResults.length > 0) {
-                    if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                        initBluetoothHandler();
-                    }
-                }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        // Check if all permission were granted
+        boolean allGranted = true;
+        for (int result : grantResults) {
+            if (result != PackageManager.PERMISSION_GRANTED) {
+                allGranted = false;
                 break;
-            default:
-                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-                break;
+            }
+        }
+
+        if (allGranted) {
+            permissionsGranted();
+        } else {
+            new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Location permission is required for scanning Bluetooth peripherals")
+                    .setMessage("Please grant permissions")
+                    .setPositiveButton("Retry", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.cancel();
+                            checkPermissions();
+                        }
+                    })
+                    .create()
+                    .show();
         }
     }
 }
