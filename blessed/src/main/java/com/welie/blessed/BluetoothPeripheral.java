@@ -317,6 +317,7 @@ public class BluetoothPeripheral {
     private Runnable discoverServicesRunnable;
     private long connectTimestamp;
     private String cachedName;
+    private int currentMtu = 23;
 
     /**
      * This abstract class is used to implement BluetoothGatt callbacks.
@@ -510,6 +511,7 @@ public class BluetoothPeripheral {
 
         @Override
         public void onMtuChanged(BluetoothGatt gatt, final int mtu, final int status) {
+            currentMtu = mtu;
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -1107,6 +1109,15 @@ public class BluetoothPeripheral {
      */
     public int getState() {
         return state;
+    }
+
+    /**
+     * Returns the currently set MTU
+     * 
+     * @return the MTU
+     */
+    public int getCurrentMtu() {
+        return currentMtu;
     }
 
     /**
