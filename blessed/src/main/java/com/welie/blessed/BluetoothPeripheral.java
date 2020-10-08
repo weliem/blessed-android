@@ -538,7 +538,7 @@ public class BluetoothPeripheral {
             @Override
             public void run() {
                 Timber.d("discovering services of '%s' with delay of %d ms", getName(), delay);
-                if (!bluetoothGatt.discoverServices()) {
+                if (bluetoothGatt != null && !bluetoothGatt.discoverServices()) {
                     Timber.e("discoverServices failed to start");
                 } else {
                     discoveryStarted = true;
