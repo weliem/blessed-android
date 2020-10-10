@@ -323,7 +323,7 @@ public class BluetoothPeripheral {
     private Runnable discoverServicesRunnable;
     private long connectTimestamp;
     private String cachedName;
-    private int currentMtu = 23;
+    private int currentMtu = DEFAULT_MTU;
 
     /**
      * This abstract class is used to implement BluetoothGatt callbacks.
@@ -1451,6 +1451,8 @@ public class BluetoothPeripheral {
      * @return true if the method was executed, false if not executed
      */
     public boolean clearServicesCache() {
+        if (bluetoothGatt == null) return false;
+
         boolean result = false;
         try {
             Method refreshMethod = bluetoothGatt.getClass().getMethod("refresh");
