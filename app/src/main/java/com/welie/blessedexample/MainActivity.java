@@ -130,19 +130,25 @@ public class MainActivity extends AppCompatActivity {
 
     private void checkPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            List<String> missingPermissions = new ArrayList<>();
-            for (String requiredPermission : getRequiredPermissions()) {
-                if (getApplicationContext().checkSelfPermission(requiredPermission) != PackageManager.PERMISSION_GRANTED) {
-                    missingPermissions.add(requiredPermission);
-                }
-            }
-
-            if (!missingPermissions.isEmpty()) {
-                requestPermissions(missingPermissions.toArray(new String[0]), ACCESS_LOCATION_REQUEST);
+            String[] missingPermissions = getMissingPermissions(getRequiredPermissions());
+            if (missingPermissions.length > 0) {
+                requestPermissions(missingPermissions, ACCESS_LOCATION_REQUEST);
             } else {
                 permissionsGranted();
             }
         }
+    }
+
+    private String[] getMissingPermissions(String[] requiredPermissions) {
+        List<String> missingPermissions = new ArrayList<>();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            for (String requiredPermission : requiredPermissions) {
+                if (getApplicationContext().checkSelfPermission(requiredPermission) != PackageManager.PERMISSION_GRANTED) {
+                    missingPermissions.add(requiredPermission);
+                }
+            }
+        }
+        return missingPermissions.toArray(new String[0]);
     }
 
     private String[] getRequiredPermissions() {
