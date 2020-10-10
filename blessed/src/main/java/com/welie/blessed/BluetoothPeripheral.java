@@ -274,6 +274,12 @@ public class BluetoothPeripheral {
     @SuppressWarnings("WeakerAccess")
     public static final int STATE_DISCONNECTING = 3;
 
+    // Minimal and default MTU
+    private static final int DEFAULT_MTU = 23;
+
+    // Max MTU according to Bluetooth standard
+    private static final int DEFAULT_MAX_MTU = 512;
+
     // Maximum number of retries of commands
     private static final int MAX_TRIES = 2;
 
@@ -1502,6 +1508,11 @@ public class BluetoothPeripheral {
      * @return true if the operation was enqueued, false otherwise
      */
     public boolean requestMtu(final int mtu) {
+        // Make sure mtu is valid
+        if (mtu < DEFAULT_MTU || mtu > DEFAULT_MAX_MTU) {
+            throw new IllegalArgumentException("mtu must be between 23 and 512");
+        }
+
         boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
