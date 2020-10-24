@@ -1334,6 +1334,10 @@ public class BluetoothPeripheral {
 
         // Copy the value to avoid race conditions
         final byte[] bytesToWrite = copyOf(value);
+        if (bytesToWrite.length == 0) {
+            Timber.e("value byte array is empty, ignoring write request");
+            return false;
+        }
 
         // Enqueue the write command now that all checks have been passed
         boolean result = commandQueue.add(new Runnable() {
