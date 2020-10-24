@@ -1211,12 +1211,16 @@ public class BluetoothPeripheral {
 
         // Check if gatt object is valid
         if (bluetoothGatt == null) {
-            Timber.e("gatt is 'null', ignoring read request");
+            Timber.e("gatt is 'null', ignoring write request");
             return false;
         }
 
         // Copy the value to avoid race conditions
         final byte[] bytesToWrite = copyOf(value);
+        if (bytesToWrite.length == 0) {
+            Timber.e("value byte array is empty, ignoring write request");
+            return false;
+        }
 
         // Check if this characteristic actually supports this writeType
         int writeProperty;
