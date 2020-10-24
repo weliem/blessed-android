@@ -530,8 +530,7 @@ public class BluetoothCentral {
         // Start the scanner
         autoConnectScanner = bluetoothAdapter.getBluetoothLeScanner();
         if (autoConnectScanner != null) {
-            List<ScanFilter> filters;
-            filters = new ArrayList<>();
+            List<ScanFilter> filters = new ArrayList<>();
             for (String address : reconnectPeripheralAddresses) {
                 ScanFilter filter = new ScanFilter.Builder()
                         .setDeviceAddress(address)
