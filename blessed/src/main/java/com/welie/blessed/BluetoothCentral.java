@@ -132,7 +132,6 @@ public class BluetoothCentral {
             synchronized (this) {
                 String deviceName = result.getDevice().getName();
                 if (deviceName == null) return;
-                if (scanPeripheralNames == null) return;
 
                 for (String name : scanPeripheralNames) {
                     if (deviceName.contains(name)) {
