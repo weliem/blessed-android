@@ -302,9 +302,8 @@ public class BluetoothPeripheral {
     private static final int MAX_NOTIFYING_CHARACTERISTICS = 15;
 
     // Member variables
-
-    private final @NotNull Context context;
-    private final @NotNull Handler callbackHandler;
+    private @NotNull final  Context context;
+    private @NotNull final Handler callbackHandler;
     private @NotNull BluetoothDevice device;
     private @NotNull final InternalCallback listener;
     private @Nullable BluetoothPeripheralCallback peripheralCallback;
