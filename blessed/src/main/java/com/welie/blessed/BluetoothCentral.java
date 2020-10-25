@@ -42,6 +42,7 @@ import android.os.Looper;
 import android.os.ParcelUuid;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -58,7 +59,7 @@ import timber.log.Timber;
 /**
  * Central class to connect and communicate with bluetooth peripherals.
  */
-@SuppressWarnings({"SpellCheckingInspection", "unused", "WeakerAccess"})
+@SuppressWarnings({"SpellCheckingInspection", "unused", "WeakerAccess", "UnusedReturnValue"})
 public class BluetoothCentral {
 
     // Private constants
@@ -97,32 +98,31 @@ public class BluetoothCentral {
      */
     public static final int SCAN_FAILED_SCANNING_TOO_FREQUENTLY = 6;
 
-
     // Private variables
-    private final Context context;
-    private final Handler callBackHandler;
-    private final BluetoothAdapter bluetoothAdapter;
-    private BluetoothLeScanner bluetoothScanner;
-    private BluetoothLeScanner autoConnectScanner;
-    private final BluetoothCentralCallback bluetoothCentralCallback;
-    private final Map<String, BluetoothPeripheral> connectedPeripherals = new ConcurrentHashMap<>();
-    private final Map<String, BluetoothPeripheral> unconnectedPeripherals = new ConcurrentHashMap<>();
-    private final Map<String, BluetoothPeripheral> scannedPeripherals = new ConcurrentHashMap<>();
-    private final List<String> reconnectPeripheralAddresses = new ArrayList<>();
-    private final Map<String, BluetoothPeripheralCallback> reconnectCallbacks = new ConcurrentHashMap<>();
-    private String[] scanPeripheralNames;
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private Runnable timeoutRunnable;
-    private Runnable autoConnectRunnable;
-    private final Object connectLock = new Object();
-    private ScanCallback currentCallback;
-    private List<ScanFilter> currentFilters;
-    private ScanSettings scanSettings;
-    private final ScanSettings autoConnectScanSettings;
-    private final Map<String, Integer> connectionRetries = new ConcurrentHashMap<>();
+    private @NotNull final Context context;
+    private @NotNull final Handler callBackHandler;
+    private @NotNull final BluetoothAdapter bluetoothAdapter;
+    private @Nullable BluetoothLeScanner bluetoothScanner;
+    private @Nullable BluetoothLeScanner autoConnectScanner;
+    private @NotNull final BluetoothCentralCallback bluetoothCentralCallback;
+    private @NotNull final Map<String, BluetoothPeripheral> connectedPeripherals = new ConcurrentHashMap<>();
+    private @NotNull final Map<String, BluetoothPeripheral> unconnectedPeripherals = new ConcurrentHashMap<>();
+    private @NotNull final Map<String, BluetoothPeripheral> scannedPeripherals = new ConcurrentHashMap<>();
+    private @NotNull final List<String> reconnectPeripheralAddresses = new ArrayList<>();
+    private @NotNull final Map<String, BluetoothPeripheralCallback> reconnectCallbacks = new ConcurrentHashMap<>();
+    private @NotNull String[] scanPeripheralNames = new String[0];
+    private @NotNull final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private @Nullable Runnable timeoutRunnable;
+    private @Nullable Runnable autoConnectRunnable;
+    private @NotNull final Object connectLock = new Object();
+    private @Nullable ScanCallback currentCallback;
+    private @Nullable List<ScanFilter> currentFilters;
+    private @NotNull ScanSettings scanSettings;
+    private @NotNull final ScanSettings autoConnectScanSettings;
+    private @NotNull final Map<String, Integer> connectionRetries = new ConcurrentHashMap<>();
     private boolean expectingBluetoothOffDisconnects = false;
-    private Runnable disconnectRunnable;
-    private final Map<String, String> pinCodes = new ConcurrentHashMap<>();
+    private @Nullable Runnable disconnectRunnable;
+    private @NotNull final Map<String, String> pinCodes = new ConcurrentHashMap<>();
 
     //region Callbacks
 
@@ -306,7 +306,7 @@ public class BluetoothCentral {
         }
 
         @Override
-        public String getPincode(BluetoothPeripheral device) {
+        public @Nullable String getPincode(BluetoothPeripheral device) {
             return pinCodes.get(device.getAddress());
         }
     };
@@ -324,7 +324,7 @@ public class BluetoothCentral {
         this.context = Objects.requireNonNull(context, "no valid context provided");
         this.bluetoothCentralCallback = Objects.requireNonNull(bluetoothCentralCallback, "no valid bluetoothCallback provided");
         this.callBackHandler = Objects.requireNonNull(handler, "no valid handler provided");
-        this.bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        this.bluetoothAdapter = Objects.requireNonNull(BluetoothAdapter.getDefaultAdapter(), "no bluetooth adapter found");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             this.autoConnectScanSettings = new ScanSettings.Builder()
                     .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
@@ -339,7 +339,7 @@ public class BluetoothCentral {
                     .setReportDelay(0L)
                     .build();
         }
-        setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY);
+        this.scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_LATENCY);
 
         // Register for broadcasts on BluetoothAdapter state change
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
@@ -354,8 +354,31 @@ public class BluetoothCentral {
         connectedPeripherals.clear();
         reconnectCallbacks.clear();
         reconnectPeripheralAddresses.clear();
-        if (context != null) {
-            context.unregisterReceiver(adapterStateReceiver);
+        scannedPeripherals.clear();
+        context.unregisterReceiver(adapterStateReceiver);
+    }
+
+    private ScanSettings getScanSettings(int scanMode) {
+        if (scanMode == ScanSettings.SCAN_MODE_LOW_POWER ||
+                scanMode == ScanSettings.SCAN_MODE_LOW_LATENCY ||
+                scanMode == ScanSettings.SCAN_MODE_BALANCED ||
+                scanMode == ScanSettings.SCAN_MODE_OPPORTUNISTIC) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                return new ScanSettings.Builder()
+                        .setScanMode(scanMode)
+                        .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
+                        .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
+                        .setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
+                        .setReportDelay(0L)
+                        .build();
+            } else {
+                return new ScanSettings.Builder()
+                        .setScanMode(scanMode)
+                        .setReportDelay(0L)
+                        .build();
+            }
+        } else {
+            throw new IllegalArgumentException("invalid scan mode");
         }
     }
 
@@ -366,33 +389,12 @@ public class BluetoothCentral {
      * The default value is SCAN_MODE_LOW_LATENCY.
      *
      * @param scanMode the scanMode to set
-     * @return true if a valid scanMode was provided, otherwise false
      */
-    public boolean setScanMode(int scanMode) {
-        if (scanMode == ScanSettings.SCAN_MODE_LOW_POWER ||
-                scanMode == ScanSettings.SCAN_MODE_LOW_LATENCY ||
-                scanMode == ScanSettings.SCAN_MODE_BALANCED ||
-                scanMode == ScanSettings.SCAN_MODE_OPPORTUNISTIC) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                this.scanSettings = new ScanSettings.Builder()
-                        .setScanMode(scanMode)
-                        .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
-                        .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
-                        .setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
-                        .setReportDelay(0L)
-                        .build();
-            } else {
-                this.scanSettings = new ScanSettings.Builder()
-                        .setScanMode(scanMode)
-                        .setReportDelay(0L)
-                        .build();
-            }
-            return true;
-        }
-        return false;
+    public void setScanMode(int scanMode) {
+        scanSettings = getScanSettings(scanMode);
     }
 
-    private void startScan(List<ScanFilter> filters, ScanSettings scanSettings, ScanCallback scanCallback) {
+    private void startScan(@Nullable List<ScanFilter> filters, @NotNull ScanSettings scanSettings, @NotNull ScanCallback scanCallback) {
         // Check is BLE is available, enabled and all permission granted
         if (!isBleReady()) return;
 
@@ -817,7 +819,7 @@ public class BluetoothCentral {
     }
 
     private boolean isBleSupported() {
-        if (bluetoothAdapter != null && context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+        if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             return true;
         }
 
@@ -874,7 +876,9 @@ public class BluetoothCentral {
                 callBackHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        startScan(filters, scanSettings, callback);
+                        if (callback != null) {
+                            startScan(filters, scanSettings, callback);
+                        }
                     }
                 }, SCAN_RESTART_DELAY);
             }
