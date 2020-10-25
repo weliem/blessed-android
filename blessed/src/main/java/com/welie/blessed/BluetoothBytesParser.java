@@ -35,7 +35,7 @@ public class BluetoothBytesParser {
 
     private int offset = 0;
     private byte[] mValue;
-    private ByteOrder byteOrder;
+    private final ByteOrder byteOrder;
 
     /**
      * Characteristic value format type uint8
