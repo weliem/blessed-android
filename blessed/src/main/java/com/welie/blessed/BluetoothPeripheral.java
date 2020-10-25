@@ -60,6 +60,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import timber.log.Timber;
 
 import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
+import static android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_BALANCED;
+import static android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_LOW_POWER;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_INDICATE;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_NOTIFY;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_READ;
@@ -752,12 +754,12 @@ public class BluetoothPeripheral {
             if (!device.getAddress().equalsIgnoreCase(getAddress())) return;
 
             final int variant = intent.getIntExtra(BluetoothDevice.EXTRA_PAIRING_VARIANT, BluetoothDevice.ERROR);
-            Timber.d("pairing request received " + ", pairing variant: " + pairingVariantToString(variant) + " (" + variant + ")");
+            Timber.d("pairing request received: " + pairingVariantToString(variant) + " (" + variant + ")");
 
             if (variant == PAIRING_VARIANT_PIN) {
                 String pin = listener.getPincode(BluetoothPeripheral.this);
                 if (pin != null) {
-                    Timber.d("Setting PIN code for this peripheral using '%s'", pin);
+                    Timber.d("setting PIN code for this peripheral using '%s'", pin);
                     device.setPin(pin.getBytes());
                     abortBroadcast();
                 }
@@ -881,37 +883,7 @@ public class BluetoothPeripheral {
         return result;
     }
 
-    /**
-     * Request a different connection priority.
-     * <p>
-     * Use the standard parameters for Android: CONNECTION_PRIORITY_BALANCED, CONNECTION_PRIORITY_HIGH, or CONNECTION_PRIORITY_LOW_POWER. There is no callback for this function.
-     *
-     * @param priority the requested connection priority
-     * @return true if request was enqueued, false if not
-     */
-    public boolean requestConnectionPriority(final int priority) {
-        // Enqueue the request connection priority command and complete is immediately as there is no callback for it
-        boolean result = commandQueue.add(new Runnable() {
-            @Override
-            public void run() {
-                if (isConnected()) {
-                    if (!bluetoothGatt.requestConnectionPriority(priority)) {
-                        Timber.e("could not set connection priority");
-                    } else {
-                        Timber.d("requesting connection priority %d", priority);
-                    }
-                    completedCommand();
-                }
-            }
-        });
 
-        if (result) {
-            nextCommand();
-        } else {
-            Timber.e("could not enqueue request connection priority command");
-        }
-        return result;
-    }
 
     /**
      * Version of createBond with transport parameter.
@@ -1554,6 +1526,43 @@ public class BluetoothPeripheral {
             Timber.e("could not enqueue setNotify command");
         }
 
+        return result;
+    }
+
+    /**
+     * Request a different connection priority.
+     * <p>
+     * Use the standard parameters for Android: CONNECTION_PRIORITY_BALANCED, CONNECTION_PRIORITY_HIGH, or CONNECTION_PRIORITY_LOW_POWER. There is no callback for this function.
+     *
+     * @param priority the requested connection priority
+     * @return true if request was enqueued, false if not
+     */
+    public boolean requestConnectionPriority(final int priority) {
+        // Make sure priority is valid
+        if (priority < CONNECTION_PRIORITY_BALANCED || priority > CONNECTION_PRIORITY_LOW_POWER) {
+            throw new IllegalArgumentException("connection priority not valid");
+        }
+
+        // Enqueue the request connection priority command and complete is immediately as there is no callback for it
+        boolean result = commandQueue.add(new Runnable() {
+            @Override
+            public void run() {
+                if (isConnected()) {
+                    if (!bluetoothGatt.requestConnectionPriority(priority)) {
+                        Timber.e("could not set connection priority");
+                    } else {
+                        Timber.d("requesting connection priority %d", priority);
+                    }
+                    completedCommand();
+                }
+            }
+        });
+
+        if (result) {
+            nextCommand();
+        } else {
+            Timber.e("could not enqueue request connection priority command");
+        }
         return result;
     }
 
