@@ -115,11 +115,11 @@ class BluetoothHandler {
                 }
             }
 
-            // Turn on notifications for Battery Service
+            // Read battery status using Battery Service
             if(peripheral.getService(BTS_SERVICE_UUID) != null) {
                 BluetoothGattCharacteristic batteryCharacteristic = peripheral.getCharacteristic(BTS_SERVICE_UUID, BATTERY_LEVEL_CHARACTERISTIC_UUID);
                 if ( batteryCharacteristic != null) {
-                    peripheral.setNotify(batteryCharacteristic, true);
+                    peripheral.readCharacteristic(batteryCharacteristic);
                 }
             }
 
