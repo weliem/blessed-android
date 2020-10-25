@@ -278,7 +278,7 @@ public class BluetoothPeripheral {
     private static final int DEFAULT_MTU = 23;
 
     // Max MTU according to Bluetooth standard
-    private static final int DEFAULT_MAX_MTU = 512;
+    private static final int MAX_MTU = 512;
 
     // Maximum number of retries of commands
     private static final int MAX_TRIES = 2;
@@ -302,19 +302,22 @@ public class BluetoothPeripheral {
     private static final int MAX_NOTIFYING_CHARACTERISTICS = 15;
 
     // Member variables
-    private final Context context;
-    private final Handler callbackHandler;
+    private @NotNull
+    final Context context;
+    private @NotNull
+    final Handler callbackHandler;
     private @NotNull BluetoothDevice device;
-    private final InternalCallback listener;
-    private BluetoothPeripheralCallback peripheralCallback;
+    private @NotNull
+    final InternalCallback listener;
+    private @Nullable BluetoothPeripheralCallback peripheralCallback;
     private final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
-    private boolean commandQueueBusy;
+    private volatile boolean commandQueueBusy = false;
     private boolean isRetrying;
     private boolean bondLost = false;
     private boolean manuallyBonding = false;
     private boolean discoveryStarted = false;
     private volatile BluetoothGatt bluetoothGatt;
-    private int state;
+    private int state = BluetoothProfile.STATE_DISCONNECTED;
     private int nrTries;
     private byte[] currentWriteBytes;
     private final Set<UUID> notifyingCharacteristics = new HashSet<>();
@@ -752,18 +755,12 @@ public class BluetoothPeripheral {
      * @param device   Wrapped Android bluetooth device.
      * @param listener Callback to {@link BluetoothCentral}.
      */
-    BluetoothPeripheral(@NotNull Context context, @NotNull BluetoothDevice device, @NotNull InternalCallback listener, BluetoothPeripheralCallback peripheralCallback, Handler callbackHandler) {
-        Objects.requireNonNull(context, "no valid context provided");
-        Objects.requireNonNull(device, "no valid device provided");
-        Objects.requireNonNull(listener, "no valid listener provided");
-
-        this.context = context;
-        this.device = device;
+    BluetoothPeripheral(@NotNull Context context, @NotNull BluetoothDevice device, @NotNull InternalCallback listener, @Nullable BluetoothPeripheralCallback peripheralCallback, @Nullable Handler callbackHandler) {
+        this.context = Objects.requireNonNull(context, "no valid context provided");
+        this.device = Objects.requireNonNull(device, "no valid device provided");
+        this.listener = Objects.requireNonNull(listener, "no valid listener provided");
         this.peripheralCallback = peripheralCallback;
-        this.listener = listener;
         this.callbackHandler = (callbackHandler != null) ? callbackHandler : new Handler(Looper.getMainLooper());
-        this.state = BluetoothProfile.STATE_DISCONNECTED;
-        this.commandQueueBusy = false;
     }
 
     void setPeripheralCallback(@NotNull BluetoothPeripheralCallback peripheralCallback) {
@@ -876,7 +873,6 @@ public class BluetoothPeripheral {
      * @return true if request was enqueued, false if not
      */
     public boolean requestConnectionPriority(final int priority) {
-
         // Enqueue the request connection priority command and complete is immediately as there is no callback for it
         boolean result = commandQueue.add(new Runnable() {
             @Override
@@ -1452,7 +1448,6 @@ public class BluetoothPeripheral {
         return result;
     }
 
-
     /**
      * Asynchronous method to clear the services cache. Make sure to add a delay when using this!
      *
@@ -1519,7 +1514,7 @@ public class BluetoothPeripheral {
      */
     public boolean requestMtu(final int mtu) {
         // Make sure mtu is valid
-        if (mtu < DEFAULT_MTU || mtu > DEFAULT_MAX_MTU) {
+        if (mtu < DEFAULT_MTU || mtu > MAX_MTU) {
             throw new IllegalArgumentException("mtu must be between 23 and 512");
         }
 
