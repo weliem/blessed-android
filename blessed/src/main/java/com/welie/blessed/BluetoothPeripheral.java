@@ -1744,7 +1744,9 @@ public class BluetoothPeripheral {
      * @param bytes the byte array to convert
      * @return String representing the byte array as a HEX string
      */
-    private static String bytes2String(final byte[] bytes) {
+    @NotNull
+    private static String bytes2String(@Nullable final byte[] bytes) {
+        if (bytes == null) return "";
         StringBuilder sb = new StringBuilder();
         for (byte b : bytes) {
             sb.append(String.format("%02x", b & 0xff));
@@ -1759,23 +1761,23 @@ public class BluetoothPeripheral {
          *
          * @param device {@link BluetoothPeripheral} that connected.
          */
-        void connected(BluetoothPeripheral device);
+        void connected(@NotNull BluetoothPeripheral device);
 
         /**
          * Connecting with {@link BluetoothPeripheral} has failed.
          *
          * @param device {@link BluetoothPeripheral} of which connect failed.
          */
-        void connectFailed(BluetoothPeripheral device, final int status);
+        void connectFailed(@NotNull BluetoothPeripheral device, final int status);
 
         /**
          * {@link BluetoothPeripheral} has disconnected.
          *
          * @param device {@link BluetoothPeripheral} that disconnected.
          */
-        void disconnected(BluetoothPeripheral device, final int status);
+        void disconnected(@NotNull BluetoothPeripheral device, final int status);
 
-        String getPincode(BluetoothPeripheral device);
+        String getPincode(@NotNull BluetoothPeripheral device);
 
     }
 
@@ -1948,7 +1950,8 @@ public class BluetoothPeripheral {
         }
     }
 
-    private byte[] copyOf(byte[] source) {
+    @NotNull
+    private byte[] copyOf(@Nullable byte[] source) {
         if (source == null) return new byte[0];
         final int sourceLength = source.length;
         final byte[] copy = new byte[sourceLength];
