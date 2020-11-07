@@ -100,12 +100,6 @@ public class BluetoothPeripheral {
     public static final int GATT_CONN_L2C_FAILURE = 1;
 
     /**
-     * The connection has timed out
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int GATT_CONN_TIMEOUT = 8;
-
-    /**
      * GATT read operation is not permitted
      */
     @SuppressWarnings("WeakerAccess")
@@ -128,6 +122,12 @@ public class BluetoothPeripheral {
      */
     @SuppressWarnings("WeakerAccess")
     public static final int GATT_REQUEST_NOT_SUPPORTED = 6;
+
+    /**
+     * The connection has timed out
+     */
+    @SuppressWarnings("WeakerAccess")
+    public static final int GATT_CONN_TIMEOUT = 8;
 
     /**
      * Insufficient encryption for a given operation
@@ -196,10 +196,20 @@ public class BluetoothPeripheral {
     public static final int GATT_AUTH_FAIL = 137;
 
     /**
+     * A remote device connection is congested.
+     */
+    public static final int GATT_CONNECTION_CONGESTED = 143;
+
+    /**
      * The connection was cancelled
      */
     @SuppressWarnings("WeakerAccess")
     public static final int GATT_CONN_CANCEL = 256;
+
+    /**
+     * A GATT operation failed, errors other than the above
+     */
+    public static final int GATT_FAILURE = 257;
 
     /**
      * Bluetooth device type, Unknown
@@ -1704,6 +1714,10 @@ public class BluetoothPeripheral {
                 return "GATT NO RESOURCES";
             case GATT_INTERNAL_ERROR:
                 return "GATT INTERNAL ERROR";
+            case GATT_FAILURE:
+                return "GATT FAILURE";
+            case GATT_CONNECTION_CONGESTED:
+                return "GATT CONNECTION CONGESTED";
             default:
                 return "UNKNOWN (" + error + ")";
         }
