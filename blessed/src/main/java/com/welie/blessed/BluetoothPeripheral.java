@@ -361,6 +361,7 @@ public class BluetoothPeripheral {
                         break;
                     case BluetoothProfile.STATE_CONNECTING:
                         Timber.i("peripheral is connecting");
+                        break;
                     default:
                         Timber.e("unknown state received");
                         break;
