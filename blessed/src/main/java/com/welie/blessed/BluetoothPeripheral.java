@@ -1534,7 +1534,7 @@ public class BluetoothPeripheral {
         if (result) {
             nextCommand();
         } else {
-            Timber.e("could not enqueue setNotify command");
+            Timber.e("could not enqueue requestMtu command");
         }
 
         return result;
