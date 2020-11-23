@@ -482,12 +482,11 @@ public class BluetoothPeripheral {
                     // So retry operation after bonding completes
                     // This only seems to happen on Android 5/6/7
                     Timber.w("read needs bonding, bonding in progress");
-                    return;
                 } else {
                     Timber.e("read failed for characteristic: %s, status %d", characteristic.getUuid(), status);
                     completedCommand();
-                    return;
                 }
+                return;
             }
 
             final byte[] value = copyOf(characteristic.getValue());
@@ -1269,7 +1268,6 @@ public class BluetoothPeripheral {
         return result;
     }
 
-
     /**
      * Read the value of a descriptor.
      *
@@ -1439,7 +1437,6 @@ public class BluetoothPeripheral {
         } else {
             Timber.e("could not enqueue setNotify command");
         }
-
         return result;
     }
 
@@ -1491,7 +1488,6 @@ public class BluetoothPeripheral {
         } else {
             Timber.e("could not enqueue readRemoteRssi command");
         }
-
         return result;
     }
 
