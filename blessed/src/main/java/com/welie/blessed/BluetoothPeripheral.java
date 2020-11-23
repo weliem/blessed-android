@@ -343,7 +343,6 @@ public class BluetoothPeripheral {
     private final BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState) {
-            long timePassed = SystemClock.elapsedRealtime() - connectTimestamp;
             cancelConnectionTimer();
             final int previousState = state;
             state = newState;
@@ -351,7 +350,7 @@ public class BluetoothPeripheral {
             if (status == GATT_SUCCESS) {
                 switch (newState) {
                     case BluetoothProfile.STATE_CONNECTED:
-                        successfullyConnected(device.getBondState(), timePassed);
+                        successfullyConnected();
                         break;
                     case BluetoothProfile.STATE_DISCONNECTED:
                         successfullyDisconnected(previousState);
@@ -367,7 +366,7 @@ public class BluetoothPeripheral {
                         break;
                 }
             } else {
-                connectionStateChangeUnsuccessful(status, previousState, newState, timePassed);
+                connectionStateChangeUnsuccessful(status, previousState, newState);
             }
         }
 
@@ -558,7 +557,9 @@ public class BluetoothPeripheral {
         }
     };
 
-    private void successfullyConnected(int bondstate, long timePassed) {
+    private void successfullyConnected() {
+        int bondstate = device.getBondState();
+        long timePassed = SystemClock.elapsedRealtime() - connectTimestamp;
         Timber.i("connected to '%s' (%s) in %.1fs", getName(), bondStateToString(bondstate), timePassed / 1000.0f);
 
         if (bondstate == BOND_NONE || bondstate == BOND_BONDED) {
@@ -619,7 +620,9 @@ public class BluetoothPeripheral {
         }
     }
 
-    private void connectionStateChangeUnsuccessful(int status, int previousState, int newState, long timePassed) {
+    private void connectionStateChangeUnsuccessful(int status, int previousState, int newState) {
+        long timePassed = SystemClock.elapsedRealtime() - connectTimestamp;
+
         // Check if service discovery completed
         if (discoverServicesRunnable != null) {
             // Service discovery is still pending so cancel it
