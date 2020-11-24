@@ -82,10 +82,15 @@ import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_SIGNED;
 public class BluetoothPeripheral {
 
     // CCC descriptor UUID
-    private static final String CCC_DESCRIPTOR_UUID = "00002902-0000-1000-8000-00805f9b34fb";
+    private static final UUID CCC_DESCRIPTOR_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
     // Gatt status values taken from Android source code:
     // https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/android-4.4.4_r2.0.1/stack/include/gatt_api.h
+
+    // Note that most of these errror codes correspond to the HCI error code as defined in the Bluetooth Standard, Volume 1, section F "Controller Error Codes" (p364-377)
+    // See https://www.bluetooth.org/docman/handlers/downloaddoc.ashx?doc_id=478726,
+    //
+    // The error code range 0x80-0x9F is reserved for application level errors.
 
     /**
      * A GATT operation completed successfully
@@ -402,7 +407,7 @@ public class BluetoothPeripheral {
             }
 
             // Check if this was the Client Configuration Descriptor
-            if (descriptor.getUuid().equals(UUID.fromString(CCC_DESCRIPTOR_UUID))) {
+            if (descriptor.getUuid().equals(CCC_DESCRIPTOR_UUID)) {
                 if (status == GATT_SUCCESS) {
                     byte[] value = descriptor.getValue();
                     if (value != null) {
@@ -1381,7 +1386,7 @@ public class BluetoothPeripheral {
         }
 
         // Get the Client Configuration Descriptor for the characteristic
-        final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString(CCC_DESCRIPTOR_UUID));
+        final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CCC_DESCRIPTOR_UUID);
         if (descriptor == null) {
             Timber.e("could not get CCC descriptor for characteristic %s", characteristic.getUuid());
             return false;
