@@ -1963,12 +1963,14 @@ public class BluetoothPeripheral {
         }
     }
 
+    /**
+     * Make a safe copy of a nullable byte array
+     *
+     * @param source byte array to copy
+     * @return non-null copy of the source byte array or an empty array if source was null
+     */
     @NotNull
-    private byte[] copyOf(@Nullable byte[] source) {
-        if (source == null) return new byte[0];
-        final int sourceLength = source.length;
-        final byte[] copy = new byte[sourceLength];
-        System.arraycopy(source, 0, copy, 0, sourceLength);
-        return copy;
+    byte[] copyOf(@Nullable byte[] source) {
+        return (source == null) ? new byte[0] : Arrays.copyOf(source, source.length);
     }
 }
