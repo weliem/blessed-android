@@ -87,7 +87,7 @@ public class BluetoothPeripheral {
     // Gatt status values taken from Android source code:
     // https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/android-4.4.4_r2.0.1/stack/include/gatt_api.h
 
-    // Note that most of these errror codes correspond to the HCI error code as defined in the Bluetooth Standard, Volume 1, section F "Controller Error Codes" (p364-377)
+    // Note that most of these error codes correspond to the ATT error codes as defined in the Bluetooth Standard, Volume 3, Part F, 3.4.1 Error handling p1491)
     // See https://www.bluetooth.org/docman/handlers/downloaddoc.ashx?doc_id=478726,
     //
     // The error code range 0x80-0x9F is reserved for application level errors.
