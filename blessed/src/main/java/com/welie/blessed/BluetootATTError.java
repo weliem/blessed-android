@@ -1,9 +1,12 @@
 package com.welie.blessed;
 
-public enum BluetoothError {
+public enum BluetootATTError {
 
     // Note that most of these error codes correspond to the ATT error codes as defined in the Bluetooth Standard, Volume 3, Part F, 3.4.1 Error handling p1491)
     // See https://www.bluetooth.org/docman/handlers/downloaddoc.ashx?doc_id=478726,
+
+    // Success
+    SUCCESS(0x00),
 
     // The attribute handle given was not valid on this server.
     INVALID_HANDLE(0x01),
@@ -26,7 +29,7 @@ public enum BluetoothError {
     // Offset specified was past the end of the attribute.
     INVALID_OFFSET(0x07),
 
-    // The attribute requires authorization before it can be read or written.
+    // The attribute requires authorization before it can be read or written. Note, this value is also used as GATT_CONN_TIMEOUT
     INSUFFICIENT_AUTHORIZATION(0x08),
 
     // Too many prepare writes have been queued.
@@ -79,14 +82,15 @@ public enum BluetoothError {
     GATT_SERVICE_STARTED(0x8c),
     GATT_ENCRYPED_NO_MITM(0x8d),
     GATT_NOT_ENCRYPTED(0x8e),
-    GATT_CONNECTION_CONGESTED (0x8f),
+    GATT_CONNECTION_CONGESTED(0x8f),
 
     // (0xE0 – 0xFF) - Common profile and service error codes defined in Core Specification Supplement, Part B.
 
     // Other errors codes that are Android specific
+    GATT_CONN_CANCEL(0x0100),  /* L2CAP connection cancelled  */
     GATT_FAILURE(0x101);
 
-    BluetoothError(int value) {
+    BluetootATTError(int value) {
         this.value = value;
     }
 
@@ -96,8 +100,8 @@ public enum BluetoothError {
         return value;
     }
 
-    public static BluetoothError fromValue(int value) {
-        for (BluetoothError type : values()) {
+    public static BluetootATTError fromValue(int value) {
+        for (BluetootATTError type : values()) {
             if (type.getValue() == value)
                 return type;
         }
