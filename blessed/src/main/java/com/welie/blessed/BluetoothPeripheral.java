@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2019 Martijn van Welie
+ *   Copyright (c) 2020 Martijn van Welie
  *
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
  *   of this software and associated documentation files (the "Software"), to deal
@@ -221,27 +221,40 @@ public class BluetoothPeripheral {
     public static final String NO_VALID_CHARACTERISTIC_UUID_PROVIDED = "no valid characteristic UUID provided";
 
     // Member variables
-    private @NotNull final  Context context;
-    private @NotNull final Handler callbackHandler;
-    private @NotNull BluetoothDevice device;
-    private @NotNull final InternalCallback listener;
-    private @Nullable BluetoothPeripheralCallback peripheralCallback;
-    private @NotNull final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
+    @NotNull
+    private final Context context;
+    @NotNull
+    private final Handler callbackHandler;
+    @NotNull
+    private BluetoothDevice device;
+    @NotNull
+    private final InternalCallback listener;
+    @Nullable
+    private BluetoothPeripheralCallback peripheralCallback;
+    @NotNull
+    private final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
     private volatile boolean commandQueueBusy = false;
     private boolean isRetrying;
     private boolean bondLost = false;
     private boolean manuallyBonding = false;
     private boolean discoveryStarted = false;
-    private volatile @Nullable BluetoothGatt bluetoothGatt;
+    @Nullable
+    private volatile BluetoothGatt bluetoothGatt;
     private int state = BluetoothProfile.STATE_DISCONNECTED;
     private int nrTries;
-    private @Nullable byte[] currentWriteBytes;
-    private @NotNull final Set<UUID> notifyingCharacteristics = new HashSet<>();
-    private @NotNull final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private @Nullable Runnable timeoutRunnable;
-    private @Nullable Runnable discoverServicesRunnable;
+    @Nullable
+    private byte[] currentWriteBytes;
+    @NotNull
+    private final Set<UUID> notifyingCharacteristics = new HashSet<>();
+    @NotNull
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    @Nullable
+    private Runnable timeoutRunnable;
+    @Nullable
+    private Runnable discoverServicesRunnable;
     private long connectTimestamp;
-    private @Nullable String cachedName;
+    @Nullable
+    private String cachedName;
     private int currentMtu = DEFAULT_MTU;
 
     /**
@@ -415,7 +428,7 @@ public class BluetoothPeripheral {
                     // Characteristic encrypted and needs bonding,
                     // So retry operation after bonding completes
                     // This only seems to happen on Android 5/6/7
-                    Timber.i("write filed with status '%s', needs bonding, bonding should be in progress",BluetoothGattError.fromValue(status));
+                    Timber.i("write filed with status '%s', needs bonding, bonding should be in progress", BluetoothGattError.fromValue(status));
                     return;
                 } else {
                     Timber.e("writing <%s> to characteristic <%s> failed, status '%s'", bytes2String(currentWriteBytes), characteristic.getUuid(), BluetoothGattError.fromValue(status));
@@ -809,8 +822,6 @@ public class BluetoothPeripheral {
         return result;
     }
 
-
-
     /**
      * Version of createBond with transport parameter.
      * May use in the future if needed as I never encountered an issue
@@ -1055,11 +1066,11 @@ public class BluetoothPeripheral {
      *
      * <p>The characteristic must support reading it, otherwise the operation will not be enqueued.
      *
-     * @param serviceUUID the service UUID the characteristic belongs to
+     * @param serviceUUID        the service UUID the characteristic belongs to
      * @param characteristicUUID the characteristic's UUID
      * @return true if the operation was enqueued, false if the characteristic does not support reading or the characteristic was not found
      */
-    public boolean readCharacteristic(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID ) {
+    public boolean readCharacteristic(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID) {
         Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
         Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
 
@@ -1127,13 +1138,13 @@ public class BluetoothPeripheral {
      * <p>All parameters must have a valid value in order for the operation
      * to be enqueued. If the characteristic does not support writing with the specified writeType, the operation will not be enqueued.
      *
-     * @param serviceUUID the service UUID the characteristic belongs to
+     * @param serviceUUID        the service UUID the characteristic belongs to
      * @param characteristicUUID the characteristic's UUID
-     * @param value          the byte array to write
-     * @param writeType      the write type to use when writing. Must be WRITE_TYPE_DEFAULT, WRITE_TYPE_NO_RESPONSE or WRITE_TYPE_SIGNED
+     * @param value              the byte array to write
+     * @param writeType          the write type to use when writing. Must be WRITE_TYPE_DEFAULT, WRITE_TYPE_NO_RESPONSE or WRITE_TYPE_SIGNED
      * @return true if the operation was enqueued, false if the characteristic does not support reading or the characteristic was not found
      */
-    public boolean writeCharacteristic(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID, @NotNull final byte[] value, final int writeType ) {
+    public boolean writeCharacteristic(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID, @NotNull final byte[] value, final int writeType) {
         Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
         Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
 
@@ -1321,9 +1332,9 @@ public class BluetoothPeripheral {
     /**
      * Set the notification state of a characteristic to 'on' or 'off'. The characteristic must support notifications or indications.
      *
-     * @param serviceUUID the service UUID the characteristic belongs to
+     * @param serviceUUID        the service UUID the characteristic belongs to
      * @param characteristicUUID the characteristic's UUID
-     * @param enable true for setting notification on, false for turning it off
+     * @param enable             true for setting notification on, false for turning it off
      * @return true if the operation was enqueued, false the characteristic could not be found or does not support notifications
      */
     public boolean setNotify(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID, boolean enable) {
@@ -1652,45 +1663,6 @@ public class BluetoothPeripheral {
                 return "unknown writeType";
         }
     }
-
-//    private static String statusToString(final int error) {
-//        switch (error) {
-//            case GATT_SUCCESS:
-//                return "SUCCESS";
-//            case GATT_CONN_L2C_FAILURE:
-//                return "GATT CONN L2C FAILURE";
-//            case GATT_CONN_TIMEOUT:
-//                return "GATT CONN TIMEOUT";  // Connection timed out
-//            case GATT_CONN_TERMINATE_PEER_USER:
-//                return "GATT CONN TERMINATE PEER USER";
-//            case GATT_CONN_TERMINATE_LOCAL_HOST:
-//                return "GATT CONN TERMINATE LOCAL HOST";
-//            case BLE_HCI_CONN_TERMINATED_DUE_TO_MIC_FAILURE:
-//                return "BLE HCI CONN TERMINATED DUE TO MIC FAILURE";
-//            case GATT_CONN_FAIL_ESTABLISH:
-//                return "GATT CONN FAIL ESTABLISH";
-//            case GATT_CONN_LMP_TIMEOUT:
-//                return "GATT CONN LMP TIMEOUT";
-//            case GATT_CONN_CANCEL:
-//                return "GATT CONN CANCEL ";
-//            case GATT_BUSY:
-//                return "GATT BUSY";
-//            case GATT_ERROR:
-//                return "GATT ERROR"; // Device not reachable
-//            case GATT_AUTH_FAIL:
-//                return "GATT AUTH FAIL";  // Device needs to be bonded
-//            case GATT_NO_RESOURCES:
-//                return "GATT NO RESOURCES";
-//            case GATT_INTERNAL_ERROR:
-//                return "GATT INTERNAL ERROR";
-//            case GATT_FAILURE:
-//                return "GATT FAILURE";
-//            case GATT_CONNECTION_CONGESTED:
-//                return "GATT CONNECTION CONGESTED";
-//            default:
-//                return "UNKNOWN (" + error + ")";
-//        }
-//    }
 
     private static final int PAIRING_VARIANT_PIN = 0;
     private static final int PAIRING_VARIANT_PASSKEY = 1;
