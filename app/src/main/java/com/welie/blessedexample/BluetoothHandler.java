@@ -38,6 +38,11 @@ class BluetoothHandler {
     public static final String MEASUREMENT_TEMPERATURE_EXTRA = "blessed.measurement.temperature.extra";
     public static final String MEASUREMENT_HEARTRATE = "blessed.measurement.heartrate";
     public static final String MEASUREMENT_HEARTRATE_EXTRA = "blessed.measurement.heartrate.extra";
+    public static final String MEASUREMENT_PULSE_OX = "blessed.measurement.pulseox";
+    public static final String MEASUREMENT_PULSE_OX_EXTRA_CONTINOUS = "blessed.measurement.pulseox.extra.continous";
+    public static final String MEASUREMENT_PULSE_OX_EXTRA_SPOT = "blessed.measurement.pulseox.extra.spot";
+    public static final String MEASUREMENT_WEIGHT = "blessed.measurement.weight";
+    public static final String MEASUREMENT_WEIGHT_EXTRA = "blessed.measurement.weight.extra";
     public static final String MEASUREMENT_EXTRA_PERIPHERAL = "blessed.measurement.peripheral";
 
     // UUIDs for the Blood Pressure service (BLP)
@@ -65,6 +70,15 @@ class BluetoothHandler {
     // UUIDs for the Battery Service (BAS)
     private static final UUID BTS_SERVICE_UUID = UUID.fromString("0000180F-0000-1000-8000-00805f9b34fb");
     private static final UUID BATTERY_LEVEL_CHARACTERISTIC_UUID = UUID.fromString("00002A19-0000-1000-8000-00805f9b34fb");
+
+    // UUIDs for the Pulse Oximeter Service (PLX)
+    public static final UUID PLX_SERVICE_UUID = UUID.fromString("00001822-0000-1000-8000-00805f9b34fb");
+    private static final UUID PLX_SPOT_MEASUREMENT_CHAR_UUID = UUID.fromString("00002a5e-0000-1000-8000-00805f9b34fb");
+    private static final UUID PLX_CONTINUOUS_MEASUREMENT_CHAR_UUID = UUID.fromString("00002a5f-0000-1000-8000-00805f9b34fb");
+
+    // UUIDs for the Weight Scale Service (WSS)
+    public static final UUID WSS_SERVICE_UUID = UUID.fromString("0000181D-0000-1000-8000-00805f9b34fb");
+    private static final UUID WSS_MEASUREMENT_CHAR_UUID = UUID.fromString("00002A9D-0000-1000-8000-00805f9b34fb");
 
     // Local variables
     public BluetoothCentral central;
@@ -109,6 +123,9 @@ class BluetoothHandler {
             peripheral.setNotify(BLP_SERVICE_UUID, BLOOD_PRESSURE_MEASUREMENT_CHARACTERISTIC_UUID, true);
             peripheral.setNotify(HTS_SERVICE_UUID, TEMPERATURE_MEASUREMENT_CHARACTERISTIC_UUID, true);
             peripheral.setNotify(HRS_SERVICE_UUID, HEARTRATE_MEASUREMENT_CHARACTERISTIC_UUID, true);
+            peripheral.setNotify(PLX_SERVICE_UUID, PLX_CONTINUOUS_MEASUREMENT_CHAR_UUID, true);
+            peripheral.setNotify(PLX_SERVICE_UUID, PLX_SPOT_MEASUREMENT_CHAR_UUID, true);
+            peripheral.setNotify(WSS_SERVICE_UUID, WSS_MEASUREMENT_CHAR_UUID, true);
         }
 
         @Override
@@ -153,6 +170,24 @@ class BluetoothHandler {
                 HeartRateMeasurement measurement = new HeartRateMeasurement(value);
                 Intent intent = new Intent(MEASUREMENT_HEARTRATE);
                 intent.putExtra(MEASUREMENT_HEARTRATE_EXTRA, measurement);
+                sendMeasurement(intent, peripheral);
+                Timber.d("%s", measurement);
+            } else if (characteristicUUID.equals(PLX_CONTINUOUS_MEASUREMENT_CHAR_UUID)) {
+                PulseOximeterContinuousMeasurement measurement = new PulseOximeterContinuousMeasurement(value);
+                Intent intent = new Intent(MEASUREMENT_PULSE_OX);
+                intent.putExtra(MEASUREMENT_PULSE_OX_EXTRA_CONTINOUS, measurement);
+                sendMeasurement(intent, peripheral);
+                Timber.d("%s", measurement);
+            } else if (characteristicUUID.equals(PLX_SPOT_MEASUREMENT_CHAR_UUID)) {
+                PulseOximeterSpotMeasurement measurement = new PulseOximeterSpotMeasurement(value);
+                Intent intent = new Intent(MEASUREMENT_PULSE_OX);
+                intent.putExtra(MEASUREMENT_PULSE_OX_EXTRA_SPOT, measurement);
+                sendMeasurement(intent, peripheral);
+                Timber.d("%s", measurement);
+            } else if (characteristicUUID.equals(WSS_MEASUREMENT_CHAR_UUID)) {
+                WeightMeasurement measurement = new WeightMeasurement(value);
+                Intent intent = new Intent(MEASUREMENT_WEIGHT);
+                intent.putExtra(MEASUREMENT_WEIGHT_EXTRA, measurement);
                 sendMeasurement(intent, peripheral);
                 Timber.d("%s", measurement);
             } else if (characteristicUUID.equals(CURRENT_TIME_CHARACTERISTIC_UUID)) {
@@ -217,10 +252,6 @@ class BluetoothHandler {
         public void onDisconnectedPeripheral(@NotNull final BluetoothPeripheral peripheral, final int status) {
             Timber.i("disconnected '%s' with status %d", peripheral.getName(), status);
 
-            peripheral.clearServicesCache();
-            central.removeBond(peripheral.getAddress());
-
-
             // Reconnect to this device when it becomes available again
             handler.postDelayed(new Runnable() {
                 @Override
@@ -273,6 +304,6 @@ class BluetoothHandler {
 
         // Scan for peripherals with a certain service UUIDs
         central.startPairingPopupHack();
-        central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID, HRS_SERVICE_UUID});
+        central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID, HRS_SERVICE_UUID, PLX_SERVICE_UUID, WSS_SERVICE_UUID});
     }
 }

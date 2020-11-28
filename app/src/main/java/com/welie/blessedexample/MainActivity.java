@@ -44,6 +44,8 @@ public class MainActivity extends AppCompatActivity {
         registerReceiver(bloodPressureDataReceiver, new IntentFilter( BluetoothHandler.MEASUREMENT_BLOODPRESSURE ));
         registerReceiver(temperatureDataReceiver, new IntentFilter( BluetoothHandler.MEASUREMENT_TEMPERATURE ));
         registerReceiver(heartRateDataReceiver, new IntentFilter( BluetoothHandler.MEASUREMENT_HEARTRATE ));
+        registerReceiver(pulseOxDataReceiver, new IntentFilter( BluetoothHandler.MEASUREMENT_PULSE_OX ));
+        registerReceiver(weightDataReceiver, new IntentFilter(BluetoothHandler.MEASUREMENT_WEIGHT));
     }
 
     @Override
@@ -77,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
         unregisterReceiver(bloodPressureDataReceiver);
         unregisterReceiver(temperatureDataReceiver);
         unregisterReceiver(heartRateDataReceiver);
+        unregisterReceiver(pulseOxDataReceiver);
+        unregisterReceiver(weightDataReceiver);
     }
 
     private final BroadcastReceiver locationServiceStateReceiver = new BroadcastReceiver() {
@@ -120,6 +124,30 @@ public class MainActivity extends AppCompatActivity {
             if (measurement == null) return;
 
             measurementValue.setText(String.format(Locale.ENGLISH, "%d bpm", measurement.pulse));
+        }
+    };
+
+    private final BroadcastReceiver pulseOxDataReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            PulseOximeterContinuousMeasurement measurement = (PulseOximeterContinuousMeasurement) intent.getSerializableExtra(BluetoothHandler.MEASUREMENT_PULSE_OX_EXTRA_CONTINOUS);
+            if (measurement != null) {
+                measurementValue.setText(String.format(Locale.ENGLISH, "SpO2 %d%%,  Pulse %d bpm", measurement.getSpO2(), measurement.getPulseRate()));
+            }
+            PulseOximeterSpotMeasurement spotMeasurement = (PulseOximeterSpotMeasurement) intent.getSerializableExtra(BluetoothHandler.MEASUREMENT_PULSE_OX_EXTRA_SPOT);
+            if (spotMeasurement != null) {
+                measurementValue.setText(String.format(Locale.ENGLISH, "SpO2 %d%%,  Pulse %d bpm\n%s", spotMeasurement.getSpO2(), spotMeasurement.getPulseRate(), dateFormat.format(spotMeasurement.getTimestamp())));
+            }
+        }
+    };
+
+    private final BroadcastReceiver weightDataReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            WeightMeasurement measurement = (WeightMeasurement) intent.getSerializableExtra(BluetoothHandler.MEASUREMENT_WEIGHT_EXTRA);
+            if (measurement != null) {
+                measurementValue.setText(String.format(Locale.ENGLISH, "%.1f %s\n%s", measurement.weight, measurement.unit.toString(), dateFormat.format(measurement.timestamp)));
+            }
         }
     };
 

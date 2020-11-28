@@ -1,9 +1,10 @@
 package com.welie.blessed;
 
+/**
+ * Note that most of these error codes correspond to the ATT error codes as defined in the Bluetooth Standard, Volume 3, Part F, 3.4.1 Error handling p1491)
+ * See https://www.bluetooth.org/docman/handlers/downloaddoc.ashx?doc_id=478726,
+ */
 public enum BluetoothGattError {
-
-    // Note that most of these error codes correspond to the ATT error codes as defined in the Bluetooth Standard, Volume 3, Part F, 3.4.1 Error handling p1491)
-    // See https://www.bluetooth.org/docman/handlers/downloaddoc.ashx?doc_id=478726,
 
     /**
      * Operation completed successfully
