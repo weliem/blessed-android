@@ -81,20 +81,8 @@ import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_SIGNED;
 @SuppressWarnings({"SpellCheckingInspection", "unused", "UnusedReturnValue"})
 public class BluetoothPeripheral {
 
-    // CCC descriptor UUID
     private static final UUID CCC_DESCRIPTOR_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
-
-    // Gatt status values taken from Android source code:
-    // https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/android-4.4.4_r2.0.1/stack/include/gatt_api.h
-    //
-    // Additional errors are related to L2CAP layer:
-    // https://android.googlesource.com/platform/system/bt/+/android-7.1.1_r44/stack/include/l2cdefs.h
-
-    // Note that most of these error codes correspond to the ATT error codes as defined in the Bluetooth Standard, Volume 3, Part F, 3.4.1 Error handling p1491)
-    // See https://www.bluetooth.org/docman/handlers/downloaddoc.ashx?doc_id=478726,
-    //
-    // The error code range 0x80-0x9F is reserved for application level errors.
-
+    
     /**
      * A GATT operation completed successfully
      */
@@ -102,94 +90,19 @@ public class BluetoothPeripheral {
     public static final int GATT_SUCCESS = 0;
 
     /**
-     * The connection was terminated because of a L2C failure
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int GATT_CONN_L2C_FAILURE = 1;
-
-    /**
-     * GATT read operation is not permitted
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int GATT_READ_NOT_PERMITTED = 2;
-
-    /**
-     * GATT write operation is not permitted
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int GATT_WRITE_NOT_PERMITTED = 3;
-
-    /**
      * Insufficient authentication for a given operation
      */
-    @SuppressWarnings("WeakerAccess")
-    public static final int GATT_INSUFFICIENT_AUTHENTICATION = 5;
-
-    /**
-     * The given request is not supported
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int GATT_REQUEST_NOT_SUPPORTED = 6;
+    private static final int GATT_INSUFFICIENT_AUTHENTICATION = 5;
 
     /**
      * The connection has timed out
      */
-    @SuppressWarnings("WeakerAccess")
-    public static final int GATT_CONN_TIMEOUT = 8;
+    private static final int GATT_CONN_TIMEOUT = 8;
 
     /**
      * Insufficient encryption for a given operation
      */
-    @SuppressWarnings("WeakerAccess")
-    public static final int GATT_INSUFFICIENT_ENCRYPTION = 15;
-
-    /**
-     * The connection was terminated by the peripheral
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int GATT_CONN_TERMINATE_PEER_USER = 19;
-
-    /**
-     * The connection was terminated by the local host
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int GATT_CONN_TERMINATE_LOCAL_HOST = 22;
-
-    /**
-     * The connection lost because of LMP timeout
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int GATT_CONN_LMP_TIMEOUT = 34;
-
-    /**
-     * The connection was terminated due to MIC failure
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int BLE_HCI_CONN_TERMINATED_DUE_TO_MIC_FAILURE = 61;
-
-    /**
-     * The connection cannot be established
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int GATT_CONN_FAIL_ESTABLISH = 62;
-
-    /**
-     * The peripheral has no resources to complete the request
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int GATT_NO_RESOURCES = 128;
-
-    /**
-     * Something went wrong in the bluetooth stack
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int GATT_INTERNAL_ERROR = 129;
-
-    /**
-     * The GATT operation could not be executed because the stack is busy
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int GATT_BUSY = 132;
+    private static final int GATT_INSUFFICIENT_ENCRYPTION = 15;
 
     /**
      * Generic error, could be anything
@@ -200,24 +113,7 @@ public class BluetoothPeripheral {
     /**
      * Authentication failed
      */
-    @SuppressWarnings("WeakerAccess")
-    public static final int GATT_AUTH_FAIL = 137;
-
-    /**
-     * A remote device connection is congested.
-     */
-    public static final int GATT_CONNECTION_CONGESTED = 143;
-
-    /**
-     * The connection was cancelled
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int GATT_CONN_CANCEL = 256;
-
-    /**
-     * A GATT operation failed, errors other than the above
-     */
-    public static final int GATT_FAILURE = 257;
+    private static final int GATT_AUTH_FAIL = 137;
 
     /**
      * Bluetooth device type, Unknown
@@ -983,7 +879,7 @@ public class BluetoothPeripheral {
                 }
             });
         } else {
-            listener.disconnected(BluetoothPeripheral.this, GATT_CONN_TERMINATE_LOCAL_HOST);
+            listener.disconnected(BluetoothPeripheral.this, GATT_SUCCESS);
         }
     }
 
