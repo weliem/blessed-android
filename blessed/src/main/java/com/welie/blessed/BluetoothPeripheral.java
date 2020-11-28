@@ -82,7 +82,7 @@ import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_SIGNED;
 public class BluetoothPeripheral {
 
     private static final UUID CCC_DESCRIPTOR_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
-    
+
     /**
      * A GATT operation completed successfully
      */
@@ -97,7 +97,7 @@ public class BluetoothPeripheral {
     /**
      * The connection has timed out
      */
-    private static final int GATT_CONN_TIMEOUT = 8;
+    protected static final int GATT_CONN_TIMEOUT = 8;
 
     /**
      * Insufficient encryption for a given operation
@@ -388,7 +388,7 @@ public class BluetoothPeripheral {
                     // Characteristic encrypted and needs bonding,
                     // So retry operation after bonding completes
                     // This only seems to happen on Android 5/6/7
-                    Timber.w("read needs bonding, bonding in progress");
+                    Timber.w("read failed with status '%s', needs bonding, bonding should be in progress", BluetoothGattError.fromValue(status));
                 } else {
                     Timber.e("read failed for characteristic: %s, status '%s'", characteristic.getUuid(), BluetoothGattError.fromValue(status));
                     completedCommand();
@@ -415,7 +415,7 @@ public class BluetoothPeripheral {
                     // Characteristic encrypted and needs bonding,
                     // So retry operation after bonding completes
                     // This only seems to happen on Android 5/6/7
-                    Timber.i("write needs bonding, bonding in progress");
+                    Timber.i("write filed with status '%s', needs bonding, bonding should be in progress",BluetoothGattError.fromValue(status));
                     return;
                 } else {
                     Timber.e("writing <%s> to characteristic <%s> failed, status '%s'", bytes2String(currentWriteBytes), characteristic.getUuid(), BluetoothGattError.fromValue(status));
@@ -437,6 +437,9 @@ public class BluetoothPeripheral {
 
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, final int rssi, final int status) {
+            if (status != GATT_SUCCESS) {
+                Timber.e("reading RSSI failed, status '%s'", BluetoothGattError.fromValue(status));
+            }
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -450,6 +453,9 @@ public class BluetoothPeripheral {
 
         @Override
         public void onMtuChanged(BluetoothGatt gatt, final int mtu, final int status) {
+            if (status != GATT_SUCCESS) {
+                Timber.e("change MTU failed, status '%s'", BluetoothGattError.fromValue(status));
+            }
             currentMtu = mtu;
             callbackHandler.post(new Runnable() {
                 @Override
