@@ -69,8 +69,8 @@ class BluetoothHandler {
     // Local variables
     public BluetoothCentral central;
     private static BluetoothHandler instance = null;
-    private Context context;
-    private Handler handler = new Handler();
+    private final Context context;
+    private final Handler handler = new Handler();
     private int currentTimeCounter = 0;
 
     // Callback for peripherals
@@ -86,76 +86,36 @@ class BluetoothHandler {
             peripheral.requestConnectionPriority(CONNECTION_PRIORITY_HIGH);
 
             // Read manufacturer and model number from the Device Information Service
-            if(peripheral.getService(DIS_SERVICE_UUID) != null) {
-                BluetoothGattCharacteristic manufacturerCharacteristic = peripheral.getCharacteristic(DIS_SERVICE_UUID, MANUFACTURER_NAME_CHARACTERISTIC_UUID);
-                if (manufacturerCharacteristic != null) {
-                    peripheral.readCharacteristic(manufacturerCharacteristic);
-                }
-                BluetoothGattCharacteristic modelCharacteristic = peripheral.getCharacteristic(DIS_SERVICE_UUID, MODEL_NUMBER_CHARACTERISTIC_UUID);
-                if (modelCharacteristic != null) {
-                    peripheral.readCharacteristic(modelCharacteristic);
-                }
-            }
+            peripheral.readCharacteristic(DIS_SERVICE_UUID, MANUFACTURER_NAME_CHARACTERISTIC_UUID);
+            peripheral.readCharacteristic(DIS_SERVICE_UUID, MODEL_NUMBER_CHARACTERISTIC_UUID);
 
-            // Turn on notifications for Current Time Service
-            if(peripheral.getService(CTS_SERVICE_UUID) != null) {
-                BluetoothGattCharacteristic currentTimeCharacteristic = peripheral.getCharacteristic(CTS_SERVICE_UUID, CURRENT_TIME_CHARACTERISTIC_UUID);
-                if (currentTimeCharacteristic != null) {
-                    peripheral.setNotify(currentTimeCharacteristic, true);
+            // Turn on notifications for Current Time Service and write it if possible
+            BluetoothGattCharacteristic currentTimeCharacteristic = peripheral.getCharacteristic(CTS_SERVICE_UUID, CURRENT_TIME_CHARACTERISTIC_UUID);
+            if (currentTimeCharacteristic != null) {
+                peripheral.setNotify(currentTimeCharacteristic, true);
 
-                    // If it has the write property we write the current time
-                    if ((currentTimeCharacteristic.getProperties() & PROPERTY_WRITE) > 0) {
-                        // Write the current time unless it is an Omron device
-                        if (!(peripheral.getName().contains("BLEsmart_"))) {
-                            BluetoothBytesParser parser = new BluetoothBytesParser();
-                            parser.setCurrentTime(Calendar.getInstance());
-                            peripheral.writeCharacteristic(currentTimeCharacteristic, parser.getValue(), WRITE_TYPE_DEFAULT);
-                        }
+                // If it has the write property we write the current time
+                if ((currentTimeCharacteristic.getProperties() & PROPERTY_WRITE) > 0) {
+                    // Write the current time unless it is an Omron device
+                    if (!(peripheral.getName().contains("BLEsmart_"))) {
+                        BluetoothBytesParser parser = new BluetoothBytesParser();
+                        parser.setCurrentTime(Calendar.getInstance());
+                        peripheral.writeCharacteristic(currentTimeCharacteristic, parser.getValue(), WRITE_TYPE_DEFAULT);
                     }
                 }
             }
 
-            // Read battery status using Battery Service
-            if(peripheral.getService(BTS_SERVICE_UUID) != null) {
-                BluetoothGattCharacteristic batteryCharacteristic = peripheral.getCharacteristic(BTS_SERVICE_UUID, BATTERY_LEVEL_CHARACTERISTIC_UUID);
-                if ( batteryCharacteristic != null) {
-                    peripheral.readCharacteristic(batteryCharacteristic);
-                }
-            }
-
-            // Turn on notifications for Blood Pressure Service
-            if(peripheral.getService(BLP_SERVICE_UUID) != null) {
-                BluetoothGattCharacteristic bloodpressureCharacteristic = peripheral.getCharacteristic(BLP_SERVICE_UUID, BLOOD_PRESSURE_MEASUREMENT_CHARACTERISTIC_UUID);
-                if ( bloodpressureCharacteristic != null) {
-                    peripheral.setNotify(bloodpressureCharacteristic, true);
-                }
-            }
-
-            // Turn on notification for Health Thermometer Service
-            if(peripheral.getService(HTS_SERVICE_UUID) != null) {
-                BluetoothGattCharacteristic temperatureCharacteristic = peripheral.getCharacteristic(HTS_SERVICE_UUID, TEMPERATURE_MEASUREMENT_CHARACTERISTIC_UUID);
-                if ( temperatureCharacteristic != null) {
-                    peripheral.setNotify(temperatureCharacteristic, true);
-                }
-            }
-
-            // Turn on notification for Heart Rate  Service
-            if(peripheral.getService(HRS_SERVICE_UUID) != null) {
-                BluetoothGattCharacteristic heartrateCharacteristic = peripheral.getCharacteristic(HRS_SERVICE_UUID, HEARTRATE_MEASUREMENT_CHARACTERISTIC_UUID);
-                if (heartrateCharacteristic != null) {
-                    peripheral.setNotify(heartrateCharacteristic, true);
-                }
-            }
+            peripheral.readCharacteristic(BTS_SERVICE_UUID, BATTERY_LEVEL_CHARACTERISTIC_UUID);
+            peripheral.setNotify(BLP_SERVICE_UUID, BLOOD_PRESSURE_MEASUREMENT_CHARACTERISTIC_UUID, true);
+            peripheral.setNotify(HTS_SERVICE_UUID, TEMPERATURE_MEASUREMENT_CHARACTERISTIC_UUID, true);
+            peripheral.setNotify(HRS_SERVICE_UUID, HEARTRATE_MEASUREMENT_CHARACTERISTIC_UUID, true);
         }
 
         @Override
         public void onNotificationStateUpdate(@NotNull BluetoothPeripheral peripheral, @NotNull BluetoothGattCharacteristic characteristic, int status) {
-            if( status == GATT_SUCCESS) {
-                if(peripheral.isNotifying(characteristic)) {
-                    Timber.i("SUCCESS: Notify set to 'on' for %s", characteristic.getUuid());
-                } else {
-                    Timber.i("SUCCESS: Notify set to 'off' for %s", characteristic.getUuid());
-                }
+            if (status == GATT_SUCCESS) {
+                final boolean isNotifying = peripheral.isNotifying(characteristic);
+                Timber.i("SUCCESS: Notify set to '%s' for %s", isNotifying, characteristic.getUuid());
             } else {
                 Timber.e("ERROR: Changing notification state failed for %s", characteristic.getUuid());
             }
@@ -163,7 +123,7 @@ class BluetoothHandler {
 
         @Override
         public void onCharacteristicWrite(@NotNull BluetoothPeripheral peripheral, @NotNull byte[] value, @NotNull BluetoothGattCharacteristic characteristic, int status) {
-            if( status == GATT_SUCCESS) {
+            if (status == GATT_SUCCESS) {
                 Timber.i("SUCCESS: Writing <%s> to <%s>", bytes2String(value), characteristic.getUuid().toString());
             } else {
                 Timber.i("ERROR: Failed writing <%s> to <%s>", bytes2String(value), characteristic.getUuid().toString());
@@ -172,7 +132,8 @@ class BluetoothHandler {
 
         @Override
         public void onCharacteristicUpdate(@NotNull BluetoothPeripheral peripheral, @NotNull byte[] value, @NotNull BluetoothGattCharacteristic characteristic, int status) {
-            if(status != GATT_SUCCESS) return;
+            if (status != GATT_SUCCESS) return;
+
             UUID characteristicUUID = characteristic.getUuid();
             BluetoothBytesParser parser = new BluetoothBytesParser(value);
 
@@ -180,59 +141,49 @@ class BluetoothHandler {
                 BloodPressureMeasurement measurement = new BloodPressureMeasurement(value);
                 Intent intent = new Intent(MEASUREMENT_BLOODPRESSURE);
                 intent.putExtra(MEASUREMENT_BLOODPRESSURE_EXTRA, measurement);
-                intent.putExtra(MEASUREMENT_EXTRA_PERIPHERAL, peripheral.getAddress());
-                context.sendBroadcast(intent);
+                sendMeasurement(intent, peripheral);
                 Timber.d("%s", measurement);
-            }
-            else if(characteristicUUID.equals(TEMPERATURE_MEASUREMENT_CHARACTERISTIC_UUID)) {
+            } else if (characteristicUUID.equals(TEMPERATURE_MEASUREMENT_CHARACTERISTIC_UUID)) {
                 TemperatureMeasurement measurement = new TemperatureMeasurement(value);
                 Intent intent = new Intent(MEASUREMENT_TEMPERATURE);
                 intent.putExtra(MEASUREMENT_TEMPERATURE_EXTRA, measurement);
-                intent.putExtra(MEASUREMENT_EXTRA_PERIPHERAL, peripheral.getAddress());
-                context.sendBroadcast(intent);
+                sendMeasurement(intent, peripheral);
                 Timber.d("%s", measurement);
-            }
-            else if(characteristicUUID.equals(HEARTRATE_MEASUREMENT_CHARACTERISTIC_UUID)) {
-               HeartRateMeasurement measurement = new HeartRateMeasurement(value);
+            } else if (characteristicUUID.equals(HEARTRATE_MEASUREMENT_CHARACTERISTIC_UUID)) {
+                HeartRateMeasurement measurement = new HeartRateMeasurement(value);
                 Intent intent = new Intent(MEASUREMENT_HEARTRATE);
                 intent.putExtra(MEASUREMENT_HEARTRATE_EXTRA, measurement);
-                intent.putExtra(MEASUREMENT_EXTRA_PERIPHERAL, peripheral.getAddress());
-                context.sendBroadcast(intent);
+                sendMeasurement(intent, peripheral);
                 Timber.d("%s", measurement);
-            }
-            else if(characteristicUUID.equals(CURRENT_TIME_CHARACTERISTIC_UUID)) {
+            } else if (characteristicUUID.equals(CURRENT_TIME_CHARACTERISTIC_UUID)) {
                 Date currentTime = parser.getDateTime();
                 Timber.i("Received device time: %s", currentTime);
 
                 // Deal with Omron devices where we can only write currentTime under specific conditions
-                if(peripheral.getName().contains("BLEsmart_")) {
+                if (peripheral.getName().contains("BLEsmart_")) {
                     BluetoothGattCharacteristic bloodpressureMeasurement = peripheral.getCharacteristic(BLP_SERVICE_UUID, BLOOD_PRESSURE_MEASUREMENT_CHARACTERISTIC_UUID);
                     if (bloodpressureMeasurement == null) return;
 
                     boolean isNotifying = peripheral.isNotifying(bloodpressureMeasurement);
-                    if(isNotifying) currentTimeCounter++;
+                    if (isNotifying) currentTimeCounter++;
 
                     // We can set device time for Omron devices only if it is the first notification and currentTime is more than 10 min from now
                     long interval = abs(Calendar.getInstance().getTimeInMillis() - currentTime.getTime());
-                    if (currentTimeCounter == 1 && interval > 10*60*1000) {
+                    if (currentTimeCounter == 1 && interval > 10 * 60 * 1000) {
                         parser.setCurrentTime(Calendar.getInstance());
                         peripheral.writeCharacteristic(characteristic, parser.getValue(), WRITE_TYPE_DEFAULT);
                     }
                 }
-            }
-            else if(characteristicUUID.equals(BATTERY_LEVEL_CHARACTERISTIC_UUID)) {
+            } else if (characteristicUUID.equals(BATTERY_LEVEL_CHARACTERISTIC_UUID)) {
                 int batteryLevel = parser.getIntValue(FORMAT_UINT8);
                 Timber.i("Received battery level %d%%", batteryLevel);
-            }
-            else if(characteristicUUID.equals(MANUFACTURER_NAME_CHARACTERISTIC_UUID)) {
+            } else if (characteristicUUID.equals(MANUFACTURER_NAME_CHARACTERISTIC_UUID)) {
                 String manufacturer = parser.getStringValue(0);
                 Timber.i("Received manufacturer: %s", manufacturer);
-            }
-            else if(characteristicUUID.equals(MODEL_NUMBER_CHARACTERISTIC_UUID)) {
+            } else if (characteristicUUID.equals(MODEL_NUMBER_CHARACTERISTIC_UUID)) {
                 String modelNumber = parser.getStringValue(0);
                 Timber.i("Received modelnumber: %s", modelNumber);
-            }
-            else if(characteristicUUID.equals(PNP_ID_CHARACTERISTIC_UUID)) {
+            } else if (characteristicUUID.equals(PNP_ID_CHARACTERISTIC_UUID)) {
                 String modelNumber = parser.getStringValue(0);
                 Timber.i("Received pnp: %s", modelNumber);
             }
@@ -241,6 +192,11 @@ class BluetoothHandler {
         @Override
         public void onMtuChanged(@NotNull BluetoothPeripheral peripheral, int mtu, int status) {
             Timber.i("new MTU set: %d", mtu);
+        }
+
+        private void sendMeasurement(@NotNull Intent intent, @NotNull BluetoothPeripheral peripheral ) {
+            intent.putExtra(MEASUREMENT_EXTRA_PERIPHERAL, peripheral.getAddress());
+            context.sendBroadcast(intent);
         }
     };
 
@@ -261,6 +217,10 @@ class BluetoothHandler {
         public void onDisconnectedPeripheral(@NotNull final BluetoothPeripheral peripheral, final int status) {
             Timber.i("disconnected '%s' with status %d", peripheral.getName(), status);
 
+            peripheral.clearServicesCache();
+            central.removeBond(peripheral.getAddress());
+
+
             // Reconnect to this device when it becomes available again
             handler.postDelayed(new Runnable() {
                 @Override
@@ -268,6 +228,7 @@ class BluetoothHandler {
                     central.autoConnectPeripheral(peripheral, peripheralCallback);
                 }
             }, 5000);
+
         }
 
         @Override
@@ -280,12 +241,17 @@ class BluetoothHandler {
         @Override
         public void onBluetoothAdapterStateChanged(int state) {
             Timber.i("bluetooth adapter changed state to %d", state);
-            if(state == BluetoothAdapter.STATE_ON) {
+            if (state == BluetoothAdapter.STATE_ON) {
                 // Bluetooth is on now, start scanning again
                 // Scan for peripherals with a certain service UUIDs
                 central.startPairingPopupHack();
                 central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID, HRS_SERVICE_UUID});
             }
+        }
+
+        @Override
+        public void onScanFailed(int errorCode) {
+            Timber.i("scanning failed with error %d", errorCode);
         }
     };
 

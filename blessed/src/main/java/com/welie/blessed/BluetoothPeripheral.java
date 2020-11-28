@@ -86,6 +86,9 @@ public class BluetoothPeripheral {
 
     // Gatt status values taken from Android source code:
     // https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/android-4.4.4_r2.0.1/stack/include/gatt_api.h
+    //
+    // Additional errors are related to L2CAP layer:
+    // https://android.googlesource.com/platform/system/bt/+/android-7.1.1_r44/stack/include/l2cdefs.h
 
     // Note that most of these error codes correspond to the ATT error codes as defined in the Bluetooth Standard, Volume 3, Part F, 3.4.1 Error handling p1491)
     // See https://www.bluetooth.org/docman/handlers/downloaddoc.ashx?doc_id=478726,
@@ -318,6 +321,9 @@ public class BluetoothPeripheral {
     // The maximum number of enabled notifications Android supports (BTA_GATTC_NOTIF_REG_MAX)
     private static final int MAX_NOTIFYING_CHARACTERISTICS = 15;
 
+    public static final String NO_VALID_SERVICE_UUID_PROVIDED = "no valid service UUID provided";
+    public static final String NO_VALID_CHARACTERISTIC_UUID_PROVIDED = "no valid characteristic UUID provided";
+
     // Member variables
     private @NotNull final  Context context;
     private @NotNull final Handler callbackHandler;
@@ -378,7 +384,7 @@ public class BluetoothPeripheral {
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status != GATT_SUCCESS) {
-                Timber.e("service discovery failed due to internal error '%s', disconnecting", statusToString(status));
+                Timber.e("service discovery failed due to internal error '%s', disconnecting", BluetoothGattError.fromValue(status));
                 disconnect();
                 return;
             }
@@ -403,7 +409,7 @@ public class BluetoothPeripheral {
         public void onDescriptorWrite(BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int status) {
             final BluetoothGattCharacteristic parentCharacteristic = descriptor.getCharacteristic();
             if (status != GATT_SUCCESS) {
-                Timber.e("failed to write <%s> to descriptor of characteristic: <%s> for device: '%s', ", bytes2String(currentWriteBytes), parentCharacteristic.getUuid(), getAddress());
+                Timber.e("failed to write <%s> to descriptor of characteristic <%s> for device: '%s', status '%s' ", bytes2String(currentWriteBytes), parentCharacteristic.getUuid(), getAddress(), BluetoothGattError.fromValue(status));
             }
 
             // Check if this was the Client Configuration Descriptor
@@ -451,7 +457,7 @@ public class BluetoothPeripheral {
         @Override
         public void onDescriptorRead(BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int status) {
             if (status != GATT_SUCCESS) {
-                Timber.e("reading descriptor <%s> failed for device '%s'", descriptor.getUuid(), getAddress());
+                Timber.e("reading descriptor <%s> failed for device '%s, status '%s'", descriptor.getUuid(), getAddress(), BluetoothGattError.fromValue(status));
             }
 
             final byte[] value = copyOf(descriptor.getValue());
@@ -488,7 +494,7 @@ public class BluetoothPeripheral {
                     // This only seems to happen on Android 5/6/7
                     Timber.w("read needs bonding, bonding in progress");
                 } else {
-                    Timber.e("read failed for characteristic: %s, status %d", characteristic.getUuid(), status);
+                    Timber.e("read failed for characteristic: %s, status '%s'", characteristic.getUuid(), BluetoothGattError.fromValue(status));
                     completedCommand();
                 }
                 return;
@@ -516,7 +522,7 @@ public class BluetoothPeripheral {
                     Timber.i("write needs bonding, bonding in progress");
                     return;
                 } else {
-                    Timber.e("writing <%s> to characteristic <%s> failed, status %s", bytes2String(currentWriteBytes), characteristic.getUuid(), statusToString(status));
+                    Timber.e("writing <%s> to characteristic <%s> failed, status '%s'", bytes2String(currentWriteBytes), characteristic.getUuid(), BluetoothGattError.fromValue(status));
                 }
             }
 
@@ -638,21 +644,21 @@ public class BluetoothPeripheral {
         // See if the initial connection failed
         if (previousState == BluetoothProfile.STATE_CONNECTING) {
             boolean isTimeout = timePassed > getTimoutThreshold();
-            Timber.i("connection failed with status '%s' (%s)", statusToString(status), isTimeout ? "TIMEOUT" : "ERROR");
+            Timber.i("connection failed with status '%s' (%s)", BluetoothError.fromValue(status), isTimeout ? "TIMEOUT" : "ERROR");
             final int adjustedStatus = (status == GATT_ERROR && isTimeout) ? GATT_CONN_TIMEOUT : status;
             completeDisconnect(false, adjustedStatus);
             listener.connectFailed(BluetoothPeripheral.this, adjustedStatus);
         } else if (previousState == BluetoothProfile.STATE_CONNECTED && newState == BluetoothProfile.STATE_DISCONNECTED && !servicesDiscovered) {
             // We got a disconnection before the services were even discovered
-            Timber.i("peripheral '%s' disconnected with status '%s' before completing service discovery", getName(), statusToString(status));
+            Timber.i("peripheral '%s' disconnected with status '%s' (%d) before completing service discovery", getName(), BluetoothError.fromValue(status), status);
             completeDisconnect(false, status);
             listener.connectFailed(BluetoothPeripheral.this, status);
         } else {
             // See if we got connection drop
             if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                Timber.i("peripheral '%s' disconnected with status '%s'", getName(), statusToString(status));
+                Timber.i("peripheral '%s' disconnected with status '%s' (%d)", getName(), BluetoothError.fromValue(status), status);
             } else {
-                Timber.i("unexpected connection state change for '%s' status '%s'", getName(), statusToString(status));
+                Timber.i("unexpected connection state change for '%s' status '%s' (%d)", getName(), BluetoothError.fromValue(status), status);
             }
             completeDisconnect(true, status);
         }
@@ -1075,7 +1081,7 @@ public class BluetoothPeripheral {
      * @return the BluetoothGattService object for the service UUID or null if the peripheral does not have a service with the specified UUID
      */
     public @Nullable BluetoothGattService getService(@NotNull UUID serviceUUID) {
-        Objects.requireNonNull(serviceUUID, "no valid service UUID provided");
+        Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
 
         if (bluetoothGatt != null) {
             return bluetoothGatt.getService(serviceUUID);
@@ -1092,8 +1098,8 @@ public class BluetoothPeripheral {
      * @return the BluetoothGattCharacteristic object for the characteristic UUID or null if the peripheral does not have a characteristic with the specified UUID
      */
     public @Nullable BluetoothGattCharacteristic getCharacteristic(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID) {
-        Objects.requireNonNull(serviceUUID, "no valid service UUID provided");
-        Objects.requireNonNull(characteristicUUID, "no valid characteristic provided");
+        Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
+        Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
 
         BluetoothGattService service = getService(serviceUUID);
         if (service != null) {
@@ -1147,6 +1153,26 @@ public class BluetoothPeripheral {
      *
      * <p>The characteristic must support reading it, otherwise the operation will not be enqueued.
      *
+     * @param serviceUUID the service UUID the characteristic belongs to
+     * @param characteristicUUID the characteristic's UUID
+     * @return true if the operation was enqueued, false if the characteristic does not support reading or the characteristic was not found
+     */
+    public boolean readCharacteristic(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID ) {
+        Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
+        Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
+
+        BluetoothGattCharacteristic characteristic = getCharacteristic(serviceUUID, characteristicUUID);
+        if (characteristic != null) {
+            return readCharacteristic(characteristic);
+        }
+        return false;
+    }
+
+    /**
+     * Read the value of a characteristic.
+     *
+     * <p>The characteristic must support reading it, otherwise the operation will not be enqueued.
+     *
      * <p>{@link BluetoothPeripheralCallback#onCharacteristicUpdate(BluetoothPeripheral, byte[], BluetoothGattCharacteristic, int)}   will be triggered as a result of this call.
      *
      * @param characteristic Specifies the characteristic to read.
@@ -1191,6 +1217,29 @@ public class BluetoothPeripheral {
             Timber.e("could not enqueue read characteristic command");
         }
         return result;
+    }
+
+    /**
+     * Write a value to a characteristic using the specified write type.
+     *
+     * <p>All parameters must have a valid value in order for the operation
+     * to be enqueued. If the characteristic does not support writing with the specified writeType, the operation will not be enqueued.
+     *
+     * @param serviceUUID the service UUID the characteristic belongs to
+     * @param characteristicUUID the characteristic's UUID
+     * @param value          the byte array to write
+     * @param writeType      the write type to use when writing. Must be WRITE_TYPE_DEFAULT, WRITE_TYPE_NO_RESPONSE or WRITE_TYPE_SIGNED
+     * @return true if the operation was enqueued, false if the characteristic does not support reading or the characteristic was not found
+     */
+    public boolean writeCharacteristic(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID, @NotNull final byte[] value, final int writeType ) {
+        Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
+        Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
+
+        BluetoothGattCharacteristic characteristic = getCharacteristic(serviceUUID, characteristicUUID);
+        if (characteristic != null) {
+            return writeCharacteristic(characteristic, value, writeType);
+        }
+        return false;
     }
 
     /**
@@ -1365,6 +1414,25 @@ public class BluetoothPeripheral {
             Timber.e("could not enqueue write descriptor command");
         }
         return result;
+    }
+
+    /**
+     * Set the notification state of a characteristic to 'on' or 'off'. The characteristic must support notifications or indications.
+     *
+     * @param serviceUUID the service UUID the characteristic belongs to
+     * @param characteristicUUID the characteristic's UUID
+     * @param enable true for setting notification on, false for turning it off
+     * @return true if the operation was enqueued, false the characteristic could not be found or does not support notifications
+     */
+    public boolean setNotify(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID, boolean enable) {
+        Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
+        Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
+
+        BluetoothGattCharacteristic characteristic = getCharacteristic(serviceUUID, characteristicUUID);
+        if (characteristic != null) {
+            return setNotify(characteristic, enable);
+        }
+        return false;
     }
 
     /**
@@ -1683,44 +1751,44 @@ public class BluetoothPeripheral {
         }
     }
 
-    private static String statusToString(final int error) {
-        switch (error) {
-            case GATT_SUCCESS:
-                return "SUCCESS";
-            case GATT_CONN_L2C_FAILURE:
-                return "GATT CONN L2C FAILURE";
-            case GATT_CONN_TIMEOUT:
-                return "GATT CONN TIMEOUT";  // Connection timed out
-            case GATT_CONN_TERMINATE_PEER_USER:
-                return "GATT CONN TERMINATE PEER USER";
-            case GATT_CONN_TERMINATE_LOCAL_HOST:
-                return "GATT CONN TERMINATE LOCAL HOST";
-            case BLE_HCI_CONN_TERMINATED_DUE_TO_MIC_FAILURE:
-                return "BLE HCI CONN TERMINATED DUE TO MIC FAILURE";
-            case GATT_CONN_FAIL_ESTABLISH:
-                return "GATT CONN FAIL ESTABLISH";
-            case GATT_CONN_LMP_TIMEOUT:
-                return "GATT CONN LMP TIMEOUT";
-            case GATT_CONN_CANCEL:
-                return "GATT CONN CANCEL ";
-            case GATT_BUSY:
-                return "GATT BUSY";
-            case GATT_ERROR:
-                return "GATT ERROR"; // Device not reachable
-            case GATT_AUTH_FAIL:
-                return "GATT AUTH FAIL";  // Device needs to be bonded
-            case GATT_NO_RESOURCES:
-                return "GATT NO RESOURCES";
-            case GATT_INTERNAL_ERROR:
-                return "GATT INTERNAL ERROR";
-            case GATT_FAILURE:
-                return "GATT FAILURE";
-            case GATT_CONNECTION_CONGESTED:
-                return "GATT CONNECTION CONGESTED";
-            default:
-                return "UNKNOWN (" + error + ")";
-        }
-    }
+//    private static String statusToString(final int error) {
+//        switch (error) {
+//            case GATT_SUCCESS:
+//                return "SUCCESS";
+//            case GATT_CONN_L2C_FAILURE:
+//                return "GATT CONN L2C FAILURE";
+//            case GATT_CONN_TIMEOUT:
+//                return "GATT CONN TIMEOUT";  // Connection timed out
+//            case GATT_CONN_TERMINATE_PEER_USER:
+//                return "GATT CONN TERMINATE PEER USER";
+//            case GATT_CONN_TERMINATE_LOCAL_HOST:
+//                return "GATT CONN TERMINATE LOCAL HOST";
+//            case BLE_HCI_CONN_TERMINATED_DUE_TO_MIC_FAILURE:
+//                return "BLE HCI CONN TERMINATED DUE TO MIC FAILURE";
+//            case GATT_CONN_FAIL_ESTABLISH:
+//                return "GATT CONN FAIL ESTABLISH";
+//            case GATT_CONN_LMP_TIMEOUT:
+//                return "GATT CONN LMP TIMEOUT";
+//            case GATT_CONN_CANCEL:
+//                return "GATT CONN CANCEL ";
+//            case GATT_BUSY:
+//                return "GATT BUSY";
+//            case GATT_ERROR:
+//                return "GATT ERROR"; // Device not reachable
+//            case GATT_AUTH_FAIL:
+//                return "GATT AUTH FAIL";  // Device needs to be bonded
+//            case GATT_NO_RESOURCES:
+//                return "GATT NO RESOURCES";
+//            case GATT_INTERNAL_ERROR:
+//                return "GATT INTERNAL ERROR";
+//            case GATT_FAILURE:
+//                return "GATT FAILURE";
+//            case GATT_CONNECTION_CONGESTED:
+//                return "GATT CONNECTION CONGESTED";
+//            default:
+//                return "UNKNOWN (" + error + ")";
+//        }
+//    }
 
     private static final int PAIRING_VARIANT_PIN = 0;
     private static final int PAIRING_VARIANT_PASSKEY = 1;
