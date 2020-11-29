@@ -220,41 +220,53 @@ public class BluetoothPeripheral {
     public static final String NO_VALID_SERVICE_UUID_PROVIDED = "no valid service UUID provided";
     public static final String NO_VALID_CHARACTERISTIC_UUID_PROVIDED = "no valid characteristic UUID provided";
 
-    // Member variables
     @NotNull
     private final Context context;
+
     @NotNull
     private final Handler callbackHandler;
+
     @NotNull
     private BluetoothDevice device;
+
     @NotNull
     private final InternalCallback listener;
+
     @Nullable
     private BluetoothPeripheralCallback peripheralCallback;
+
     @NotNull
     private final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
+
+    @Nullable
+    private volatile BluetoothGatt bluetoothGatt;
+
+    @Nullable
+    private String cachedName;
+
+    @Nullable
+    private byte[] currentWriteBytes;
+
+    @NotNull
+    private final Set<UUID> notifyingCharacteristics = new HashSet<>();
+
+    @NotNull
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+
+    @Nullable
+    private Runnable timeoutRunnable;
+
+    @Nullable
+    private Runnable discoverServicesRunnable;
+
     private volatile boolean commandQueueBusy = false;
     private boolean isRetrying;
     private boolean bondLost = false;
     private boolean manuallyBonding = false;
     private boolean discoveryStarted = false;
-    @Nullable
-    private volatile BluetoothGatt bluetoothGatt;
     private int state = BluetoothProfile.STATE_DISCONNECTED;
     private int nrTries;
-    @Nullable
-    private byte[] currentWriteBytes;
-    @NotNull
-    private final Set<UUID> notifyingCharacteristics = new HashSet<>();
-    @NotNull
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    @Nullable
-    private Runnable timeoutRunnable;
-    @Nullable
-    private Runnable discoverServicesRunnable;
     private long connectTimestamp;
-    @Nullable
-    private String cachedName;
     private int currentMtu = DEFAULT_MTU;
 
     /**
@@ -324,17 +336,15 @@ public class BluetoothPeripheral {
             // Check if this was the Client Configuration Descriptor
             if (descriptor.getUuid().equals(CCC_DESCRIPTOR_UUID)) {
                 if (status == GATT_SUCCESS) {
-                    byte[] value = descriptor.getValue();
+                    final byte[] value = descriptor.getValue();
                     if (value != null) {
                         if (Arrays.equals(value, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) ||
                                 Arrays.equals(value, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)) {
-                            // Notify set to on, add it to the set of notifying characteristics
                             notifyingCharacteristics.add(parentCharacteristic.getUuid());
                             if (notifyingCharacteristics.size() > MAX_NOTIFYING_CHARACTERISTICS) {
                                 Timber.e("too many (%d) notifying characteristics. The maximum Android can handle is %d", notifyingCharacteristics.size(), MAX_NOTIFYING_CHARACTERISTICS);
                             }
                         } else if (Arrays.equals(value, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)) {
-                            // Notify was turned off, so remove it from the set of notifying characteristics
                             notifyingCharacteristics.remove(parentCharacteristic.getUuid());
                         } else {
                             Timber.e("unexpected CCC descriptor value");

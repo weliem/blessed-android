@@ -98,7 +98,6 @@ public class BluetoothCentral {
      */
     public static final int SCAN_FAILED_SCANNING_TOO_FREQUENTLY = 6;
 
-    // Private variables
     private @NotNull final Context context;
     private @NotNull final Handler callBackHandler;
     private @NotNull final BluetoothAdapter bluetoothAdapter;

@@ -174,9 +174,11 @@ class BluetoothHandler {
                 Timber.d("%s", measurement);
             } else if (characteristicUUID.equals(PLX_CONTINUOUS_MEASUREMENT_CHAR_UUID)) {
                 PulseOximeterContinuousMeasurement measurement = new PulseOximeterContinuousMeasurement(value);
-                Intent intent = new Intent(MEASUREMENT_PULSE_OX);
-                intent.putExtra(MEASUREMENT_PULSE_OX_EXTRA_CONTINOUS, measurement);
-                sendMeasurement(intent, peripheral);
+                if (measurement.getSpO2() <= 100 && measurement.getPulseRate() <= 220) {
+                    Intent intent = new Intent(MEASUREMENT_PULSE_OX);
+                    intent.putExtra(MEASUREMENT_PULSE_OX_EXTRA_CONTINOUS, measurement);
+                    sendMeasurement(intent, peripheral);
+                }
                 Timber.d("%s", measurement);
             } else if (characteristicUUID.equals(PLX_SPOT_MEASUREMENT_CHAR_UUID)) {
                 PulseOximeterSpotMeasurement measurement = new PulseOximeterSpotMeasurement(value);
