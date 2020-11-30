@@ -180,7 +180,18 @@ Lastly, it is also possible to automatically issue a PIN code when pairing. Use 
 
 ## Example application
 
-An example application is provided in the repo. It shows how to connect to Blood Pressure meters, Heart Rate monitors and Thermometers, read the data and show it on screen.
+An example application is provided in the repo. It shows how to connect to Blood Pressure meters, Heart Rate monitors, Weight scales, Pulse Oximeters and Thermometers, read the data and show it on screen. It only works with peripherals that use the Bluetooth SIG services. Working peripherals include:
+
+* Beurer FT95 thermometer
+* GRX Thermometer (TD-1241)
+* Masimo MightySat
+* Nonin 3230
+* Indiehealth scale
+* A&D 352BLE scale
+* A&D 651BLE blood pressure meter
+* Beurer BM57 blood pressure meter
+* Soehnle Connect 300/400 blood pressure meter
+* Polar H7/H10/OH1 heartrate monitors
 
 ## Acknowledgements
 
