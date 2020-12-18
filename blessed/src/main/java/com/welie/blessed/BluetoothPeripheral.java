@@ -900,8 +900,8 @@ public class BluetoothPeripheral {
                 @Override
                 public void run() {
                     if (bluetoothGatt != null) {
-                        Timber.i("force disconnect '%s' (%s)", getName(), getAddress());
                         bluetoothGatt.disconnect();
+                        Timber.i("force disconnect '%s' (%s)", getName(), getAddress());
                     }
                 }
             });
@@ -1222,8 +1222,8 @@ public class BluetoothPeripheral {
             public void run() {
                 if (isConnected()) {
                     currentWriteBytes = bytesToWrite;
-                    characteristic.setValue(bytesToWrite);
                     characteristic.setWriteType(writeType);
+                    characteristic.setValue(bytesToWrite);
                     if (!bluetoothGatt.writeCharacteristic(characteristic)) {
                         Timber.e("writeCharacteristic failed for characteristic: %s", characteristic.getUuid());
                         completedCommand();
