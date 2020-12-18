@@ -15,8 +15,10 @@ import com.welie.blessed.BluetoothPeripheralCallback;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.ByteOrder;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import timber.log.Timber;
@@ -24,6 +26,8 @@ import timber.log.Timber;
 import static android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_HIGH;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE;
 import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
+import static com.welie.blessed.BluetoothBytesParser.FORMAT_SINT16;
+import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT16;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT8;
 import static com.welie.blessed.BluetoothBytesParser.bytes2String;
 import static com.welie.blessed.BluetoothPeripheral.GATT_SUCCESS;
@@ -80,6 +84,15 @@ class BluetoothHandler {
     public static final UUID WSS_SERVICE_UUID = UUID.fromString("0000181D-0000-1000-8000-00805f9b34fb");
     private static final UUID WSS_MEASUREMENT_CHAR_UUID = UUID.fromString("00002A9D-0000-1000-8000-00805f9b34fb");
 
+    public static final UUID GLUCOSE_SERVICE_UUID = UUID.fromString("00001808-0000-1000-8000-00805f9b34fb");
+    public static final UUID GLUCOSE_MEASUREMENT_CHARACTERISTIC_UUID = UUID.fromString("00002A18-0000-1000-8000-00805f9b34fb");
+    public static final UUID GLUCOSE_RECORD_ACCESS_POINT_CHARACTERISTIC_UUID = UUID.fromString("00002A52-0000-1000-8000-00805f9b34fb");
+    public static final UUID GLUCOSE_MEASUREMENT_CONTEXT_CHARACTERISTIC_UUID = UUID.fromString("00002A34-0000-1000-8000-00805f9b34fb");
+
+    // Contour Glucose Service
+    public static final UUID CONTOUR_SERVICE_UUID = UUID.fromString("00000000-0002-11E2-9E96-0800200C9A66");
+    private static final UUID CONTOUR_CLOCK = UUID.fromString("00001026-0002-11E2-9E96-0800200C9A66");
+
     // Local variables
     public BluetoothCentral central;
     private static BluetoothHandler instance = null;
@@ -119,6 +132,7 @@ class BluetoothHandler {
                 }
             }
 
+            // Try to turn on notifications for other characteristics
             peripheral.readCharacteristic(BTS_SERVICE_UUID, BATTERY_LEVEL_CHARACTERISTIC_UUID);
             peripheral.setNotify(BLP_SERVICE_UUID, BLOOD_PRESSURE_MEASUREMENT_CHARACTERISTIC_UUID, true);
             peripheral.setNotify(HTS_SERVICE_UUID, TEMPERATURE_MEASUREMENT_CHARACTERISTIC_UUID, true);
@@ -126,6 +140,10 @@ class BluetoothHandler {
             peripheral.setNotify(PLX_SERVICE_UUID, PLX_CONTINUOUS_MEASUREMENT_CHAR_UUID, true);
             peripheral.setNotify(PLX_SERVICE_UUID, PLX_SPOT_MEASUREMENT_CHAR_UUID, true);
             peripheral.setNotify(WSS_SERVICE_UUID, WSS_MEASUREMENT_CHAR_UUID, true);
+            peripheral.setNotify(GLUCOSE_SERVICE_UUID, GLUCOSE_MEASUREMENT_CHARACTERISTIC_UUID, true);
+            peripheral.setNotify(GLUCOSE_SERVICE_UUID, GLUCOSE_MEASUREMENT_CONTEXT_CHARACTERISTIC_UUID, true);
+            peripheral.setNotify(GLUCOSE_SERVICE_UUID, GLUCOSE_RECORD_ACCESS_POINT_CHARACTERISTIC_UUID, true);
+            peripheral.setNotify(CONTOUR_SERVICE_UUID, CONTOUR_CLOCK, true);
         }
 
         @Override
@@ -133,6 +151,9 @@ class BluetoothHandler {
             if (status == GATT_SUCCESS) {
                 final boolean isNotifying = peripheral.isNotifying(characteristic);
                 Timber.i("SUCCESS: Notify set to '%s' for %s", isNotifying, characteristic.getUuid());
+                if (characteristic.getUuid().equals(CONTOUR_CLOCK)) {
+                    writeContourClock(peripheral);
+                }
             } else {
                 Timber.e("ERROR: Changing notification state failed for %s", characteristic.getUuid());
             }
@@ -151,6 +172,7 @@ class BluetoothHandler {
         public void onCharacteristicUpdate(@NotNull BluetoothPeripheral peripheral, @NotNull byte[] value, @NotNull BluetoothGattCharacteristic characteristic, int status) {
             if (status != GATT_SUCCESS) return;
 
+            Timber.i("%s", bytes2String(value));
             UUID characteristicUUID = characteristic.getUuid();
             BluetoothBytesParser parser = new BluetoothBytesParser(value);
 
@@ -191,6 +213,9 @@ class BluetoothHandler {
                 Intent intent = new Intent(MEASUREMENT_WEIGHT);
                 intent.putExtra(MEASUREMENT_WEIGHT_EXTRA, measurement);
                 sendMeasurement(intent, peripheral);
+                Timber.d("%s", measurement);
+            } else if (characteristicUUID.equals((GLUCOSE_MEASUREMENT_CHARACTERISTIC_UUID))) {
+                GlucoseMeasurement measurement = new GlucoseMeasurement(value);
                 Timber.d("%s", measurement);
             } else if (characteristicUUID.equals(CURRENT_TIME_CHARACTERISTIC_UUID)) {
                 Date currentTime = parser.getDateTime();
@@ -234,6 +259,22 @@ class BluetoothHandler {
         private void sendMeasurement(@NotNull Intent intent, @NotNull BluetoothPeripheral peripheral ) {
             intent.putExtra(MEASUREMENT_EXTRA_PERIPHERAL, peripheral.getAddress());
             context.sendBroadcast(intent);
+        }
+
+        private void writeContourClock(@NotNull BluetoothPeripheral peripheral) {
+            Calendar calendar = Calendar.getInstance();
+            int offsetInMinutes = calendar.getTimeZone().getRawOffset() / 60000;
+            calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
+            BluetoothBytesParser parser = new BluetoothBytesParser(ByteOrder.LITTLE_ENDIAN);
+            parser.setIntValue(1, FORMAT_UINT8);
+            parser.setIntValue(calendar.get(Calendar.YEAR), FORMAT_UINT16);
+            parser.setIntValue(calendar.get(Calendar.MONTH) + 1, FORMAT_UINT8);
+            parser.setIntValue(calendar.get(Calendar.DAY_OF_MONTH), FORMAT_UINT8);
+            parser.setIntValue(calendar.get(Calendar.HOUR_OF_DAY), FORMAT_UINT8);
+            parser.setIntValue(calendar.get(Calendar.MINUTE), FORMAT_UINT8);
+            parser.setIntValue(calendar.get(Calendar.SECOND), FORMAT_UINT8);
+            parser.setIntValue(offsetInMinutes, FORMAT_SINT16);
+            peripheral.writeCharacteristic(CONTOUR_SERVICE_UUID, CONTOUR_CLOCK, parser.getValue(), WRITE_TYPE_DEFAULT);
         }
     };
 
