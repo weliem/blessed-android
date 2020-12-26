@@ -253,7 +253,7 @@ public class BluetoothCentral {
         }
 
         @Override
-        public void connectFailed(final @NotNull BluetoothPeripheral peripheral, final int status) {
+        public void connectFailed(final @NotNull BluetoothPeripheral peripheral, final HciStatus status) {
             unconnectedPeripherals.remove(peripheral.getAddress());
             scannedPeripherals.remove((peripheral.getAddress()));
 
@@ -265,7 +265,7 @@ public class BluetoothCentral {
             }
 
             // Retry connection or conclude the connection has failed
-            if (nrRetries < MAX_CONNECTION_RETRIES && status != BluetoothPeripheral.GATT_CONN_TIMEOUT) {
+            if (nrRetries < MAX_CONNECTION_RETRIES && status != HciStatus.CONNECTION_FAILED_ESTABLISHMENT) {
                 Timber.i("retrying connection to '%s' (%s)", peripheral.getName(), peripheral.getAddress());
                 nrRetries++;
                 connectionRetries.put(peripheral.getAddress(), nrRetries);
@@ -284,7 +284,7 @@ public class BluetoothCentral {
         }
 
         @Override
-        public void disconnected(final @NotNull BluetoothPeripheral peripheral, final int status) {
+        public void disconnected(final @NotNull BluetoothPeripheral peripheral, final HciStatus status) {
             if (expectingBluetoothOffDisconnects) {
                 cancelDisconnectionTimer();
                 expectingBluetoothOffDisconnects = false;
@@ -706,7 +706,7 @@ public class BluetoothCentral {
             callBackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    bluetoothCentralCallback.onDisconnectedPeripheral(peripheral, BluetoothPeripheral.GATT_SUCCESS);
+                    bluetoothCentralCallback.onDisconnectedPeripheral(peripheral, HciStatus.SUCCESS);
                 }
             });
 

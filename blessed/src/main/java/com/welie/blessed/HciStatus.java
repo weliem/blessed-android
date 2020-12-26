@@ -27,7 +27,7 @@ package com.welie.blessed;
  * This class describes the HCI error codes as defined in the Bluetooth Standard, Volume 1, Part F, 1.3 HCI Error Code, pages 364-377.
  * See https://www.bluetooth.org/docman/handlers/downloaddoc.ashx?doc_id=478726,
  */
-public enum BluetoothError {
+public enum HciStatus {
 
     /**
      * Command was successful
@@ -342,7 +342,7 @@ public enum BluetoothError {
     /**
      * The LL initiated a connection but the connection has failed to be established.
      */
-    CONN_FAILED_ESTABLISHMENT(0x3E),
+    CONNECTION_FAILED_ESTABLISHMENT(0x3E),
 
     /**
      * The MAC of the 802.11 AMP was requested to connect to a peer, but the connection failed.
@@ -380,9 +380,14 @@ public enum BluetoothError {
     PACKET_TOO_LONG(0x45),
 
     // Additional Android specific errors
-    GATT_ERROR(0x85);
+    ERROR(0x85),
 
-    BluetoothError(int value) {
+    /**
+     * Used when status code is not defined in the class
+     */
+    UNKNOWN_STATUS_CODE(0xFF);
+
+    HciStatus(int value) {
         this.value = value;
     }
 
@@ -392,11 +397,11 @@ public enum BluetoothError {
         return value;
     }
 
-    public static BluetoothError fromValue(int value) {
-        for (BluetoothError type : values()) {
+    public static HciStatus fromValue(int value) {
+        for (HciStatus type : values()) {
             if (type.getValue() == value)
                 return type;
         }
-        return null;
+        return UNKNOWN_STATUS_CODE;
     }
 }

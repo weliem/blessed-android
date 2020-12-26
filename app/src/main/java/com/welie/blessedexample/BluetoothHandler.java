@@ -12,6 +12,8 @@ import com.welie.blessed.BluetoothCentral;
 import com.welie.blessed.BluetoothCentralCallback;
 import com.welie.blessed.BluetoothPeripheral;
 import com.welie.blessed.BluetoothPeripheralCallback;
+import com.welie.blessed.GattStatus;
+import com.welie.blessed.HciStatus;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -30,7 +32,7 @@ import static com.welie.blessed.BluetoothBytesParser.FORMAT_SINT16;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT16;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT8;
 import static com.welie.blessed.BluetoothBytesParser.bytes2String;
-import static com.welie.blessed.BluetoothPeripheral.GATT_SUCCESS;
+
 import static java.lang.Math.abs;
 
 class BluetoothHandler {
@@ -147,32 +149,31 @@ class BluetoothHandler {
         }
 
         @Override
-        public void onNotificationStateUpdate(@NotNull BluetoothPeripheral peripheral, @NotNull BluetoothGattCharacteristic characteristic, int status) {
-            if (status == GATT_SUCCESS) {
+        public void onNotificationStateUpdate(@NotNull BluetoothPeripheral peripheral, @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
+            if (status == GattStatus.SUCCESS) {
                 final boolean isNotifying = peripheral.isNotifying(characteristic);
                 Timber.i("SUCCESS: Notify set to '%s' for %s", isNotifying, characteristic.getUuid());
                 if (characteristic.getUuid().equals(CONTOUR_CLOCK)) {
                     writeContourClock(peripheral);
                 }
             } else {
-                Timber.e("ERROR: Changing notification state failed for %s", characteristic.getUuid());
+                Timber.e("ERROR: Changing notification state failed for %s (%s)", characteristic.getUuid(), status);
             }
         }
 
         @Override
-        public void onCharacteristicWrite(@NotNull BluetoothPeripheral peripheral, @NotNull byte[] value, @NotNull BluetoothGattCharacteristic characteristic, int status) {
-            if (status == GATT_SUCCESS) {
+        public void onCharacteristicWrite(@NotNull BluetoothPeripheral peripheral, @NotNull byte[] value, @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
+            if (status == GattStatus.SUCCESS) {
                 Timber.i("SUCCESS: Writing <%s> to <%s>", bytes2String(value), characteristic.getUuid().toString());
             } else {
-                Timber.i("ERROR: Failed writing <%s> to <%s>", bytes2String(value), characteristic.getUuid().toString());
+                Timber.i("ERROR: Failed writing <%s> to <%s> (%s)", bytes2String(value), characteristic.getUuid().toString(), status);
             }
         }
 
         @Override
-        public void onCharacteristicUpdate(@NotNull BluetoothPeripheral peripheral, @NotNull byte[] value, @NotNull BluetoothGattCharacteristic characteristic, int status) {
-            if (status != GATT_SUCCESS) return;
+        public void onCharacteristicUpdate(@NotNull BluetoothPeripheral peripheral, @NotNull byte[] value, @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
+            if (status != GattStatus.SUCCESS) return;
 
-            Timber.i("%s", bytes2String(value));
             UUID characteristicUUID = characteristic.getUuid();
             BluetoothBytesParser parser = new BluetoothBytesParser(value);
 
@@ -252,7 +253,7 @@ class BluetoothHandler {
         }
 
         @Override
-        public void onMtuChanged(@NotNull BluetoothPeripheral peripheral, int mtu, int status) {
+        public void onMtuChanged(@NotNull BluetoothPeripheral peripheral, int mtu, @NotNull GattStatus status) {
             Timber.i("new MTU set: %d", mtu);
         }
 
@@ -287,13 +288,13 @@ class BluetoothHandler {
         }
 
         @Override
-        public void onConnectionFailed(@NotNull BluetoothPeripheral peripheral, final int status) {
-            Timber.e("connection '%s' failed with status %d", peripheral.getName(), status);
+        public void onConnectionFailed(@NotNull BluetoothPeripheral peripheral, final @NotNull HciStatus status) {
+            Timber.e("connection '%s' failed with status %s", peripheral.getName(), status);
         }
 
         @Override
-        public void onDisconnectedPeripheral(@NotNull final BluetoothPeripheral peripheral, final int status) {
-            Timber.i("disconnected '%s' with status %d", peripheral.getName(), status);
+        public void onDisconnectedPeripheral(@NotNull final BluetoothPeripheral peripheral, final @NotNull HciStatus status) {
+            Timber.i("disconnected '%s' with status %s", peripheral.getName(), status);
 
             // Reconnect to this device when it becomes available again
             handler.postDelayed(new Runnable() {
@@ -347,6 +348,8 @@ class BluetoothHandler {
 
         // Scan for peripherals with a certain service UUIDs
         central.startPairingPopupHack();
-        central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID, HRS_SERVICE_UUID, PLX_SERVICE_UUID, WSS_SERVICE_UUID});
+//        central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID, HRS_SERVICE_UUID, PLX_SERVICE_UUID, WSS_SERVICE_UUID});
+        BluetoothPeripheral peripheral = central.getPeripheral("12:12:12:14:15:16");
+        central.connectPeripheral(peripheral, peripheralCallback);
     }
 }

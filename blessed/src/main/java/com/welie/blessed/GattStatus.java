@@ -28,112 +28,112 @@ package com.welie.blessed;
  * See https://www.bluetooth.org/docman/handlers/downloaddoc.ashx?doc_id=478726,
  *
  * Gatt status values in Android source code:
- * https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/android-4.4.4_r2.0.1/stack/include/gatt_api.h
+ * https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/android-4.4.4_r2.0.1/stack/include/api.h
  *
  * Additional errors are related to L2CAP layer:
  * https://android.googlesource.com/platform/system/bt/+/android-7.1.1_r44/stack/include/l2cdefs.h
  */
-public enum BluetoothGattError {
+public enum GattStatus {
 
     /**
      * Operation completed successfully
      */
-    GATT_SUCCESS(0x00),
+    SUCCESS(0x00),
 
     /**
      * The attribute handle given was not valid on this server
      */
-    GATT_INVALID_HANDLE(0x01),
+    INVALID_HANDLE(0x01),
 
     /**
      * The attribute cannot be read.
      */
-    GATT_READ_NOT_PERMITTED(0x02),
+    READ_NOT_PERMITTED(0x02),
 
     /**
      * The attribute cannot be written.
      */
-    GATT_WRITE_NOT_PERMITTED(0x03),
+    WRITE_NOT_PERMITTED(0x03),
 
     /**
      * The attribute PDU was invalid.
      */
-    GATT_INVALID_PDU(0x04),
+    INVALID_PDU(0x04),
 
     /**
      * The attribute requires authentication before it can be read or written.
      */
-    GATT_INSUFFICIENT_AUTHENTICATION(0x05),
+    INSUFFICIENT_AUTHENTICATION(0x05),
 
     /**
      * Attribute server does not support the request received from the client.
      */
-    GATT_REQUEST_NOT_SUPPORTED(0x06),
+    REQUEST_NOT_SUPPORTED(0x06),
 
     /**
      * Offset specified was past the end of the attribute.
      */
-    GATT_INVALID_OFFSET(0x07),
+    INVALID_OFFSET(0x07),
 
     /**
      * The attribute requires authorization before it can be read or written.
      */
-    GATT_INSUFFICIENT_AUTHORIZATION(0x08),
+    INSUFFICIENT_AUTHORIZATION(0x08),
 
     /**
      * Too many prepare writes have been queued.
      */
-    GATT_PREPARE_QUEUE_FULL(0x09),
+    PREPARE_QUEUE_FULL(0x09),
 
     /**
      * No attribute found within the given attribute handle range.
      */
-    GATT_ATTRIBUTE_NOT_FOUND(0x0A),
+    ATTRIBUTE_NOT_FOUND(0x0A),
 
     /**
      * The attribute cannot be read using the ATT_READ_BLOB_REQ PDU.
      */
-    GATT_ATTRIBUTE_NOT_LONG(0x0B),
+    ATTRIBUTE_NOT_LONG(0x0B),
 
     /**
      * The Encryption Key Size used for encrypting this link is insufficient.
      */
-    GATT_INSUFFICIENT_ENCRYPTION_KEY_SIZE(0x0C),
+    INSUFFICIENT_ENCRYPTION_KEY_SIZE(0x0C),
 
     /**
      * The attribute value length is invalid for the operation.
      */
-    GATT_INVALID_ATTRIBUTE_VALUE_LENGTH(0x0D),
+    INVALID_ATTRIBUTE_VALUE_LENGTH(0x0D),
 
     /**
      * The attribute request that was requested has encountered an error that was unlikely, and therefore could not be completed as requested.
      */
-    GATT_UNLIKELY_ERROR(0x0E),
+    UNLIKELY_ERROR(0x0E),
 
     /**
      * The attribute requires encryption before it can be read or written.
      */
-    GATT_INSUFFICIENT_ENCRYPTION(0x0F),
+    INSUFFICIENT_ENCRYPTION(0x0F),
 
     /**
      * The attribute type is not a supported grouping attribute as defined by a higher layer specification.
      */
-    GATT_UNSUPPORTED_GROUP_TYPE(0x10),
+    UNSUPPORTED_GROUP_TYPE(0x10),
 
     /**
      * Insufficient Resources to complete the request.
      */
-    GATT_INSUFFICIENT_RESOURCES(0x11),
+    INSUFFICIENT_RESOURCES(0x11),
 
     /**
      * The server requests the client to redis- cover the database.
      */
-    GATT_DATABASE_OUT_OF_SYNC(0x12),
+    DATABASE_OUT_OF_SYNC(0x12),
 
     /**
      * The attribute parameter value was not allowed
      */
-    GATT_VALUE_NOT_ALLOWED(0x13),
+    VALUE_NOT_ALLOWED(0x13),
 
     // (0x80 – 0x9F) - Application error code defined by a higher layer specification.
     // So the following codes are Android specific
@@ -141,98 +141,106 @@ public enum BluetoothGattError {
     /**
      * No resources
      */
-    GATT_NO_RESOURCES(0x80),
+    NO_RESOURCES(0x80),
 
     /**
      * An internal error has occurred
      */
-    GATT_INTERNAL_ERROR(0x81),
+    INTERNAL_ERROR(0x81),
 
     /**
      * Wrong state
      */
-    GATT_WRONG_STATE(0x82),
+    WRONG_STATE(0x82),
 
     /**
      * Database is full
      */
-    GATT_DB_FULL(0x83),
+    DB_FULL(0x83),
 
     /**
      * Busy
      */
-    GATT_BUSY(0x84),
+    BUSY(0x84),
 
     /**
      * Undefined GATT error occurred
      */
-    GATT_ERROR(0x85),
+    ERROR(0x85),
 
     /**
      * Command has been queued up
      */
-    GATT_CMD_STARTED(0x86),
+    CMD_STARTED(0x86),
 
     /**
      * Illegal parameter
      */
-    GATT_ILLEGAL_PARAMETER(0x87),
+    ILLEGAL_PARAMETER(0x87),
 
     /**
      * Operation is pending
      */
-    GATT_PENDING(0x88),
+    PENDING(0x88),
 
     /**
-     * Authorization failed
+     * Authorization failed, typically because bonding failed
      */
-    GATT_AUTH_FAIL(0x89),
+    AUTHORIZATION_FAILED(0x89),
 
     /**
      * More
      */
-    GATT_MORE(0x8a),
+    MORE(0x8a),
 
     /**
      * Invalid configuration
      */
-    GATT_INVALID_CFG(0x8b),
+    INVALID_CFG(0x8b),
 
     /**
      * Service started
      */
-    GATT_SERVICE_STARTED(0x8c),
+    SERVICE_STARTED(0x8c),
 
     /**
      * No Man-in-the-middle protection
      */
-    GATT_ENCRYPED_NO_MITM(0x8d),
+    ENCRYPED_NO_MITM(0x8d),
 
     /**
      * Not encrypted
      */
-    GATT_NOT_ENCRYPTED(0x8e),
+    NOT_ENCRYPTED(0x8e),
 
     /**
      * Command is sent but L2CAP channel is congested
      */
-    GATT_CONNECTION_CONGESTED(0x8f),
+    CONNECTION_CONGESTED(0x8f),
 
     // (0xE0 – 0xFF) - Common profile and service error codes defined in Core Specification Supplement, Part B.
+    CCCD_CFG_ERROR(0x00FD),
+    PROCEDURE_IN_PROGRESS(0x00FE),
+    VALUE_OUT_OF_RANGE(0x00FF),
 
     // Other errors codes that are Android specific
 
     /**
      * L2CAP connection cancelled
      */
-    GATT_CONN_CANCEL(0x0100),
+    CONNECTION_CANCELLED(0x0100),
 
     /**
      * Failure
      */
-    GATT_FAILURE(0x101);
+    FAILURE(0x101),
 
-    BluetoothGattError(int value) {
+    /**
+     * Used when status code is not defined in the class
+     */
+    UNKNOWN_STATUS_CODE(0xFFFF);
+
+    GattStatus(int value) {
         this.value = value;
     }
 
@@ -242,11 +250,11 @@ public enum BluetoothGattError {
         return value;
     }
 
-    public static BluetoothGattError fromValue(int value) {
-        for (BluetoothGattError type : values()) {
+    public static GattStatus fromValue(int value) {
+        for (GattStatus type : values()) {
             if (type.getValue() == value)
                 return type;
         }
-        return null;
+        return UNKNOWN_STATUS_CODE;
     }
 }

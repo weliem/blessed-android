@@ -3,12 +3,12 @@ package com.welie.blessedexample;
 public enum GlucoseMeasurementUnit {
 
     /**
-     * kg per liter
+     * mg per deciliter (mg/Dl)
      */
     MiligramPerDeciliter,
 
     /**
-     * mmol per liter
+     * mmol per liter (mmol/L)
      */
     MmolPerLiter
 }
