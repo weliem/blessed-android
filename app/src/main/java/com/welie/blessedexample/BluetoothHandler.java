@@ -45,7 +45,7 @@ class BluetoothHandler {
     public static final String MEASUREMENT_HEARTRATE = "blessed.measurement.heartrate";
     public static final String MEASUREMENT_HEARTRATE_EXTRA = "blessed.measurement.heartrate.extra";
     public static final String MEASUREMENT_PULSE_OX = "blessed.measurement.pulseox";
-    public static final String MEASUREMENT_PULSE_OX_EXTRA_CONTINOUS = "blessed.measurement.pulseox.extra.continous";
+    public static final String MEASUREMENT_PULSE_OX_EXTRA_CONTINOUS = "blessed.measurement.pulseox.extra.continuous";
     public static final String MEASUREMENT_PULSE_OX_EXTRA_SPOT = "blessed.measurement.pulseox.extra.spot";
     public static final String MEASUREMENT_WEIGHT = "blessed.measurement.weight";
     public static final String MEASUREMENT_WEIGHT_EXTRA = "blessed.measurement.weight.extra";

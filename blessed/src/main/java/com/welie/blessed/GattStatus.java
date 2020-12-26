@@ -28,7 +28,7 @@ package com.welie.blessed;
  * See https://www.bluetooth.org/docman/handlers/downloaddoc.ashx?doc_id=478726,
  *
  * Gatt status values in Android source code:
- * https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/android-4.4.4_r2.0.1/stack/include/api.h
+ * https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/master/stack/include/gatt_api.h
  *
  * Additional errors are related to L2CAP layer:
  * https://android.googlesource.com/platform/system/bt/+/android-7.1.1_r44/stack/include/l2cdefs.h
@@ -126,7 +126,7 @@ public enum GattStatus {
     INSUFFICIENT_RESOURCES(0x11),
 
     /**
-     * The server requests the client to redis- cover the database.
+     * The server requests the client to rediscover the database.
      */
     DATABASE_OUT_OF_SYNC(0x12),
 
