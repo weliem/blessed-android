@@ -82,8 +82,8 @@ BluetoothPeripheral peripheral = central.getPeripheral("CF:A9:BA:D9:62:9E");
 After issuing a connect call, you will receive one of the following callbacks:
 ```java
 public void onConnectedPeripheral(BluetoothPeripheral peripheral)
-public void onConnectionFailed(BluetoothPeripheral peripheral, int status)
-public void onDisconnectedPeripheral(BluetoothPeripheral peripheral, int status)
+public void onConnectionFailed(BluetoothPeripheral peripheral, HciStatus status)
+public void onDisconnectedPeripheral(BluetoothPeripheral peripheral, HciStatus status)
 ```
 
 To disconnect or to cancel an outstanding `connectPeripheral()` or `autoConnectPeripheral()`, you call:
@@ -120,7 +120,7 @@ public void onCharacteristicUpdate(BluetoothPeripheral peripheral, byte[] value,
 ```
 If you want to write to a characteristic, you need to provide a `value` and a `writeType`. The `writeType` is usually `WRITE_TYPE_DEFAULT` or `WRITE_TYPE_NO_RESPONSE`. If the write type you specify is not supported by the characteristic you will see an error in your log. For write operations you will get a callback on:
 ```java
-public void onCharacteristicWrite(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic characteristic, final int status)
+public void onCharacteristicWrite(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic characteristic, final GattStatus status)
 
 ```
 
@@ -131,9 +131,9 @@ In these callbacks, the *value* parameter is the threadsafe byte array that was 
 BLESSED provides a convenience method `setNotify` to turn notifications/indications on or off. It will perform all the necessary operations like writing to the Client Characteristic Configuration descriptor for you. So all you need to do is:
 
 ```java
-// See if this peripheral has the Current Time service
-if(peripheral.getService(CTS_SERVICE_UUID) != null) {
-     BluetoothGattCharacteristic currentTimeCharacteristic = peripheral.getCharacteristic(CTS_SERVICE_UUID, CURRENT_TIME_CHARACTERISTIC_UUID);
+
+BluetoothGattCharacteristic currentTimeCharacteristic = peripheral.getCharacteristic(CTS_SERVICE_UUID, CURRENT_TIME_CHARACTERISTIC_UUID);
+if (currentTimeCharacteristic != null) {
      peripheral.setNotify(currentTimeCharacteristic, true);
 }
 ```
@@ -142,7 +142,7 @@ Since this is an asynchronous operation you will receive a callback that indicat
 
 ```java
 @Override
-public void onNotificationStateUpdate(BluetoothPeripheral peripheral, BluetoothGattCharacteristic characteristic, int status) {
+public void onNotificationStateUpdate(BluetoothPeripheral peripheral, BluetoothGattCharacteristic characteristic, GattStatus status) {
      if( status == GATT_SUCCESS) {
           if(peripheral.isNotifying(characteristic)) {
                Log.i(TAG, String.format("SUCCESS: Notify set to 'on' for %s", characteristic.getUuid()));
@@ -157,7 +157,7 @@ public void onNotificationStateUpdate(BluetoothPeripheral peripheral, BluetoothG
 When notifications arrive you will receive a callback on:
 
 ```java
-public void onCharacteristicUpdate(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic characteristic)
+public void onCharacteristicUpdate(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic characteristic, GattStatus status)
 ```
 
 ## Bonding
@@ -177,6 +177,9 @@ It is also possible to remove a bond by calling `removeBond`. Note that this met
 
 Lastly, it is also possible to automatically issue a PIN code when pairing. Use the method `setPinCodeForPeripheral` to register a 6 digit PIN code. Once bonding starts, BLESSED will automatically issue the PIN code and the UI dialog to enter the PIN code will not appear anymore.
 
+## Status codes
+When connecting or disconnecting, the callback methods will contain a parameter `HciStatus status`. This enum class will have the value `SUCCESS` of the operation succeeded and otherwise it will provide a value indicating what went wrong.
+Similarly, when doing GATT operations, the callbacks methods contain a parameter `GattStatus status`. These two enum classes replace the `int status` parameter that Android normally passes.
 
 ## Example application
 

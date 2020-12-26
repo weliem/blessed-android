@@ -36,7 +36,6 @@ public abstract class BluetoothCentralCallback {
      */
     public void onConnectedPeripheral(@NotNull final BluetoothPeripheral peripheral) {}
 
-
     /**
      * Connecting with the peripheral has failed.
      *
@@ -44,7 +43,6 @@ public abstract class BluetoothCentralCallback {
      * @param status the status code for the connection failure
      */
     public void onConnectionFailed(@NotNull final BluetoothPeripheral peripheral, @NotNull final HciStatus status) {}
-
 
     /**
      * Peripheral disconnected
@@ -54,7 +52,6 @@ public abstract class BluetoothCentralCallback {
      */
     public void onDisconnectedPeripheral(@NotNull final BluetoothPeripheral peripheral, @NotNull final HciStatus status) {}
 
-
     /**
      * Discovered a peripheral
      *
@@ -63,14 +60,12 @@ public abstract class BluetoothCentralCallback {
      */
     public void onDiscoveredPeripheral(@NotNull final BluetoothPeripheral peripheral, @NotNull final ScanResult scanResult) {}
 
-
     /**
      * Scanning failed
      *
      * @param errorCode the status code for the scanning failure
      */
     public void onScanFailed(final int errorCode) {}
-
 
     /**
      * Bluetooth adapter status changed

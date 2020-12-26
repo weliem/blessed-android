@@ -942,6 +942,7 @@ public class BluetoothPeripheral {
         if (name != null) {
             // Cache the name so that we even know it when bluetooth is switched off
             cachedName = name;
+            return name;
         }
         return cachedName;
     }

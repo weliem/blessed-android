@@ -138,5 +138,4 @@ public abstract class BluetoothPeripheralCallback {
      * @param status GATT status code
      */
     public void onMtuChanged(@NotNull final BluetoothPeripheral peripheral, int mtu, @NotNull GattStatus status) {}
-
 }
