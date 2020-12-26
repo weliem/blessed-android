@@ -45,7 +45,7 @@ class BluetoothHandler {
     public static final String MEASUREMENT_HEARTRATE = "blessed.measurement.heartrate";
     public static final String MEASUREMENT_HEARTRATE_EXTRA = "blessed.measurement.heartrate.extra";
     public static final String MEASUREMENT_PULSE_OX = "blessed.measurement.pulseox";
-    public static final String MEASUREMENT_PULSE_OX_EXTRA_CONTINOUS = "blessed.measurement.pulseox.extra.continuous";
+    public static final String MEASUREMENT_PULSE_OX_EXTRA_CONTINUOUS = "blessed.measurement.pulseox.extra.continuous";
     public static final String MEASUREMENT_PULSE_OX_EXTRA_SPOT = "blessed.measurement.pulseox.extra.spot";
     public static final String MEASUREMENT_WEIGHT = "blessed.measurement.weight";
     public static final String MEASUREMENT_WEIGHT_EXTRA = "blessed.measurement.weight.extra";
@@ -199,7 +199,7 @@ class BluetoothHandler {
                 PulseOximeterContinuousMeasurement measurement = new PulseOximeterContinuousMeasurement(value);
                 if (measurement.getSpO2() <= 100 && measurement.getPulseRate() <= 220) {
                     Intent intent = new Intent(MEASUREMENT_PULSE_OX);
-                    intent.putExtra(MEASUREMENT_PULSE_OX_EXTRA_CONTINOUS, measurement);
+                    intent.putExtra(MEASUREMENT_PULSE_OX_EXTRA_CONTINUOUS, measurement);
                     sendMeasurement(intent, peripheral);
                 }
                 Timber.d("%s", measurement);
