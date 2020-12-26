@@ -185,8 +185,9 @@ public class BluetoothPeripheral {
     // The maximum number of enabled notifications Android supports (BTA_GATTC_NOTIF_REG_MAX)
     private static final int MAX_NOTIFYING_CHARACTERISTICS = 15;
 
-    public static final String NO_VALID_SERVICE_UUID_PROVIDED = "no valid service UUID provided";
-    public static final String NO_VALID_CHARACTERISTIC_UUID_PROVIDED = "no valid characteristic UUID provided";
+    private static final String NO_VALID_SERVICE_UUID_PROVIDED = "no valid service UUID provided";
+    private static final String NO_VALID_CHARACTERISTIC_UUID_PROVIDED = "no valid characteristic UUID provided";
+    private static final String NO_VALID_CHARACTERISTIC_PROVIDED = "no valid characteristic provided";
 
     @NotNull
     private final Context context;
@@ -1078,7 +1079,7 @@ public class BluetoothPeripheral {
      * @return true if the operation was enqueued, false if the characteristic does not support reading or the characteristic was invalid
      */
     public boolean readCharacteristic(@NotNull final BluetoothGattCharacteristic characteristic) {
-        Objects.requireNonNull(characteristic, "characteristic is 'null', ignoring read request");
+        Objects.requireNonNull(characteristic, NO_VALID_CHARACTERISTIC_PROVIDED);
 
         // Check if gatt object is valid
         if (bluetoothGatt == null) {
@@ -1155,7 +1156,7 @@ public class BluetoothPeripheral {
      * @return true if a write operation was succesfully enqueued, otherwise false
      */
     public boolean writeCharacteristic(@NotNull final BluetoothGattCharacteristic characteristic, @NotNull final byte[] value, final int writeType) {
-        Objects.requireNonNull(characteristic, "no valid characteristic provided");
+        Objects.requireNonNull(characteristic, NO_VALID_CHARACTERISTIC_PROVIDED);
         Objects.requireNonNull(value, "no valid value provided");
 
         // Check if gatt object is valid
@@ -1344,7 +1345,7 @@ public class BluetoothPeripheral {
      * @return true if the operation was enqueued, false if the characteristic doesn't support notification or indications or
      */
     public boolean setNotify(@NotNull final BluetoothGattCharacteristic characteristic, final boolean enable) {
-        Objects.requireNonNull(characteristic, "no valid characteristic provided");
+        Objects.requireNonNull(characteristic, NO_VALID_CHARACTERISTIC_PROVIDED);
 
         // Check if gatt object is valid
         if (bluetoothGatt == null) {

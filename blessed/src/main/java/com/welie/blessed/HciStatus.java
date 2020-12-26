@@ -23,6 +23,8 @@
 
 package com.welie.blessed;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * This class describes the HCI error codes as defined in the Bluetooth Standard, Volume 1, Part F, 1.3 HCI Error Code, pages 364-377.
  * See https://www.bluetooth.org/docman/handlers/downloaddoc.ashx?doc_id=478726,
@@ -385,7 +387,7 @@ public enum HciStatus {
     /**
      * Used when status code is not defined in the class
      */
-    UNKNOWN_STATUS_CODE(0xFF);
+    UNKNOWN_STATUS_CODE(0xFFFF);
 
     HciStatus(int value) {
         this.value = value;
@@ -397,6 +399,7 @@ public enum HciStatus {
         return value;
     }
 
+    @NotNull
     public static HciStatus fromValue(int value) {
         for (HciStatus type : values()) {
             if (type.getValue() == value)

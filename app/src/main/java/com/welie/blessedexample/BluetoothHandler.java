@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.Intent;
+import android.media.audiofx.BassBoost;
 import android.os.Handler;
 
 import com.welie.blessed.BluetoothBytesParser;
@@ -44,6 +45,8 @@ class BluetoothHandler {
     public static final String MEASUREMENT_TEMPERATURE_EXTRA = "blessed.measurement.temperature.extra";
     public static final String MEASUREMENT_HEARTRATE = "blessed.measurement.heartrate";
     public static final String MEASUREMENT_HEARTRATE_EXTRA = "blessed.measurement.heartrate.extra";
+    public static final String MEASUREMENT_GLUCOSE = "blessed.measurement.glucose";
+    public static final String MEASUREMENT_GLUCOSE_EXTRA = "blessed.measurement.glucose.extra";
     public static final String MEASUREMENT_PULSE_OX = "blessed.measurement.pulseox";
     public static final String MEASUREMENT_PULSE_OX_EXTRA_CONTINUOUS = "blessed.measurement.pulseox.extra.continuous";
     public static final String MEASUREMENT_PULSE_OX_EXTRA_SPOT = "blessed.measurement.pulseox.extra.spot";
@@ -155,6 +158,8 @@ class BluetoothHandler {
                 Timber.i("SUCCESS: Notify set to '%s' for %s", isNotifying, characteristic.getUuid());
                 if (characteristic.getUuid().equals(CONTOUR_CLOCK)) {
                     writeContourClock(peripheral);
+                } else if (characteristic.getUuid().equals(GLUCOSE_RECORD_ACCESS_POINT_CHARACTERISTIC_UUID)) {
+                    writeGetAllGlucoseMeasurements(peripheral);
                 }
             } else {
                 Timber.e("ERROR: Changing notification state failed for %s (%s)", characteristic.getUuid(), status);
@@ -217,6 +222,9 @@ class BluetoothHandler {
                 Timber.d("%s", measurement);
             } else if (characteristicUUID.equals((GLUCOSE_MEASUREMENT_CHARACTERISTIC_UUID))) {
                 GlucoseMeasurement measurement = new GlucoseMeasurement(value);
+                Intent intent = new Intent(MEASUREMENT_GLUCOSE);
+                intent.putExtra(MEASUREMENT_GLUCOSE_EXTRA, measurement);
+                sendMeasurement(intent, peripheral);
                 Timber.d("%s", measurement);
             } else if (characteristicUUID.equals(CURRENT_TIME_CHARACTERISTIC_UUID)) {
                 Date currentTime = parser.getDateTime();
@@ -276,6 +284,13 @@ class BluetoothHandler {
             parser.setIntValue(calendar.get(Calendar.SECOND), FORMAT_UINT8);
             parser.setIntValue(offsetInMinutes, FORMAT_SINT16);
             peripheral.writeCharacteristic(CONTOUR_SERVICE_UUID, CONTOUR_CLOCK, parser.getValue(), WRITE_TYPE_DEFAULT);
+        }
+
+        private void writeGetAllGlucoseMeasurements(@NotNull BluetoothPeripheral peripheral) {
+            byte OP_CODE_REPORT_STORED_RECORDS = 1;
+            byte OPERATOR_ALL_RECORDS = 1;
+            final byte[] command = new byte[] {OP_CODE_REPORT_STORED_RECORDS, OPERATOR_ALL_RECORDS};
+            peripheral.writeCharacteristic(GLUCOSE_SERVICE_UUID, GLUCOSE_RECORD_ACCESS_POINT_CHARACTERISTIC_UUID, command, WRITE_TYPE_DEFAULT);
         }
     };
 
@@ -348,6 +363,6 @@ class BluetoothHandler {
 
         // Scan for peripherals with a certain service UUIDs
         central.startPairingPopupHack();
-        central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID, HRS_SERVICE_UUID, PLX_SERVICE_UUID, WSS_SERVICE_UUID});
+        central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID, HRS_SERVICE_UUID, PLX_SERVICE_UUID, WSS_SERVICE_UUID, GLUCOSE_SERVICE_UUID});
     }
 }

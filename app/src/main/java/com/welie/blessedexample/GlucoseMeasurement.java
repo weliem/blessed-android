@@ -2,6 +2,7 @@ package com.welie.blessedexample;
 
 import com.welie.blessed.BluetoothBytesParser;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Locale;
 
@@ -12,7 +13,7 @@ import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT16;
 import static com.welie.blessedexample.GlucoseMeasurementUnit.MiligramPerDeciliter;
 import static com.welie.blessedexample.GlucoseMeasurementUnit.MmolPerLiter;
 
-public class GlucoseMeasurement {
+public class GlucoseMeasurement implements Serializable {
 
     public final GlucoseMeasurementUnit unit;
     public Date timestamp;

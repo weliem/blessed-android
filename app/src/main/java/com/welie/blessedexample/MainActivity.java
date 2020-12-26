@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
         registerReceiver(heartRateDataReceiver, new IntentFilter( BluetoothHandler.MEASUREMENT_HEARTRATE ));
         registerReceiver(pulseOxDataReceiver, new IntentFilter( BluetoothHandler.MEASUREMENT_PULSE_OX ));
         registerReceiver(weightDataReceiver, new IntentFilter(BluetoothHandler.MEASUREMENT_WEIGHT));
+        registerReceiver(glucoseDataReceiver, new IntentFilter(BluetoothHandler.MEASUREMENT_GLUCOSE));
     }
 
     @Override
@@ -81,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
         unregisterReceiver(heartRateDataReceiver);
         unregisterReceiver(pulseOxDataReceiver);
         unregisterReceiver(weightDataReceiver);
+        unregisterReceiver(glucoseDataReceiver);
     }
 
     private final BroadcastReceiver locationServiceStateReceiver = new BroadcastReceiver() {
@@ -149,6 +151,17 @@ public class MainActivity extends AppCompatActivity {
             WeightMeasurement measurement = (WeightMeasurement) intent.getSerializableExtra(BluetoothHandler.MEASUREMENT_WEIGHT_EXTRA);
             if (measurement != null) {
                 measurementValue.setText(String.format(Locale.ENGLISH, "%.1f %s\n%s\n\nfrom %s", measurement.weight, measurement.unit.toString(), dateFormat.format(measurement.timestamp), peripheral.getName()));
+            }
+        }
+    };
+
+    private final BroadcastReceiver glucoseDataReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            BluetoothPeripheral peripheral = getPeripheral(intent.getStringExtra(BluetoothHandler.MEASUREMENT_EXTRA_PERIPHERAL));
+            GlucoseMeasurement measurement = (GlucoseMeasurement) intent.getSerializableExtra(BluetoothHandler.MEASUREMENT_GLUCOSE_EXTRA);
+            if (measurement != null) {
+                measurementValue.setText(String.format(Locale.ENGLISH, "%.1f %s\n%s\n\nfrom %s", measurement.value, measurement.unit == GlucoseMeasurementUnit.MmolPerLiter ? "mmol/L" : "mg/dL", dateFormat.format(measurement.timestamp), peripheral.getName()));
             }
         }
     };

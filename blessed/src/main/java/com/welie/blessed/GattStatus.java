@@ -23,15 +23,18 @@
 
 package com.welie.blessed;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
- * Note that most of these error codes correspond to the ATT error codes as defined in the Bluetooth Standard, Volume 3, Part F, 3.4.1 Error handling p1491)
- * See https://www.bluetooth.org/docman/handlers/downloaddoc.ashx?doc_id=478726,
+ * The GattStatus describes the result of a GATT operation.
  *
- * Gatt status values in Android source code:
+ * <p>Note that most of these error codes correspond to the ATT error codes as defined in the Bluetooth Standard, Volume 3, Part F, 3.4.1 Error handling p1491)
+ * See https://www.bluetooth.org/docman/handlers/downloaddoc.ashx?doc_id=478726
+ * </p>
+ *
+ * <p>Gatt status values as defined in the Android source code:
  * https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/master/stack/include/gatt_api.h
- *
- * Additional errors are related to L2CAP layer:
- * https://android.googlesource.com/platform/system/bt/+/android-7.1.1_r44/stack/include/l2cdefs.h
+ * </p>
  */
 public enum GattStatus {
 
@@ -219,8 +222,20 @@ public enum GattStatus {
     CONNECTION_CONGESTED(0x8f),
 
     // (0xE0 – 0xFF) - Common profile and service error codes defined in Core Specification Supplement, Part B.
+
+    /**
+     * Client Characteristic Configuration Descriptor error
+     */
     CCCD_CFG_ERROR(0x00FD),
+
+    /**
+     * Procedure in progress
+     */
     PROCEDURE_IN_PROGRESS(0x00FE),
+
+    /**
+     * Value out of range
+     */
     VALUE_OUT_OF_RANGE(0x00FF),
 
     // Other errors codes that are Android specific
@@ -231,7 +246,7 @@ public enum GattStatus {
     CONNECTION_CANCELLED(0x0100),
 
     /**
-     * Failure
+     * Failure to register client when trying to connect
      */
     FAILURE(0x101),
 
@@ -250,6 +265,7 @@ public enum GattStatus {
         return value;
     }
 
+    @NotNull
     public static GattStatus fromValue(int value) {
         for (GattStatus type : values()) {
             if (type.getValue() == value)

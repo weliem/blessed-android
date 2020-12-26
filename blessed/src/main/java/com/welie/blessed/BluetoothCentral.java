@@ -936,9 +936,10 @@ public class BluetoothCentral {
     }
 
     /**
-     * Set a fixed PIN code for a peripheral that asks fir a PIN code during bonding.
+     * Set a fixed PIN code for a peripheral that asks for a PIN code during bonding.
      * <p>
-     * This PIN code will be used to programmatically bond with the peripheral when it asks for a PIN code.
+     * This PIN code will be used to programmatically bond with the peripheral when it asks for a PIN code. The normal PIN popup will not appear anymore.
+     * </p>
      * Note that this only works for peripherals with a fixed PIN code.
      *
      * @param peripheralAddress the address of the peripheral
