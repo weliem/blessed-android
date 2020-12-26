@@ -164,9 +164,9 @@ class BluetoothHandler {
         @Override
         public void onCharacteristicWrite(@NotNull BluetoothPeripheral peripheral, @NotNull byte[] value, @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
             if (status == GattStatus.SUCCESS) {
-                Timber.i("SUCCESS: Writing <%s> to <%s>", bytes2String(value), characteristic.getUuid().toString());
+                Timber.i("SUCCESS: Writing <%s> to <%s>", bytes2String(value), characteristic.getUuid());
             } else {
-                Timber.i("ERROR: Failed writing <%s> to <%s> (%s)", bytes2String(value), characteristic.getUuid().toString(), status);
+                Timber.i("ERROR: Failed writing <%s> to <%s> (%s)", bytes2String(value), characteristic.getUuid(), status);
             }
         }
 
@@ -348,8 +348,6 @@ class BluetoothHandler {
 
         // Scan for peripherals with a certain service UUIDs
         central.startPairingPopupHack();
-//        central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID, HRS_SERVICE_UUID, PLX_SERVICE_UUID, WSS_SERVICE_UUID});
-        BluetoothPeripheral peripheral = central.getPeripheral("12:12:12:14:15:16");
-        central.connectPeripheral(peripheral, peripheralCallback);
+        central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID, HRS_SERVICE_UUID, PLX_SERVICE_UUID, WSS_SERVICE_UUID});
     }
 }

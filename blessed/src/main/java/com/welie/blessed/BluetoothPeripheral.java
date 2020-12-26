@@ -454,7 +454,7 @@ public class BluetoothPeripheral {
             if (gattStatus != GattStatus.SUCCESS) {
                 Timber.e("change MTU failed, status '%s'", GattStatus.fromValue(status));
             }
-            
+
             currentMtu = mtu;
             callbackHandler.post(new Runnable() {
                 @Override
