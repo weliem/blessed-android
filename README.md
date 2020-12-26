@@ -143,7 +143,7 @@ Since this is an asynchronous operation you will receive a callback that indicat
 ```java
 @Override
 public void onNotificationStateUpdate(BluetoothPeripheral peripheral, BluetoothGattCharacteristic characteristic, GattStatus status) {
-     if( status == GATT_SUCCESS) {
+     if (status == GattStatus.SUCCESS) {
           if(peripheral.isNotifying(characteristic)) {
                Log.i(TAG, String.format("SUCCESS: Notify set to 'on' for %s", characteristic.getUuid()));
           } else {
