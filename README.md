@@ -116,7 +116,7 @@ Both methods are asynchronous and will be queued up. So you can just issue as ma
 For read operations you will get a callback on:
 
 ```java
-public void onCharacteristicUpdate(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic characteristic)
+public void onCharacteristicUpdate(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic characteristic, GattStatus status)
 ```
 If you want to write to a characteristic, you need to provide a `value` and a `writeType`. The `writeType` is usually `WRITE_TYPE_DEFAULT` or `WRITE_TYPE_NO_RESPONSE`. If the write type you specify is not supported by the characteristic you will see an error in your log. For write operations you will get a callback on:
 ```java
@@ -178,12 +178,12 @@ It is also possible to remove a bond by calling `removeBond`. Note that this met
 Lastly, it is also possible to automatically issue a PIN code when pairing. Use the method `setPinCodeForPeripheral` to register a 6 digit PIN code. Once bonding starts, BLESSED will automatically issue the PIN code and the UI dialog to enter the PIN code will not appear anymore.
 
 ## Status codes
-When connecting or disconnecting, the callback methods will contain a parameter `HciStatus status`. This enum class will have the value `SUCCESS` of the operation succeeded and otherwise it will provide a value indicating what went wrong.
+When connecting or disconnecting, the callback methods will contain a parameter `HciStatus status`. This enum class will have the value `SUCCESS` if the operation succeeded and otherwise it will provide a value indicating what went wrong.
 Similarly, when doing GATT operations, the callbacks methods contain a parameter `GattStatus status`. These two enum classes replace the `int status` parameter that Android normally passes.
 
 ## Example application
 
-An example application is provided in the repo. It shows how to connect to Blood Pressure meters, Heart Rate monitors, Weight scales, Pulse Oximeters and Thermometers, read the data and show it on screen. It only works with peripherals that use the Bluetooth SIG services. Working peripherals include:
+An example application is provided in the repo. It shows how to connect to Blood Pressure meters, Heart Rate monitors, Weight scales, Glucose Meters, Pulse Oximeters and Thermometers, read the data and show it on screen. It only works with peripherals that use the Bluetooth SIG services. Working peripherals include:
 
 * Beurer FT95 thermometer
 * GRX Thermometer (TD-1241)
@@ -195,6 +195,8 @@ An example application is provided in the repo. It shows how to connect to Blood
 * Beurer BM57 blood pressure meter
 * Soehnle Connect 300/400 blood pressure meter
 * Polar H7/H10/OH1 heartrate monitors
+* Contour Next One glucose meter
+* Accu-Chek Instant glucose meter
 
 ## Acknowledgements
 
