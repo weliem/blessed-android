@@ -275,7 +275,7 @@ public class BluetoothPeripheral {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             final GattStatus gattStatus = GattStatus.fromValue(status);
             if (gattStatus != GattStatus.SUCCESS) {
-                Timber.e("service discovery failed due to internal error '%s', disconnecting", gattStatus );
+                Timber.e("service discovery failed due to internal error '%s', disconnecting", gattStatus);
                 disconnect();
                 return;
             }
@@ -308,17 +308,17 @@ public class BluetoothPeripheral {
             if (descriptor.getUuid().equals(CCC_DESCRIPTOR_UUID)) {
                 if (gattStatus == GattStatus.SUCCESS) {
                     final byte[] value = copyOf(descriptor.getValue());
-                        if (Arrays.equals(value, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) ||
-                                Arrays.equals(value, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)) {
-                            notifyingCharacteristics.add(parentCharacteristic.getUuid());
-                            if (notifyingCharacteristics.size() > MAX_NOTIFYING_CHARACTERISTICS) {
-                                Timber.e("too many (%d) notifying characteristics. The maximum Android can handle is %d", notifyingCharacteristics.size(), MAX_NOTIFYING_CHARACTERISTICS);
-                            }
-                        } else if (Arrays.equals(value, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)) {
-                            notifyingCharacteristics.remove(parentCharacteristic.getUuid());
-                        } else {
-                            Timber.e("unexpected CCC descriptor value");
+                    if (Arrays.equals(value, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) ||
+                            Arrays.equals(value, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)) {
+                        notifyingCharacteristics.add(parentCharacteristic.getUuid());
+                        if (notifyingCharacteristics.size() > MAX_NOTIFYING_CHARACTERISTICS) {
+                            Timber.e("too many (%d) notifying characteristics. The maximum Android can handle is %d", notifyingCharacteristics.size(), MAX_NOTIFYING_CHARACTERISTICS);
                         }
+                    } else if (Arrays.equals(value, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)) {
+                        notifyingCharacteristics.remove(parentCharacteristic.getUuid());
+                    } else {
+                        Timber.e("unexpected CCC descriptor value");
+                    }
                 }
 
                 callbackHandler.post(new Runnable() {
@@ -436,6 +436,7 @@ public class BluetoothPeripheral {
             if (gattStatus != GattStatus.SUCCESS) {
                 Timber.e("reading RSSI failed, status '%s'", GattStatus.fromValue(status));
             }
+
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -453,6 +454,7 @@ public class BluetoothPeripheral {
             if (gattStatus != GattStatus.SUCCESS) {
                 Timber.e("change MTU failed, status '%s'", GattStatus.fromValue(status));
             }
+            
             currentMtu = mtu;
             callbackHandler.post(new Runnable() {
                 @Override
