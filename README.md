@@ -35,7 +35,7 @@ public void scanForPeripheralsWithAddresses(String[] peripheralAddresses)
 public void scanForPeripheralsUsingFilters(List<ScanFilter> filters)
 ```
 
-They all work in the same way and take an array of either service UUIDs, peripheral names or mac addresses. So in order to setup a scan for a device with the Bloodpressure service and connect to it, you do:
+They all work in the same way and take an array of either service UUIDs, peripheral names or mac addresses. When a peripheral is found you will get a callback on `onDiscoveredPeripheral` with the `BluetoothPeripheral` object and a `ScanResult` object that contains the scan details. So in order to setup a scan for a device with the Bloodpressure service and connect to it, you do:
 
 ```java
 private final BluetoothCentralCallback bluetoothCentralCallback = new BluetoothCentralCallback() {
@@ -154,7 +154,7 @@ public void onNotificationStateUpdate(BluetoothPeripheral peripheral, BluetoothG
      }
 }
 ```
-When notifications arrive you will receive a callback on:
+When notifications arrive, you will receive a callback on:
 
 ```java
 public void onCharacteristicUpdate(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic characteristic, GattStatus status)
