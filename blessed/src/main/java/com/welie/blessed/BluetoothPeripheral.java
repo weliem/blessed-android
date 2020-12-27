@@ -188,6 +188,9 @@ public class BluetoothPeripheral {
     private static final String NO_VALID_SERVICE_UUID_PROVIDED = "no valid service UUID provided";
     private static final String NO_VALID_CHARACTERISTIC_UUID_PROVIDED = "no valid characteristic UUID provided";
     private static final String NO_VALID_CHARACTERISTIC_PROVIDED = "no valid characteristic provided";
+    private static final String NO_VALID_WRITE_TYPE_PROVIDED = "no valid writeType provided";
+    private static final String NO_VALID_VALUE_PROVIDED = "no valid value provided";
+    public static final String NO_VALID_DESCRIPTOR_PROVIDED = "no valid descriptor provided";
 
     @NotNull
     private final Context context;
@@ -1132,9 +1135,11 @@ public class BluetoothPeripheral {
      * @param writeType          the write type to use when writing. Must be WRITE_TYPE_DEFAULT, WRITE_TYPE_NO_RESPONSE or WRITE_TYPE_SIGNED
      * @return true if the operation was enqueued, false if the characteristic does not support reading or the characteristic was not found
      */
-    public boolean writeCharacteristic(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID, @NotNull final byte[] value, final WriteType writeType) {
+    public boolean writeCharacteristic(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID, @NotNull final byte[] value, @NotNull final WriteType writeType) {
         Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
         Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
+        Objects.requireNonNull(value, NO_VALID_VALUE_PROVIDED);
+        Objects.requireNonNull(writeType, NO_VALID_WRITE_TYPE_PROVIDED);
 
         BluetoothGattCharacteristic characteristic = getCharacteristic(serviceUUID, characteristicUUID);
         if (characteristic != null) {
@@ -1156,9 +1161,10 @@ public class BluetoothPeripheral {
      * @param writeType      the write type to use when writing. Must be WRITE_TYPE_DEFAULT, WRITE_TYPE_NO_RESPONSE or WRITE_TYPE_SIGNED
      * @return true if a write operation was succesfully enqueued, otherwise false
      */
-    public boolean writeCharacteristic(@NotNull final BluetoothGattCharacteristic characteristic, @NotNull final byte[] value, final WriteType writeType) {
+    public boolean writeCharacteristic(@NotNull final BluetoothGattCharacteristic characteristic, @NotNull final byte[] value, @NotNull final WriteType writeType) {
         Objects.requireNonNull(characteristic, NO_VALID_CHARACTERISTIC_PROVIDED);
-        Objects.requireNonNull(value, "no valid value provided");
+        Objects.requireNonNull(value, NO_VALID_VALUE_PROVIDED);
+        Objects.requireNonNull(writeType, NO_VALID_WRITE_TYPE_PROVIDED);
 
         // Check if gatt object is valid
         if (bluetoothGatt == null) {
@@ -1235,7 +1241,7 @@ public class BluetoothPeripheral {
      * @return true if a write operation was succesfully enqueued, otherwise false
      */
     public boolean readDescriptor(@NotNull final BluetoothGattDescriptor descriptor) {
-        Objects.requireNonNull(descriptor, "no valid descriptor provided");
+        Objects.requireNonNull(descriptor, NO_VALID_DESCRIPTOR_PROVIDED);
 
         // Check if gatt object is valid
         if (bluetoothGatt == null) {
@@ -1278,8 +1284,8 @@ public class BluetoothPeripheral {
      * @return true if a write operation was succesfully enqueued, otherwise false
      */
     public boolean writeDescriptor(@NotNull final BluetoothGattDescriptor descriptor, @NotNull final byte[] value) {
-        Objects.requireNonNull(descriptor, "no valid descriptor provided");
-        Objects.requireNonNull(value, "no valid value provided");
+        Objects.requireNonNull(descriptor, NO_VALID_DESCRIPTOR_PROVIDED);
+        Objects.requireNonNull(value, NO_VALID_VALUE_PROVIDED);
 
         // Check if gatt object is valid
         if (bluetoothGatt == null) {
