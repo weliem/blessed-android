@@ -109,7 +109,7 @@ Reading and writing to characteristics is done using the following methods:
 
 ```java
 public boolean readCharacteristic(BluetoothGattCharacteristic characteristic)
-public boolean writeCharacteristic(BluetoothGattCharacteristic characteristic, byte[] value, int writeType)
+public boolean writeCharacteristic(BluetoothGattCharacteristic characteristic, byte[] value, WriteType writeType)
 ```
 
 Both methods are asynchronous and will be queued up. So you can just issue as many read/write operations as you like without waiting for each of them to complete. You will receive a callback once the result of the operation is available.
@@ -118,7 +118,7 @@ For read operations you will get a callback on:
 ```java
 public void onCharacteristicUpdate(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic characteristic, GattStatus status)
 ```
-If you want to write to a characteristic, you need to provide a `value` and a `writeType`. The `writeType` is usually `WRITE_TYPE_DEFAULT` or `WRITE_TYPE_NO_RESPONSE`. If the write type you specify is not supported by the characteristic you will see an error in your log. For write operations you will get a callback on:
+If you want to write to a characteristic, you need to provide a `value` and a `writeType`. The `writeType` is usually `WITH_RESPONSE` or `WITHOUT_RESPONSE`. If the write type you specify is not supported by the characteristic you will see an error in your log. For write operations you will get a callback on:
 ```java
 public void onCharacteristicWrite(BluetoothPeripheral peripheral, byte[] value, BluetoothGattCharacteristic characteristic, final GattStatus status)
 
