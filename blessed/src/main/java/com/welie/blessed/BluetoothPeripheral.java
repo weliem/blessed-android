@@ -190,7 +190,7 @@ public class BluetoothPeripheral {
     private static final String NO_VALID_CHARACTERISTIC_PROVIDED = "no valid characteristic provided";
     private static final String NO_VALID_WRITE_TYPE_PROVIDED = "no valid writeType provided";
     private static final String NO_VALID_VALUE_PROVIDED = "no valid value provided";
-    public static final String NO_VALID_DESCRIPTOR_PROVIDED = "no valid descriptor provided";
+    private static final String NO_VALID_DESCRIPTOR_PROVIDED = "no valid descriptor provided";
 
     @NotNull
     private final Context context;
