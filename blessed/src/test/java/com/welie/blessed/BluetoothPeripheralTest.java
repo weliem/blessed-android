@@ -209,7 +209,7 @@ public class BluetoothPeripheralTest {
         verify(gatt).writeDescriptor(descriptor);
 
         callback.onDescriptorWrite(gatt, descriptor, 0);
-        verify(peripheralCallback).onNotificationStateUpdate(peripheral, characteristic, 0);
+        verify(peripheralCallback).onNotificationStateUpdate(peripheral, characteristic, GattStatus.SUCCESS);
     }
 
     @Test
@@ -232,7 +232,7 @@ public class BluetoothPeripheralTest {
         verify(gatt).writeDescriptor(descriptor);
 
         callback.onDescriptorWrite(gatt, descriptor, 0);
-        verify(peripheralCallback).onNotificationStateUpdate(peripheral, characteristic, 0);
+        verify(peripheralCallback).onNotificationStateUpdate(peripheral, characteristic, GattStatus.SUCCESS);
     }
 
     @Test
@@ -256,7 +256,7 @@ public class BluetoothPeripheralTest {
 
         callback.onDescriptorWrite(gatt, descriptor, 0);
 
-        verify(peripheralCallback).onNotificationStateUpdate(peripheral, characteristic, 0);
+        verify(peripheralCallback).onNotificationStateUpdate(peripheral, characteristic, GattStatus.SUCCESS);
     }
 
     @Test
@@ -279,7 +279,7 @@ public class BluetoothPeripheralTest {
         ArgumentCaptor<BluetoothPeripheral> captorPeripheral = ArgumentCaptor.forClass(BluetoothPeripheral.class);
         ArgumentCaptor<byte[]> captorValue = ArgumentCaptor.forClass(byte[].class);
         ArgumentCaptor<BluetoothGattCharacteristic> captorCharacteristic = ArgumentCaptor.forClass(BluetoothGattCharacteristic.class);
-        ArgumentCaptor<Integer> captorStatus = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<GattStatus> captorStatus = ArgumentCaptor.forClass(GattStatus.class);
         verify(peripheralCallback).onCharacteristicUpdate(captorPeripheral.capture(), captorValue.capture(), captorCharacteristic.capture(), captorStatus.capture());
 
         byte[] value = captorValue.getValue();
@@ -287,7 +287,7 @@ public class BluetoothPeripheralTest {
         assertNotEquals(value, originalByteArray);   // Check if the byte array has been copier
         assertEquals(peripheral, captorPeripheral.getValue());
         assertEquals(characteristic, captorCharacteristic.getValue());
-        assertEquals(GATT_SUCCESS, (int) captorStatus.getValue() );
+        assertEquals(GattStatus.SUCCESS, (GattStatus) captorStatus.getValue() );
     }
 
     @Test
@@ -334,14 +334,14 @@ public class BluetoothPeripheralTest {
         ArgumentCaptor<BluetoothPeripheral> captorPeripheral = ArgumentCaptor.forClass(BluetoothPeripheral.class);
         ArgumentCaptor<byte[]> captorValue = ArgumentCaptor.forClass(byte[].class);
         ArgumentCaptor<BluetoothGattCharacteristic> captorCharacteristic = ArgumentCaptor.forClass(BluetoothGattCharacteristic.class);
-        ArgumentCaptor<Integer> captorStatus = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<GattStatus> captorStatus = ArgumentCaptor.forClass(GattStatus.class);
         verify(peripheralCallback).onCharacteristicWrite(captorPeripheral.capture(), captorValue.capture(), captorCharacteristic.capture(), captorStatus.capture());
 
         byte[] value = captorValue.getValue();
         assertEquals(0, value[0]);  // Check if original value is returned and not the one in the characteristic
         assertEquals(peripheral, captorPeripheral.getValue());
         assertEquals(characteristic, captorCharacteristic.getValue());
-        assertEquals(GATT_SUCCESS, (int) captorStatus.getValue() );
+        assertEquals(GattStatus.SUCCESS, (GattStatus) captorStatus.getValue() );
     }
 
 
@@ -408,13 +408,13 @@ public class BluetoothPeripheralTest {
 
         callback.onCharacteristicRead(gatt, characteristic, GATT_SUCCESS);
 
-        verify(peripheralCallback).onCharacteristicUpdate(peripheral, byteArray, characteristic, 0);
+        verify(peripheralCallback).onCharacteristicUpdate(peripheral, byteArray, characteristic, GattStatus.SUCCESS);
 
         verify(gatt).readCharacteristic(characteristic2);
 
         callback.onCharacteristicRead(gatt, characteristic2, GATT_SUCCESS);
 
-        verify(peripheralCallback).onCharacteristicUpdate(peripheral, byteArray, characteristic2, 0);
+        verify(peripheralCallback).onCharacteristicUpdate(peripheral, byteArray, characteristic2, GattStatus.SUCCESS);
     }
 
     @Test
@@ -439,13 +439,13 @@ public class BluetoothPeripheralTest {
 
         callback.onCharacteristicRead(gatt, characteristic, 128);
 
-        verify(peripheralCallback, never()).onCharacteristicUpdate(peripheral, byteArray, characteristic,128);
+        verify(peripheralCallback, never()).onCharacteristicUpdate(peripheral, byteArray, characteristic,GattStatus.NO_RESOURCES);
 
         verify(gatt).readCharacteristic(characteristic2);
 
         callback.onCharacteristicRead(gatt, characteristic2, GATT_SUCCESS);
 
-        verify(peripheralCallback).onCharacteristicUpdate(peripheral, byteArray ,characteristic2, 0);
+        verify(peripheralCallback).onCharacteristicUpdate(peripheral, byteArray ,characteristic2, GattStatus.SUCCESS);
     }
 
     @Test
@@ -468,7 +468,7 @@ public class BluetoothPeripheralTest {
         peripheral.readCharacteristic(characteristic2);
 
         verify(gatt).readCharacteristic(characteristic);
-        verify(peripheralCallback, never()).onCharacteristicUpdate(peripheral, byteArray, characteristic, 0);
+        verify(peripheralCallback, never()).onCharacteristicUpdate(peripheral, byteArray, characteristic, GattStatus.SUCCESS);
         verify(gatt, never()).readCharacteristic(characteristic2);
     }
 
@@ -486,7 +486,7 @@ public class BluetoothPeripheralTest {
         ArgumentCaptor<BluetoothPeripheral> captorPeripheral = ArgumentCaptor.forClass(BluetoothPeripheral.class);
         ArgumentCaptor<byte[]> captorValue = ArgumentCaptor.forClass(byte[].class);
         ArgumentCaptor<BluetoothGattCharacteristic> captorCharacteristic = ArgumentCaptor.forClass(BluetoothGattCharacteristic.class);
-        ArgumentCaptor<Integer> captorStatus = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<GattStatus> captorStatus = ArgumentCaptor.forClass(GattStatus.class);
         verify(peripheralCallback).onCharacteristicUpdate(captorPeripheral.capture(), captorValue.capture(), captorCharacteristic.capture(), captorStatus.capture());
 
         byte[] value = captorValue.getValue();
@@ -494,7 +494,7 @@ public class BluetoothPeripheralTest {
         assertNotEquals(value, originalByteArray);   // Check if the byte array has been copied
         assertEquals(peripheral, captorPeripheral.getValue());
         assertEquals(characteristic, captorCharacteristic.getValue());
-        assertEquals(GATT_SUCCESS, (int) captorStatus.getValue() );
+        assertEquals(GattStatus.SUCCESS, (GattStatus) captorStatus.getValue() );
     }
 
     @Test
@@ -521,7 +521,7 @@ public class BluetoothPeripheralTest {
         ArgumentCaptor<BluetoothPeripheral> captorPeripheral = ArgumentCaptor.forClass(BluetoothPeripheral.class);
         ArgumentCaptor<byte[]> captorValue = ArgumentCaptor.forClass(byte[].class);
         ArgumentCaptor<BluetoothGattDescriptor> captorDescriptor = ArgumentCaptor.forClass(BluetoothGattDescriptor.class);
-        ArgumentCaptor<Integer> captorStatus = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<GattStatus> captorStatus = ArgumentCaptor.forClass(GattStatus.class);
         verify(peripheralCallback).onDescriptorRead(captorPeripheral.capture(), captorValue.capture(), captorDescriptor.capture(), captorStatus.capture());
 
         byte[] value = captorValue.getValue();
@@ -529,7 +529,7 @@ public class BluetoothPeripheralTest {
         assertNotEquals(value, originalByteArray);   // Check if the byte array has been copied
         assertEquals(peripheral, captorPeripheral.getValue());
         assertEquals(descriptor, captorDescriptor.getValue());
-        assertEquals(GATT_SUCCESS, (int) captorStatus.getValue() );
+        assertEquals(GattStatus.SUCCESS, (GattStatus) captorStatus.getValue() );
     }
 
 
@@ -555,7 +555,7 @@ public class BluetoothPeripheralTest {
         ArgumentCaptor<BluetoothPeripheral> captorPeripheral = ArgumentCaptor.forClass(BluetoothPeripheral.class);
         ArgumentCaptor<byte[]> captorValue = ArgumentCaptor.forClass(byte[].class);
         ArgumentCaptor<BluetoothGattDescriptor> captorDescriptor = ArgumentCaptor.forClass(BluetoothGattDescriptor.class);
-        ArgumentCaptor<Integer> captorStatus = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<GattStatus> captorStatus = ArgumentCaptor.forClass(GattStatus.class);
         verify(peripheralCallback).onDescriptorWrite(captorPeripheral.capture(), captorValue.capture(), captorDescriptor.capture(), captorStatus.capture());
 
         byte[] value = captorValue.getValue();
@@ -563,7 +563,7 @@ public class BluetoothPeripheralTest {
         assertNotEquals(value, originalByteArray);   // Check if the byte array has been copied
         assertEquals(peripheral, captorPeripheral.getValue());
         assertEquals(descriptor, captorDescriptor.getValue());
-        assertEquals(GATT_SUCCESS, (int) captorStatus.getValue() );
+        assertEquals(GattStatus.SUCCESS, (GattStatus) captorStatus.getValue() );
     }
 
     @Test
@@ -575,9 +575,9 @@ public class BluetoothPeripheralTest {
 
         verify(gatt).readRemoteRssi();
 
-        callback.onReadRemoteRssi(gatt, -40, 0);
+        callback.onReadRemoteRssi(gatt, -40, GATT_SUCCESS);
 
-        verify(peripheralCallback).onReadRemoteRssi(peripheral, -40, 0);
+        verify(peripheralCallback).onReadRemoteRssi(peripheral, -40, GattStatus.SUCCESS);
     }
 
     @Test
@@ -589,9 +589,9 @@ public class BluetoothPeripheralTest {
 
         verify(gatt).requestMtu(32);
 
-        callback.onMtuChanged(gatt, 32, 0);
+        callback.onMtuChanged(gatt, 32, GATT_SUCCESS);
 
-        verify(peripheralCallback).onMtuChanged(peripheral, 32, 0);
+        verify(peripheralCallback).onMtuChanged(peripheral, 32, GattStatus.SUCCESS);
     }
 
     @Test
@@ -711,7 +711,7 @@ public class BluetoothPeripheralTest {
         callback.onConnectionStateChange(gatt, GATT_SUCCESS, BluetoothProfile.STATE_DISCONNECTED);
 
         verify(gatt).close();
-        verify(internalCallback).disconnected(any(BluetoothPeripheral.class), anyInt());
+        verify(internalCallback).disconnected(any(BluetoothPeripheral.class), any(HciStatus.class));
     }
 
     @Test

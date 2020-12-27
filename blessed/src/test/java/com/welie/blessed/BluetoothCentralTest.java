@@ -33,7 +33,6 @@ import java.util.UUID;
 import static android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES;
 import static android.os.Build.VERSION_CODES.M;
 import static com.welie.blessed.BluetoothCentral.SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES;
-import static com.welie.blessed.BluetoothPeripheral.GATT_SUCCESS;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
@@ -501,10 +500,10 @@ public class BluetoothCentralTest {
         BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
 
         // Give connected event and see if we get callback
-        internalCallback.connectFailed(peripheral, 133);
+        internalCallback.connectFailed(peripheral, HciStatus.ERROR);
 
         // We should not get a connection failed but a retry with autoconnect instead
-        verify(callback, never()).onConnectionFailed(peripheral, 133);
+        verify(callback, never()).onConnectionFailed(peripheral, HciStatus.ERROR);
         verify(peripheral, times(2)).connect();
     }
 
@@ -526,11 +525,11 @@ public class BluetoothCentralTest {
         BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
 
         // Give connected event and see if we get callback
-        internalCallback.connectFailed(peripheral, 133);
-        internalCallback.connectFailed(peripheral, 133);
+        internalCallback.connectFailed(peripheral, HciStatus.ERROR);
+        internalCallback.connectFailed(peripheral, HciStatus.ERROR);
 
         // We should not get a connection failed after 2 failed attempts
-        verify(callback).onConnectionFailed(peripheral, 133);
+        verify(callback).onConnectionFailed(peripheral, HciStatus.ERROR);
     }
 
     @Test
@@ -561,7 +560,7 @@ public class BluetoothCentralTest {
 
         peripheral.cancelConnection();
 
-        internalCallback.disconnected(peripheral, GATT_SUCCESS);
+        internalCallback.disconnected(peripheral, HciStatus.SUCCESS);
 
         List<BluetoothPeripheral> peripherals2 = central.getConnectedPeripherals();
         assertNotNull(peripherals2);
@@ -602,9 +601,9 @@ public class BluetoothCentralTest {
 
         verify(peripheral).cancelConnection();
 
-        internalCallback.disconnected(peripheral, GATT_SUCCESS);
+        internalCallback.disconnected(peripheral, HciStatus.SUCCESS);
 
-        verify(callback).onDisconnectedPeripheral(peripheral, GATT_SUCCESS);
+        verify(callback).onDisconnectedPeripheral(peripheral, HciStatus.SUCCESS);
     }
 
     @Test
@@ -628,9 +627,9 @@ public class BluetoothCentralTest {
         field.setAccessible(true);
         BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
 
-        internalCallback.disconnected(peripheral, GATT_SUCCESS);
+        internalCallback.disconnected(peripheral, HciStatus.SUCCESS);
 
-        verify(callback).onDisconnectedPeripheral(peripheral, GATT_SUCCESS);
+        verify(callback).onDisconnectedPeripheral(peripheral, HciStatus.SUCCESS);
     }
 
     @Test
@@ -645,7 +644,7 @@ public class BluetoothCentralTest {
 
         central.cancelConnection(peripheral);
 
-        verify(callback).onDisconnectedPeripheral(peripheral, GATT_SUCCESS);
+        verify(callback).onDisconnectedPeripheral(peripheral, HciStatus.SUCCESS);
     }
 
     @Test
