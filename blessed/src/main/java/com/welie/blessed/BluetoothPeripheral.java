@@ -161,8 +161,8 @@ public class BluetoothPeripheral {
     // Minimal and default MTU
     private static final int DEFAULT_MTU = 23;
 
-    // Max MTU according to Bluetooth standard
-    private static final int MAX_MTU = 512;
+    // Max MTU that Android can handle
+    private static final int MAX_MTU = 517;
 
     // Maximum number of retries of commands
     private static final int MAX_TRIES = 2;
@@ -1491,7 +1491,7 @@ public class BluetoothPeripheral {
     public boolean requestMtu(final int mtu) {
         // Make sure mtu is valid
         if (mtu < DEFAULT_MTU || mtu > MAX_MTU) {
-            throw new IllegalArgumentException("mtu must be between 23 and 512");
+            throw new IllegalArgumentException("mtu must be between 23 and 517");
         }
 
         boolean result = commandQueue.add(new Runnable() {
@@ -1538,7 +1538,7 @@ public class BluetoothPeripheral {
             public void run() {
                 if (isConnected()) {
                     if (!bluetoothGatt.requestConnectionPriority(priority)) {
-                        Timber.e("could not set connection priority");
+                        Timber.e("could not request connection priority");
                     } else {
                         Timber.d("requesting connection priority %d", priority);
                     }
