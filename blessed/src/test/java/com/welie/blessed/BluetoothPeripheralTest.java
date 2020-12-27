@@ -323,7 +323,7 @@ public class BluetoothPeripheralTest {
 
         when(gatt.writeCharacteristic(characteristic)).thenReturn(true);
 
-        peripheral.writeCharacteristic(characteristic, new byte[]{0}, WRITE_TYPE_DEFAULT);
+        peripheral.writeCharacteristic(characteristic, new byte[]{0}, WriteType.WITH_RESPONSE);
 
         verify(gatt).writeCharacteristic(any(BluetoothGattCharacteristic.class));
 
@@ -353,7 +353,7 @@ public class BluetoothPeripheralTest {
 
         when(gatt.writeCharacteristic(characteristic)).thenReturn(true);
 
-        peripheral.writeCharacteristic(characteristic, new byte[]{0}, WRITE_TYPE_DEFAULT);
+        peripheral.writeCharacteristic(characteristic, new byte[]{0}, WriteType.WITH_RESPONSE);
 
         verify(gatt, never()).writeCharacteristic(any(BluetoothGattCharacteristic.class));
     }
@@ -366,7 +366,7 @@ public class BluetoothPeripheralTest {
 
         BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"), 0,0);
 
-        peripheral.writeCharacteristic(characteristic, new byte[] { 0, 0 }, WRITE_TYPE_DEFAULT);
+        peripheral.writeCharacteristic(characteristic, new byte[] { 0, 0 }, WriteType.WITH_RESPONSE);
 
         verify(gatt, never()).writeCharacteristic(any(BluetoothGattCharacteristic.class));
     }
@@ -381,7 +381,7 @@ public class BluetoothPeripheralTest {
 
         when(gatt.writeCharacteristic(characteristic)).thenReturn(true);
 
-        peripheral.writeCharacteristic(characteristic, new byte[0], WRITE_TYPE_DEFAULT);
+        peripheral.writeCharacteristic(characteristic, new byte[0], WriteType.WITH_RESPONSE);
 
         verify(gatt, never()).writeCharacteristic(any(BluetoothGattCharacteristic.class));
     }

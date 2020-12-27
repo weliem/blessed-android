@@ -1132,7 +1132,7 @@ public class BluetoothPeripheral {
      * @param writeType          the write type to use when writing. Must be WRITE_TYPE_DEFAULT, WRITE_TYPE_NO_RESPONSE or WRITE_TYPE_SIGNED
      * @return true if the operation was enqueued, false if the characteristic does not support reading or the characteristic was not found
      */
-    public boolean writeCharacteristic(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID, @NotNull final byte[] value, final int writeType) {
+    public boolean writeCharacteristic(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID, @NotNull final byte[] value, final WriteType writeType) {
         Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
         Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
 
@@ -1156,7 +1156,7 @@ public class BluetoothPeripheral {
      * @param writeType      the write type to use when writing. Must be WRITE_TYPE_DEFAULT, WRITE_TYPE_NO_RESPONSE or WRITE_TYPE_SIGNED
      * @return true if a write operation was succesfully enqueued, otherwise false
      */
-    public boolean writeCharacteristic(@NotNull final BluetoothGattCharacteristic characteristic, @NotNull final byte[] value, final int writeType) {
+    public boolean writeCharacteristic(@NotNull final BluetoothGattCharacteristic characteristic, @NotNull final byte[] value, final WriteType writeType) {
         Objects.requireNonNull(characteristic, NO_VALID_CHARACTERISTIC_PROVIDED);
         Objects.requireNonNull(value, "no valid value provided");
 
@@ -1175,22 +1175,27 @@ public class BluetoothPeripheral {
 
         // Check if this characteristic actually supports this writeType
         int writeProperty;
+        final int writeTypeInternal;
         switch (writeType) {
-            case WRITE_TYPE_DEFAULT:
+            case WITH_RESPONSE:
                 writeProperty = PROPERTY_WRITE;
+                writeTypeInternal = WRITE_TYPE_DEFAULT;
                 break;
-            case WRITE_TYPE_NO_RESPONSE:
+            case WITHOUT_RESPONSE:
                 writeProperty = PROPERTY_WRITE_NO_RESPONSE;
+                writeTypeInternal = WRITE_TYPE_NO_RESPONSE;
                 break;
-            case WRITE_TYPE_SIGNED:
+            case SIGNED:
                 writeProperty = PROPERTY_SIGNED_WRITE;
+                writeTypeInternal = WRITE_TYPE_SIGNED;
                 break;
             default:
                 writeProperty = 0;
+                writeTypeInternal = 0;
                 break;
         }
         if ((characteristic.getProperties() & writeProperty) == 0) {
-            Timber.e("characteristic <%s> does not support writeType '%s'", characteristic.getUuid(), writeTypeToString(writeType));
+            Timber.e("characteristic <%s> does not support writeType '%s'", characteristic.getUuid(), writeType);
             return false;
         }
 
@@ -1200,7 +1205,7 @@ public class BluetoothPeripheral {
             public void run() {
                 if (isConnected()) {
                     currentWriteBytes = bytesToWrite;
-                    characteristic.setWriteType(writeType);
+                    characteristic.setWriteType(writeTypeInternal);
                     characteristic.setValue(bytesToWrite);
                     if (!bluetoothGatt.writeCharacteristic(characteristic)) {
                         Timber.e("writeCharacteristic failed for characteristic: %s", characteristic.getUuid());

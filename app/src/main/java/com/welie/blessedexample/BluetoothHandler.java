@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.Intent;
-import android.media.audiofx.BassBoost;
 import android.os.Handler;
 
 import com.welie.blessed.BluetoothBytesParser;
@@ -15,6 +14,7 @@ import com.welie.blessed.BluetoothPeripheral;
 import com.welie.blessed.BluetoothPeripheralCallback;
 import com.welie.blessed.GattStatus;
 import com.welie.blessed.HciStatus;
+import com.welie.blessed.WriteType;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,7 +28,6 @@ import timber.log.Timber;
 
 import static android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_HIGH;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE;
-import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_SINT16;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT16;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT8;
@@ -129,10 +128,11 @@ class BluetoothHandler {
                 // If it has the write property we write the current time
                 if ((currentTimeCharacteristic.getProperties() & PROPERTY_WRITE) > 0) {
                     // Write the current time unless it is an Omron device
-                    if (!(peripheral.getName().contains("BLEsmart_"))) {
+                    final String name = peripheral.getName();
+                    if (name != null && !(name.contains("BLEsmart_"))) {
                         BluetoothBytesParser parser = new BluetoothBytesParser();
                         parser.setCurrentTime(Calendar.getInstance());
-                        peripheral.writeCharacteristic(currentTimeCharacteristic, parser.getValue(), WRITE_TYPE_DEFAULT);
+                        peripheral.writeCharacteristic(currentTimeCharacteristic, parser.getValue(), WriteType.WITH_RESPONSE);
                     }
                 }
             }
@@ -231,7 +231,8 @@ class BluetoothHandler {
                 Timber.i("Received device time: %s", currentTime);
 
                 // Deal with Omron devices where we can only write currentTime under specific conditions
-                if (peripheral.getName().contains("BLEsmart_")) {
+                final String name = peripheral.getName();
+                if (name != null &&  name.contains("BLEsmart_")) {
                     BluetoothGattCharacteristic bloodpressureMeasurement = peripheral.getCharacteristic(BLP_SERVICE_UUID, BLOOD_PRESSURE_MEASUREMENT_CHARACTERISTIC_UUID);
                     if (bloodpressureMeasurement == null) return;
 
@@ -242,7 +243,7 @@ class BluetoothHandler {
                     long interval = abs(Calendar.getInstance().getTimeInMillis() - currentTime.getTime());
                     if (currentTimeCounter == 1 && interval > 10 * 60 * 1000) {
                         parser.setCurrentTime(Calendar.getInstance());
-                        peripheral.writeCharacteristic(characteristic, parser.getValue(), WRITE_TYPE_DEFAULT);
+                        peripheral.writeCharacteristic(characteristic, parser.getValue(), WriteType.WITH_RESPONSE);
                     }
                 }
             } else if (characteristicUUID.equals(BATTERY_LEVEL_CHARACTERISTIC_UUID)) {
@@ -283,14 +284,14 @@ class BluetoothHandler {
             parser.setIntValue(calendar.get(Calendar.MINUTE), FORMAT_UINT8);
             parser.setIntValue(calendar.get(Calendar.SECOND), FORMAT_UINT8);
             parser.setIntValue(offsetInMinutes, FORMAT_SINT16);
-            peripheral.writeCharacteristic(CONTOUR_SERVICE_UUID, CONTOUR_CLOCK, parser.getValue(), WRITE_TYPE_DEFAULT);
+            peripheral.writeCharacteristic(CONTOUR_SERVICE_UUID, CONTOUR_CLOCK, parser.getValue(), WriteType.WITH_RESPONSE);
         }
 
         private void writeGetAllGlucoseMeasurements(@NotNull BluetoothPeripheral peripheral) {
             byte OP_CODE_REPORT_STORED_RECORDS = 1;
             byte OPERATOR_ALL_RECORDS = 1;
             final byte[] command = new byte[] {OP_CODE_REPORT_STORED_RECORDS, OPERATOR_ALL_RECORDS};
-            peripheral.writeCharacteristic(GLUCOSE_SERVICE_UUID, GLUCOSE_RECORD_ACCESS_POINT_CHARACTERISTIC_UUID, command, WRITE_TYPE_DEFAULT);
+            peripheral.writeCharacteristic(GLUCOSE_SERVICE_UUID, GLUCOSE_RECORD_ACCESS_POINT_CHARACTERISTIC_UUID, command, WriteType.WITH_RESPONSE);
         }
     };
 
