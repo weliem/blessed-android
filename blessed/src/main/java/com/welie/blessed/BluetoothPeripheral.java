@@ -541,18 +541,12 @@ public class BluetoothPeripheral {
     }
 
     private void connectionStateChangeUnsuccessful(HciStatus status, int previousState, int newState) {
-        long timePassed = SystemClock.elapsedRealtime() - connectTimestamp;
-
-        // Check if service discovery completed
-        if (discoverServicesRunnable != null) {
-            // Service discovery is still pending so cancel it
-            mainHandler.removeCallbacks(discoverServicesRunnable);
-            discoverServicesRunnable = null;
-        }
+        cancelPendingServiceDiscovery();
         boolean servicesDiscovered = !getServices().isEmpty();
 
         // See if the initial connection failed
         if (previousState == BluetoothProfile.STATE_CONNECTING) {
+            long timePassed = SystemClock.elapsedRealtime() - connectTimestamp;
             boolean isTimeout = timePassed > getTimoutThreshold();
             final HciStatus adjustedStatus = (status == HciStatus.ERROR && isTimeout) ? HciStatus.CONNECTION_FAILED_ESTABLISHMENT : status;
             Timber.i("connection failed with status '%s'", adjustedStatus);
@@ -571,6 +565,13 @@ public class BluetoothPeripheral {
                 Timber.i("unexpected connection state change for '%s' status '%s' (%d)", getName(), status, status.getValue());
             }
             completeDisconnect(true, status);
+        }
+    }
+
+    private void cancelPendingServiceDiscovery() {
+        if (discoverServicesRunnable != null) {
+            mainHandler.removeCallbacks(discoverServicesRunnable);
+            discoverServicesRunnable = null;
         }
     }
 
@@ -659,10 +660,7 @@ public class BluetoothPeripheral {
                     bondLost = true;
 
                     // Cancel the discoverServiceRunnable if it is still pending
-                    if (discoverServicesRunnable != null) {
-                        mainHandler.removeCallbacks(discoverServicesRunnable);
-                        discoverServicesRunnable = null;
-                    }
+                    cancelPendingServiceDiscovery();
 
                     callbackHandler.post(new Runnable() {
                         @Override
