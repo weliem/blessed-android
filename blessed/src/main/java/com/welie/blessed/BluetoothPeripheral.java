@@ -160,7 +160,7 @@ public class BluetoothPeripheral {
 
     // Minimal and default MTU
     private static final int DEFAULT_MTU = 23;
-    
+
     /**
      * Max MTU that Android can handle
      */
@@ -384,16 +384,17 @@ public class BluetoothPeripheral {
         public void onCharacteristicRead(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
             final GattStatus gattStatus = GattStatus.fromValue(status);
             if (gattStatus != GattStatus.SUCCESS) {
+                Timber.e("read failed for characteristic <%s>, status '%s'", characteristic.getUuid(), gattStatus);
+
                 if (gattStatus == GattStatus.AUTHORIZATION_FAILED || gattStatus == GattStatus.INSUFFICIENT_AUTHENTICATION) {
                     // Characteristic encrypted and needs bonding,
                     // So retry operation after bonding completes
                     // This only seems to happen on Android 5/6/7
-                    Timber.w("read failed with status '%s', needs bonding, bonding should be in progress", gattStatus);
-                } else {
-                    Timber.e("read failed for characteristic: %s, status '%s'", characteristic.getUuid(), gattStatus);
-                    completedCommand();
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                        Timber.i("read will be retried after bonding, bonding should be in progress");
+                        return;
+                    }
                 }
-                return;
             }
 
             final byte[] value = copyOf(characteristic.getValue());
@@ -412,14 +413,16 @@ public class BluetoothPeripheral {
         public void onCharacteristicWrite(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
             final GattStatus gattStatus = GattStatus.fromValue(status);
             if (gattStatus != GattStatus.SUCCESS) {
+                Timber.e("writing <%s> to characteristic <%s> failed, status '%s'", bytes2String(currentWriteBytes), characteristic.getUuid(), gattStatus);
+
                 if (gattStatus == GattStatus.AUTHORIZATION_FAILED || gattStatus == GattStatus.INSUFFICIENT_AUTHENTICATION) {
                     // Characteristic encrypted and needs bonding,
                     // So retry operation after bonding completes
                     // This only seems to happen on Android 5/6/7
-                    Timber.i("write filed with status '%s', needs bonding, bonding should be in progress", gattStatus);
-                    return;
-                } else {
-                    Timber.e("writing <%s> to characteristic <%s> failed, status '%s'", bytes2String(currentWriteBytes), characteristic.getUuid(), gattStatus);
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                        Timber.i("write will be retried after bonding, bonding should be in progress");
+                        return;
+                    }
                 }
             }
 
