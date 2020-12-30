@@ -1047,7 +1047,7 @@ public class BluetoothPeripheral {
      * @return true if the characteristic is notifying or indicating, false if it is not
      */
     public boolean isNotifying(@NotNull BluetoothGattCharacteristic characteristic) {
-        Objects.requireNonNull(characteristic, "no valid characteristic provided");
+        Objects.requireNonNull(characteristic, NO_VALID_CHARACTERISTIC_PROVIDED);
         return notifyingCharacteristics.contains(characteristic.getUuid());
     }
 
