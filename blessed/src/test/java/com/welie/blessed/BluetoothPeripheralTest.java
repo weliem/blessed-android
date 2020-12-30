@@ -439,7 +439,7 @@ public class BluetoothPeripheralTest {
 
         callback.onCharacteristicRead(gatt, characteristic, 128);
 
-        verify(peripheralCallback, never()).onCharacteristicUpdate(peripheral, byteArray, characteristic,GattStatus.NO_RESOURCES);
+        verify(peripheralCallback).onCharacteristicUpdate(peripheral, byteArray, characteristic,GattStatus.NO_RESOURCES);
 
         verify(gatt).readCharacteristic(characteristic2);
 
