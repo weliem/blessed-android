@@ -314,7 +314,7 @@ public class BluetoothPeripheral {
             // Check if this was the Client Configuration Descriptor
             if (descriptor.getUuid().equals(CCC_DESCRIPTOR_UUID)) {
                 if (gattStatus == GattStatus.SUCCESS) {
-                    final byte[] value = copyOf(descriptor.getValue());
+                    final byte[] value = nonnullOf(descriptor.getValue());
                     if (Arrays.equals(value, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) ||
                             Arrays.equals(value, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)) {
                         notifyingCharacteristics.add(parentCharacteristic.getUuid());
@@ -323,8 +323,6 @@ public class BluetoothPeripheral {
                         }
                     } else if (Arrays.equals(value, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)) {
                         notifyingCharacteristics.remove(parentCharacteristic.getUuid());
-                    } else {
-                        Timber.e("unexpected CCC descriptor value");
                     }
                 }
 
@@ -357,7 +355,7 @@ public class BluetoothPeripheral {
                 if (failureThatShouldTriggerBonding(gattStatus)) return;
             }
 
-            final byte[] value = copyOf(descriptor.getValue());
+            final byte[] value = nonnullOf(descriptor.getValue());
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -371,7 +369,7 @@ public class BluetoothPeripheral {
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
-            final byte[] value = copyOf(characteristic.getValue());
+            final byte[] value = nonnullOf(characteristic.getValue());
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -390,7 +388,7 @@ public class BluetoothPeripheral {
                 if (failureThatShouldTriggerBonding(gattStatus)) return;
             }
 
-            final byte[] value = copyOf(characteristic.getValue());
+            final byte[] value = nonnullOf(characteristic.getValue());
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -410,7 +408,7 @@ public class BluetoothPeripheral {
                 if (failureThatShouldTriggerBonding(gattStatus)) return;
             }
 
-            final byte[] value = copyOf(currentWriteBytes);
+            final byte[] value = nonnullOf(currentWriteBytes);
             currentWriteBytes = null;
             callbackHandler.post(new Runnable() {
                 @Override
@@ -1921,5 +1919,16 @@ public class BluetoothPeripheral {
     @NotNull
     byte[] copyOf(@Nullable byte[] source) {
         return (source == null) ? new byte[0] : Arrays.copyOf(source, source.length);
+    }
+
+    /**
+     * Make a byte array nonnull by either returning the original byte array if non-null or an empty bytearray
+     *
+     * @param source byte array to make nonnull
+     * @return the source byte array or an empty array if source was null
+     */
+    @NotNull
+    byte[] nonnullOf(@Nullable byte[] source) {
+        return (source == null) ? new byte[0] : source;
     }
 }

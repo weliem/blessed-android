@@ -284,7 +284,6 @@ public class BluetoothPeripheralTest {
 
         byte[] value = captorValue.getValue();
         assertEquals(0x01, value[0]);
-        assertNotEquals(value, originalByteArray);   // Check if the byte array has been copier
         assertEquals(peripheral, captorPeripheral.getValue());
         assertEquals(characteristic, captorCharacteristic.getValue());
         assertEquals(GattStatus.SUCCESS, (GattStatus) captorStatus.getValue() );
@@ -491,7 +490,6 @@ public class BluetoothPeripheralTest {
 
         byte[] value = captorValue.getValue();
         assertEquals(0x01, value[0]);  // Check if original value is returned and not the one in the characteristic
-        assertNotEquals(value, originalByteArray);   // Check if the byte array has been copied
         assertEquals(peripheral, captorPeripheral.getValue());
         assertEquals(characteristic, captorCharacteristic.getValue());
         assertEquals(GattStatus.SUCCESS, (GattStatus) captorStatus.getValue() );
@@ -526,7 +524,6 @@ public class BluetoothPeripheralTest {
 
         byte[] value = captorValue.getValue();
         assertEquals(0x01, value[0]);
-        assertNotEquals(value, originalByteArray);   // Check if the byte array has been copied
         assertEquals(peripheral, captorPeripheral.getValue());
         assertEquals(descriptor, captorDescriptor.getValue());
         assertEquals(GattStatus.SUCCESS, (GattStatus) captorStatus.getValue() );
