@@ -427,9 +427,10 @@ public class BluetoothPeripheral {
             if (gattStatus == GattStatus.AUTHORIZATION_FAILED
                     || gattStatus == GattStatus.INSUFFICIENT_AUTHENTICATION
                     || gattStatus == GattStatus.INSUFFICIENT_ENCRYPTION) {
-                // Characteristic encrypted and needs bonding,
-                // So retry operation after bonding completes
-                // This only seems to happen on Android 5/6/7
+                // Characteristic/descriptor is encrypted and needs bonding, bonding should be in progress already
+                // Operation must be retried after bonding is completed.
+                // This only seems to happen on Android 5/6/7.
+                // On newer versions Android will do retry internally
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
                     Timber.i("operation will be retried after bonding, bonding should be in progress");
                     return true;
