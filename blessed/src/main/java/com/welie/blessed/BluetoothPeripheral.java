@@ -1643,32 +1643,6 @@ public class BluetoothPeripheral {
         }
     }
 
-    private String stateToString(final int state) {
-        switch (state) {
-            case BluetoothProfile.STATE_CONNECTED:
-                return "CONNECTED";
-            case BluetoothProfile.STATE_CONNECTING:
-                return "CONNECTING";
-            case BluetoothProfile.STATE_DISCONNECTING:
-                return "DISCONNECTING";
-            default:
-                return "DISCONNECTED";
-        }
-    }
-
-    private String writeTypeToString(final int writeType) {
-        switch (writeType) {
-            case WRITE_TYPE_DEFAULT:
-                return "WRITE_TYPE_DEFAULT";
-            case WRITE_TYPE_NO_RESPONSE:
-                return "WRITE_TYPE_NO_RESPONSE";
-            case WRITE_TYPE_SIGNED:
-                return "WRITE_TYPE_SIGNED";
-            default:
-                return "unknown writeType";
-        }
-    }
-
     private static final int PAIRING_VARIANT_PIN = 0;
     private static final int PAIRING_VARIANT_PASSKEY = 1;
     private static final int PAIRING_VARIANT_PASSKEY_CONFIRMATION = 2;
