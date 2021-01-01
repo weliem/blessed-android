@@ -1039,12 +1039,20 @@ public class BluetoothPeripheral {
     }
 
     /**
-     * Get maximum length of byte array that can be written
+     * Get maximum length of byte array that can be written depending on WriteType
      *
-     * This value is derived from the current negotiated MTU
+     * <p>
+     * This value is derived from the current negotiated MTU or the maximum characteristic length (512)
      */
-    public int getMaximumWriteValueLength() {
-        return currentMtu - 3;
+    public int getMaximumWriteValueLength(WriteType writeType) {
+        switch (writeType) {
+            case WITH_RESPONSE:
+                return 512;
+            case SIGNED:
+                return currentMtu - 15;
+            default:
+                return currentMtu - 3;
+        }
     }
 
     /**
@@ -1192,21 +1200,21 @@ public class BluetoothPeripheral {
             return false;
         }
 
-        // See if the byte array is acceptable considering the current MTU
-        if (bytesToWrite.length > getMaximumWriteValueLength()) {
-            if (writeType == WriteType.WITH_RESPONSE) {
-                // If the peripheral supports Long Writes this may still succeed because Android will turn this into a Long Write
-                // However, the peripheral's firmware must also support it, so it is not guaranteed to work.
-                // Long writes are also very inefficient because of the confirmation of each write operation.
-                // So it is better to increase MTU if possible. Hence a warning if this write becomes a long write...
-                // See https://stackoverflow.com/questions/48216517/rxandroidble-write-only-sends-the-first-20b
-                Timber.w("value byte array is longer than allowed by MTU, write will fail if peripheral does not support long writes");
-            } else {
-                // Long Writes are not supported for other write types than WITH_RESPONSE. See bluetooth specification.
-                // Writes without response cannot be longer than MTU-3.
-                Timber.e("value byte array is too long, , ignoring write request");
-                return false;
-            }
+        // See if the byte array length is not too long
+        if (bytesToWrite.length > getMaximumWriteValueLength(writeType)) {
+            Timber.e("value byte array is too long, ignoring write request");
+            return false;
+        }
+
+        // See if a Long Write is being triggered because of the byte array length
+        if (bytesToWrite.length > currentMtu - 3 && writeType == WriteType.WITH_RESPONSE) {
+            // Android will turn this into a Long Write because it is larger than the MTU - 3.
+            // When doing a Long Write the byte array will be automatically split in chunks of size MTU - 3.
+            // However, the peripheral's firmware must also support it, so it is not guaranteed to work.
+            // Long writes are also very inefficient because of the confirmation of each write operation.
+            // So it is better to increase MTU if possible. Hence a warning if this write becomes a long write...
+            // See https://stackoverflow.com/questions/48216517/rxandroidble-write-only-sends-the-first-20b
+            Timber.w("value byte array is longer than allowed by MTU, write will fail if peripheral does not support long writes");
         }
 
         // Check if this characteristic actually supports this writeType
