@@ -1039,6 +1039,15 @@ public class BluetoothPeripheral {
     }
 
     /**
+     * Get maximum length of byte array that can be written
+     *
+     * This value is derived from the current negotiated MTU
+     */
+    public int getMaximumWriteValueLength() {
+        return currentMtu - 3;
+    }
+
+    /**
      * Boolean to indicate if the specified characteristic is currently notifying or indicating.
      *
      * @param characteristic the characteristic to check
@@ -1175,9 +1184,21 @@ public class BluetoothPeripheral {
 
         // Copy the value to avoid race conditions
         final byte[] bytesToWrite = copyOf(value);
+
         if (bytesToWrite.length == 0) {
             Timber.e("value byte array is empty, ignoring write request");
             return false;
+        }
+
+        // See if the byte array is acceptable considering the current MTU
+        if (bytesToWrite.length > getMaximumWriteValueLength()) {
+            if (writeType == WriteType.WITH_RESPONSE) {
+                // If the peripheral supports Long Writes this may still succeed
+                Timber.w("value byte array is too long, write may fail...");
+            } else {
+                Timber.e("value byte array is too long, , ignoring write request");
+                return false;
+            }
         }
 
         // Check if this characteristic actually supports this writeType
