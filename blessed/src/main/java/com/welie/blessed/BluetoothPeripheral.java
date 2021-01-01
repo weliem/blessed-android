@@ -1163,6 +1163,7 @@ public class BluetoothPeripheral {
      *
      * <p>All parameters must have a valid value in order for the operation
      * to be enqueued. If the characteristic does not support writing with the specified writeType, the operation will not be enqueued.
+     * The length of the byte array to write must be between 1 and getMaximumWriteValueLength().
      *
      * <p>{@link BluetoothPeripheralCallback#onCharacteristicWrite(BluetoothPeripheral, byte[], BluetoothGattCharacteristic, GattStatus)} will be triggered as a result of this call.
      *
@@ -1185,6 +1186,7 @@ public class BluetoothPeripheral {
         // Copy the value to avoid race conditions
         final byte[] bytesToWrite = copyOf(value);
 
+        // Make sure we are not going to write empty byte arrays
         if (bytesToWrite.length == 0) {
             Timber.e("value byte array is empty, ignoring write request");
             return false;
@@ -1193,9 +1195,15 @@ public class BluetoothPeripheral {
         // See if the byte array is acceptable considering the current MTU
         if (bytesToWrite.length > getMaximumWriteValueLength()) {
             if (writeType == WriteType.WITH_RESPONSE) {
-                // If the peripheral supports Long Writes this may still succeed
-                Timber.w("value byte array is too long, write may fail...");
+                // If the peripheral supports Long Writes this may still succeed because Android will turn this into a Long Write
+                // However, the peripheral's firmware must also support it, so it is not guaranteed to work.
+                // Long writes are also very inefficient because of the confirmation of each write operation.
+                // So it is better to increase MTU if possible. Hence a warning if this write becomes a long write...
+                // See https://stackoverflow.com/questions/48216517/rxandroidble-write-only-sends-the-first-20b
+                Timber.w("value byte array is longer than allowed by MTU, write will fail if peripheral does not support long writes");
             } else {
+                // Long Writes are not supported for other write types than WITH_RESPONSE. See bluetooth specification.
+                // Writes without response cannot be longer than MTU-3.
                 Timber.e("value byte array is too long, , ignoring write request");
                 return false;
             }
