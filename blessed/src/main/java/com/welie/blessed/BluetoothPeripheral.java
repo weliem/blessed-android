@@ -193,6 +193,9 @@ public class BluetoothPeripheral {
     private static final String NO_VALID_WRITE_TYPE_PROVIDED = "no valid writeType provided";
     private static final String NO_VALID_VALUE_PROVIDED = "no valid value provided";
     private static final String NO_VALID_DESCRIPTOR_PROVIDED = "no valid descriptor provided";
+    private static final String PERIPHERAL_NOT_CONNECTECTED = "peripheral not connectected";
+    private static final String VALUE_BYTE_ARRAY_IS_EMPTY = "value byte array is empty";
+    private static final String VALUE_BYTE_ARRAY_IS_TOO_LONG = "value byte array is too long";
 
     @NotNull
     private final Context context;
@@ -1083,6 +1086,11 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
         Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
 
+        if (!isConnected()) {
+            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
+            return false;
+        }
+
         BluetoothGattCharacteristic characteristic = getCharacteristic(serviceUUID, characteristicUUID);
         if (characteristic != null) {
             return readCharacteristic(characteristic);
@@ -1103,9 +1111,8 @@ public class BluetoothPeripheral {
     public boolean readCharacteristic(@NotNull final BluetoothGattCharacteristic characteristic) {
         Objects.requireNonNull(characteristic, NO_VALID_CHARACTERISTIC_PROVIDED);
 
-        // Check if gatt object is valid
-        if (bluetoothGatt == null) {
-            Timber.e("gatt is 'null', ignoring read request");
+        if (!isConnected()) {
+            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
             return false;
         }
 
@@ -1115,7 +1122,6 @@ public class BluetoothPeripheral {
             return false;
         }
 
-        // Enqueue the read command now that all checks have been passed
         boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
@@ -1159,6 +1165,11 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(value, NO_VALID_VALUE_PROVIDED);
         Objects.requireNonNull(writeType, NO_VALID_WRITE_TYPE_PROVIDED);
 
+        if (!isConnected()) {
+            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
+            return false;
+        }
+
         BluetoothGattCharacteristic characteristic = getCharacteristic(serviceUUID, characteristicUUID);
         if (characteristic != null) {
             return writeCharacteristic(characteristic, value, writeType);
@@ -1171,13 +1182,13 @@ public class BluetoothPeripheral {
      *
      * <p>All parameters must have a valid value in order for the operation
      * to be enqueued. If the characteristic does not support writing with the specified writeType, the operation will not be enqueued.
-     * The length of the byte array to write must be between 1 and getMaximumWriteValueLength().
+     * The length of the byte array to write must be between 1 and getMaximumWriteValueLength(writeType).
      *
      * <p>{@link BluetoothPeripheralCallback#onCharacteristicWrite(BluetoothPeripheral, byte[], BluetoothGattCharacteristic, GattStatus)} will be triggered as a result of this call.
      *
      * @param characteristic the characteristic to write to
      * @param value          the byte array to write
-     * @param writeType      the write type to use when writing. Must be WRITE_TYPE_DEFAULT, WRITE_TYPE_NO_RESPONSE or WRITE_TYPE_SIGNED
+     * @param writeType      the write type to use when writing.
      * @return true if a write operation was succesfully enqueued, otherwise false
      */
     public boolean writeCharacteristic(@NotNull final BluetoothGattCharacteristic characteristic, @NotNull final byte[] value, @NotNull final WriteType writeType) {
@@ -1185,29 +1196,21 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(value, NO_VALID_VALUE_PROVIDED);
         Objects.requireNonNull(writeType, NO_VALID_WRITE_TYPE_PROVIDED);
 
-        // Check if gatt object is valid
-        if (bluetoothGatt == null) {
-            Timber.e("gatt is 'null', ignoring write request");
+        if (!isConnected()) {
+            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
             return false;
         }
 
-        // Copy the value to avoid race conditions
-        final byte[] bytesToWrite = copyOf(value);
-
-        // Make sure we are not going to write empty byte arrays
-        if (bytesToWrite.length == 0) {
-            Timber.e("value byte array is empty, ignoring write request");
-            return false;
+        if (value.length == 0) {
+            throw new IllegalArgumentException(VALUE_BYTE_ARRAY_IS_EMPTY);
         }
 
-        // See if the byte array length is not too long
-        if (bytesToWrite.length > getMaximumWriteValueLength(writeType)) {
-            Timber.e("value byte array is too long, ignoring write request");
-            return false;
+        if (value.length > getMaximumWriteValueLength(writeType)) {
+            throw new IllegalArgumentException(VALUE_BYTE_ARRAY_IS_TOO_LONG);
         }
 
         // See if a Long Write is being triggered because of the byte array length
-        if (bytesToWrite.length > currentMtu - 3 && writeType == WriteType.WITH_RESPONSE) {
+        if (value.length > currentMtu - 3 && writeType == WriteType.WITH_RESPONSE) {
             // Android will turn this into a Long Write because it is larger than the MTU - 3.
             // When doing a Long Write the byte array will be automatically split in chunks of size MTU - 3.
             // However, the peripheral's firmware must also support it, so it is not guaranteed to work.
@@ -1216,6 +1219,9 @@ public class BluetoothPeripheral {
             // See https://stackoverflow.com/questions/48216517/rxandroidble-write-only-sends-the-first-20b
             Timber.w("value byte array is longer than allowed by MTU, write will fail if peripheral does not support long writes");
         }
+
+        // Copy the value to avoid race conditions
+        final byte[] bytesToWrite = copyOf(value);
 
         // Check if this characteristic actually supports this writeType
         int writeProperty;
@@ -1243,7 +1249,6 @@ public class BluetoothPeripheral {
             return false;
         }
 
-        // Enqueue the write command now that all checks have been passed
         boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
@@ -1281,13 +1286,11 @@ public class BluetoothPeripheral {
     public boolean readDescriptor(@NotNull final BluetoothGattDescriptor descriptor) {
         Objects.requireNonNull(descriptor, NO_VALID_DESCRIPTOR_PROVIDED);
 
-        // Check if gatt object is valid
-        if (bluetoothGatt == null) {
-            Timber.e("gatt is 'null', ignoring read request");
+        if (!isConnected()) {
+            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
             return false;
         }
 
-        // Enqueue the read command now that all checks have been passed
         boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
@@ -1325,20 +1328,22 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(descriptor, NO_VALID_DESCRIPTOR_PROVIDED);
         Objects.requireNonNull(value, NO_VALID_VALUE_PROVIDED);
 
-        // Check if gatt object is valid
-        if (bluetoothGatt == null) {
-            Timber.e("gatt is 'null', ignoring write descriptor request");
+        if (!isConnected()) {
+            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
             return false;
+        }
+
+        if (value.length == 0) {
+            throw new IllegalArgumentException(VALUE_BYTE_ARRAY_IS_EMPTY);
+        }
+
+        if (value.length > getMaximumWriteValueLength(WriteType.WITH_RESPONSE)) {
+            throw new IllegalArgumentException(VALUE_BYTE_ARRAY_IS_TOO_LONG);
         }
 
         // Copy the value to avoid race conditions
         final byte[] bytesToWrite = copyOf(value);
-        if (bytesToWrite.length == 0) {
-            Timber.e("value byte array is empty, ignoring write request");
-            return false;
-        }
 
-        // Enqueue the write command now that all checks have been passed
         boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
@@ -1379,6 +1384,11 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
         Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
 
+        if (!isConnected()) {
+            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
+            return false;
+        }
+
         BluetoothGattCharacteristic characteristic = getCharacteristic(serviceUUID, characteristicUUID);
         if (characteristic != null) {
             return setNotify(characteristic, enable);
@@ -1398,13 +1408,12 @@ public class BluetoothPeripheral {
     public boolean setNotify(@NotNull final BluetoothGattCharacteristic characteristic, final boolean enable) {
         Objects.requireNonNull(characteristic, NO_VALID_CHARACTERISTIC_PROVIDED);
 
-        // Check if gatt object is valid
-        if (bluetoothGatt == null) {
-            Timber.e("gatt is 'null', ignoring set notify request");
+        if (!isConnected()) {
+            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
             return false;
         }
 
-        // Get the Client Configuration Descriptor for the characteristic
+        // Get the Client Characteristic Configuration Descriptor for the characteristic
         final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CCC_DESCRIPTOR_UUID);
         if (descriptor == null) {
             Timber.e("could not get CCC descriptor for characteristic %s", characteristic.getUuid());
@@ -1424,7 +1433,6 @@ public class BluetoothPeripheral {
         }
         final byte[] finalValue = enable ? value : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
 
-        // Queue Runnable to turn on/off the notification now that all checks have been passed
         boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
@@ -1537,6 +1545,11 @@ public class BluetoothPeripheral {
             throw new IllegalArgumentException("mtu must be between 23 and 517");
         }
 
+        if (!isConnected()) {
+            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
+            return false;
+        }
+
         boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
@@ -1575,7 +1588,11 @@ public class BluetoothPeripheral {
             throw new IllegalArgumentException("connection priority not valid");
         }
 
-        // Enqueue the request connection priority command and complete is immediately as there is no callback for it
+        if (!isConnected()) {
+            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
+            return false;
+        }
+
         boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
@@ -1585,6 +1602,7 @@ public class BluetoothPeripheral {
                     } else {
                         Timber.d("requesting connection priority %d", priority);
                     }
+                    // complete command immediately as there is no callback for it
                     completedCommand();
                 }
             }
