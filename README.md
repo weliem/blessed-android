@@ -191,7 +191,7 @@ public void onMtuChanged(BluetoothPeripheral peripheral, int mtu, GattStatus sta
 ```
 
 This callback will tell you what the negotiated MTU value is. Note that you may not get the value you requested if the peripheral doesn't accept your offer.
-If you simply want the highest possible MTU, you can call `peripheral.requestMtu(MAX_MTU)` and that will lead to receiving the highest possible MTU your peripheral supports.
+If you simply want the highest possible MTU, you can call `peripheral.requestMtu(BluetoothPeripheral.MAX_MTU)` and that will lead to receiving the highest possible MTU your peripheral supports.
 
 Once the MTU has been set, you can always access it by calling `getCurrentMtu()`. If you want to know the maximum length of the byte arrays that you can write, you can call the method `getMaximumWriteValueLength()`. Note that the maximum value depends on the write type you want to use.
 
