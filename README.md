@@ -177,6 +177,24 @@ It is also possible to remove a bond by calling `removeBond`. Note that this met
 
 Lastly, it is also possible to automatically issue a PIN code when pairing. Use the method `setPinCodeForPeripheral` to register a 6 digit PIN code. Once bonding starts, BLESSED will automatically issue the PIN code and the UI dialog to enter the PIN code will not appear anymore.
 
+## Requesting a higher MTU to increase throughput
+By default the MTU is 23 which allows you to send and receive byte arrays of 20 bytes at a time. If your peripheral supports higher a higher MTU, you can request that by calling:
+
+```java
+public void requestMtu(int mtu)
+```
+
+You will get a callback on:
+
+```java
+public void onMtuChanged(BluetoothPeripheral peripheral, int mtu, GattStatus status)
+```
+
+This callback will tell you what the negotiated MTU value is. Note that you may not get the value of what you requested if the peripheral doesn't accept your offer.
+If you simply want the highest possible MTU, you can call `peripheral.requestMtu(MAX_MTU)` and that will lead to receiving the highest possible MTU.
+
+Once the MTU has been set you can always access it by calling `getCurrentMtu()`. If you want to know the maximum length of the byte arrays that you can write, you can call the method `getMaximumWriteValueLength()`. Note that the maximum value depends on the write type you want to use.
+
 ## Status codes
 When connecting or disconnecting, the callback methods will contain a parameter `HciStatus status`. This enum class will have the value `SUCCESS` if the operation succeeded and otherwise it will provide a value indicating what went wrong.
 Similarly, when doing GATT operations, the callbacks methods contain a parameter `GattStatus status`. These two enum classes replace the `int status` parameter that Android normally passes.
