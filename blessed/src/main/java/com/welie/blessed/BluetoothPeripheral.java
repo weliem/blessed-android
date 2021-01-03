@@ -1477,26 +1477,6 @@ public class BluetoothPeripheral {
     }
 
     /**
-     * Asynchronous method to clear the services cache. Make sure to add a delay when using this!
-     *
-     * @return true if the method was executed, false if not executed
-     */
-    public boolean clearServicesCache() {
-        if (bluetoothGatt == null) return false;
-
-        boolean result = false;
-        try {
-            Method refreshMethod = bluetoothGatt.getClass().getMethod("refresh");
-            if (refreshMethod != null) {
-                result = (boolean) refreshMethod.invoke(bluetoothGatt);
-            }
-        } catch (Exception e) {
-            Timber.e("could not invoke refresh method");
-        }
-        return result;
-    }
-
-    /**
      * Read the RSSI for a connected remote peripheral.
      *
      * <p>{@link BluetoothPeripheralCallback#onReadRemoteRssi(BluetoothPeripheral, int, GattStatus)} will be triggered as a result of this call.
@@ -1504,6 +1484,11 @@ public class BluetoothPeripheral {
      * @return true if the operation was enqueued, false otherwise
      */
     public boolean readRemoteRssi() {
+        if (!isConnected()) {
+            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
+            return false;
+        }
+
         boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
@@ -1540,7 +1525,6 @@ public class BluetoothPeripheral {
      * @return true if the operation was enqueued, false otherwise
      */
     public boolean requestMtu(final int mtu) {
-        // Make sure mtu is valid
         if (mtu < DEFAULT_MTU || mtu > MAX_MTU) {
             throw new IllegalArgumentException("mtu must be between 23 and 517");
         }
@@ -1583,7 +1567,6 @@ public class BluetoothPeripheral {
      * @return true if request was enqueued, false if not
      */
     public boolean requestConnectionPriority(final int priority) {
-        // Make sure priority is valid
         if (priority < CONNECTION_PRIORITY_BALANCED || priority > CONNECTION_PRIORITY_LOW_POWER) {
             throw new IllegalArgumentException("connection priority not valid");
         }
@@ -1612,6 +1595,26 @@ public class BluetoothPeripheral {
             nextCommand();
         } else {
             Timber.e("could not enqueue request connection priority command");
+        }
+        return result;
+    }
+
+    /**
+     * Asynchronous method to clear the services cache. Make sure to add a delay when using this!
+     *
+     * @return true if the method was executed, false if not executed
+     */
+    public boolean clearServicesCache() {
+        if (bluetoothGatt == null) return false;
+
+        boolean result = false;
+        try {
+            Method refreshMethod = bluetoothGatt.getClass().getMethod("refresh");
+            if (refreshMethod != null) {
+                result = (boolean) refreshMethod.invoke(bluetoothGatt);
+            }
+        } catch (Exception e) {
+            Timber.e("could not invoke refresh method");
         }
         return result;
     }
