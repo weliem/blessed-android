@@ -622,7 +622,7 @@ public class BluetoothPeripheral {
 
                 // If bonding was started at connection time, we may still have to discover the services
                 // Also make sure we are not starting a discovery while another one is already in progress
-                if (bluetoothGatt.getServices().isEmpty() && !discoveryStarted) {
+                if (getServices().isEmpty() && !discoveryStarted) {
                     delayedDiscoverServices(0);
                 }
 
@@ -926,7 +926,8 @@ public class BluetoothPeripheral {
      *
      * @return Address of the bluetooth peripheral
      */
-    public @NotNull String getAddress() {
+    @NotNull
+    public String getAddress() {
         return device.getAddress();
     }
 
@@ -944,7 +945,8 @@ public class BluetoothPeripheral {
      *
      * @return name of the bluetooth peripheral
      */
-    public @Nullable String getName() {
+    @Nullable
+    public String getName() {
         String name = device.getName();
         if (name != null) {
             // Cache the name so that we even know it when bluetooth is switched off
@@ -975,7 +977,8 @@ public class BluetoothPeripheral {
      * @return Supported services.
      */
     @SuppressWarnings("WeakerAccess")
-    public @NotNull List<BluetoothGattService> getServices() {
+    @NotNull
+    public List<BluetoothGattService> getServices() {
         if (bluetoothGatt != null) {
             return bluetoothGatt.getServices();
         }
@@ -988,7 +991,8 @@ public class BluetoothPeripheral {
      * @param serviceUUID the UUID of the service
      * @return the BluetoothGattService object for the service UUID or null if the peripheral does not have a service with the specified UUID
      */
-    public @Nullable BluetoothGattService getService(@NotNull UUID serviceUUID) {
+    @Nullable
+    public BluetoothGattService getService(@NotNull UUID serviceUUID) {
         Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
 
         if (bluetoothGatt != null) {
@@ -1005,7 +1009,8 @@ public class BluetoothPeripheral {
      * @param characteristicUUID the UUID of the chararacteristic
      * @return the BluetoothGattCharacteristic object for the characteristic UUID or null if the peripheral does not have a characteristic with the specified UUID
      */
-    public @Nullable BluetoothGattCharacteristic getCharacteristic(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID) {
+    @Nullable
+    public BluetoothGattCharacteristic getCharacteristic(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID) {
         Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
         Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
 
