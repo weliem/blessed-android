@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2020 Martijn van Welie
+ *   Copyright (c) 2021 Martijn van Welie
  *
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
  *   of this software and associated documentation files (the "Software"), to deal
@@ -314,7 +314,7 @@ public class BluetoothPeripheral {
                 if (failureThatShouldTriggerBonding(gattStatus)) return;
             }
 
-            // Check if this was the Client Configuration Descriptor
+            // Check if this was the Client Characteristic Configuration Descriptor
             if (descriptor.getUuid().equals(CCC_DESCRIPTOR_UUID)) {
                 if (gattStatus == GattStatus.SUCCESS) {
                     final byte[] value = nonnullOf(descriptor.getValue());
@@ -609,7 +609,6 @@ public class BluetoothPeripheral {
                 });
                 break;
             case BOND_BONDED:
-                // Bonding succeeded
                 Timber.d("bonded with '%s' (%s)", getName(), getAddress());
                 callbackHandler.post(new Runnable() {
                     @Override
