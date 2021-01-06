@@ -209,7 +209,7 @@ public enum GattStatus {
     /**
      * No Man-in-the-middle protection
      */
-    ENCRYPED_NO_MITM(0x8d),
+    ENCRYPTED_NO_MITM(0x8d),
 
     /**
      * Not encrypted
