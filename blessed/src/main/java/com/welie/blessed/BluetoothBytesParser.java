@@ -555,7 +555,7 @@ public class BluetoothBytesParser {
      */
     public boolean setFloatValue(float value, int precision) {
         float mantissa = (float) (value * Math.pow(10, precision));
-        return setFloatValue((int) mantissa, -precision, FORMAT_FLOAT, 0);
+        return setFloatValue((int) mantissa, -precision, FORMAT_FLOAT, offset);
     }
 
     /**
