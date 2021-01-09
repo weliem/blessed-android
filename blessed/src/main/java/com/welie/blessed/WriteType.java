@@ -23,11 +23,34 @@
 
 package com.welie.blessed;
 
+import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE;
+import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE;
+import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE;
+import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
+import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE;
+import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_SIGNED;
+
 /**
  * WriteType describes the type of write that can be done
  */
 public enum WriteType {
-    WITH_RESPONSE,
-    WITHOUT_RESPONSE,
-    SIGNED
+    WITH_RESPONSE(WRITE_TYPE_DEFAULT, PROPERTY_WRITE),
+    WITHOUT_RESPONSE(WRITE_TYPE_NO_RESPONSE, PROPERTY_WRITE_NO_RESPONSE),
+    SIGNED(WRITE_TYPE_SIGNED, PROPERTY_SIGNED_WRITE);
+
+    final int writeType;
+    final int property;
+
+    WriteType(int writeType, int property) {
+        this.writeType = writeType;
+        this.property = property;
+    }
+
+    int getWriteType() {
+        return writeType;
+    }
+
+    int getProperty() {
+        return property;
+    }
 }

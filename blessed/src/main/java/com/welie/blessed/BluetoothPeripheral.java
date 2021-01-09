@@ -1213,8 +1213,12 @@ public class BluetoothPeripheral {
             throw new IllegalArgumentException(VALUE_BYTE_ARRAY_IS_TOO_LONG);
         }
 
-        // See if a Long Write is being triggered because of the byte array length
-        if (value.length > currentMtu - 3 && writeType == WriteType.WITH_RESPONSE) {
+        if (supportsWriteType(characteristic, writeType)) {
+            Timber.e("characteristic <%s> does not support writeType '%s'", characteristic.getUuid(), writeType);
+            return false;
+        }
+
+        if (willCauseLongWrite(value, writeType)) {
             // Android will turn this into a Long Write because it is larger than the MTU - 3.
             // When doing a Long Write the byte array will be automatically split in chunks of size MTU - 3.
             // However, the peripheral's firmware must also support it, so it is not guaranteed to work.
@@ -1227,38 +1231,12 @@ public class BluetoothPeripheral {
         // Copy the value to avoid race conditions
         final byte[] bytesToWrite = copyOf(value);
 
-        // Check if this characteristic actually supports this writeType
-        int writeProperty;
-        final int writeTypeInternal;
-        switch (writeType) {
-            case WITH_RESPONSE:
-                writeProperty = PROPERTY_WRITE;
-                writeTypeInternal = WRITE_TYPE_DEFAULT;
-                break;
-            case WITHOUT_RESPONSE:
-                writeProperty = PROPERTY_WRITE_NO_RESPONSE;
-                writeTypeInternal = WRITE_TYPE_NO_RESPONSE;
-                break;
-            case SIGNED:
-                writeProperty = PROPERTY_SIGNED_WRITE;
-                writeTypeInternal = WRITE_TYPE_SIGNED;
-                break;
-            default:
-                writeProperty = 0;
-                writeTypeInternal = 0;
-                break;
-        }
-        if ((characteristic.getProperties() & writeProperty) == 0) {
-            Timber.e("characteristic <%s> does not support writeType '%s'", characteristic.getUuid(), writeType);
-            return false;
-        }
-
         boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
                 if (isConnected()) {
                     currentWriteBytes = bytesToWrite;
-                    characteristic.setWriteType(writeTypeInternal);
+                    characteristic.setWriteType(writeType.getWriteType());
                     characteristic.setValue(bytesToWrite);
                     if (!bluetoothGatt.writeCharacteristic(characteristic)) {
                         Timber.e("writeCharacteristic failed for characteristic: %s", characteristic.getUuid());
@@ -1279,6 +1257,14 @@ public class BluetoothPeripheral {
             Timber.e("could not enqueue write characteristic command");
         }
         return result;
+    }
+
+    private boolean willCauseLongWrite(@NotNull byte[] value, @NotNull WriteType writeType) {
+        return value.length > currentMtu - 3 && writeType == WriteType.WITH_RESPONSE;
+    }
+
+    private boolean supportsWriteType(@NotNull BluetoothGattCharacteristic characteristic, @NotNull WriteType writeType) {
+        return (characteristic.getProperties() & writeType.getProperty()) == 0;
     }
 
     /**

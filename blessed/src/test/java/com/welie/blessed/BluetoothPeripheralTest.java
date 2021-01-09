@@ -37,7 +37,9 @@ import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_INDICATE;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_NOTIFY;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_READ;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE;
+import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE;
 import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
+import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE;
 import static android.bluetooth.BluetoothProfile.STATE_CONNECTED;
 import static android.bluetooth.BluetoothProfile.STATE_DISCONNECTED;
 import static android.bluetooth.BluetoothProfile.STATE_DISCONNECTING;
@@ -53,6 +55,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -314,7 +317,7 @@ public class BluetoothPeripheralTest {
     }
 
     @Test
-    public void writeCharacteristicTest() throws Exception {
+    public void writeWithResponseCharacteristicTest() throws Exception {
         BluetoothGattCallback callback = connectAndGetCallback();
         callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
 
@@ -324,7 +327,39 @@ public class BluetoothPeripheralTest {
 
         peripheral.writeCharacteristic(characteristic, new byte[]{0}, WriteType.WITH_RESPONSE);
 
-        verify(gatt).writeCharacteristic(any(BluetoothGattCharacteristic.class));
+        verify(gatt, timeout(1000)).writeCharacteristic(any(BluetoothGattCharacteristic.class));
+        assertEquals(WRITE_TYPE_DEFAULT, characteristic.getWriteType());
+
+        byte[] originalByteArray = new byte[]{0x01};
+        characteristic.setValue(originalByteArray);
+        callback.onCharacteristicWrite(gatt, characteristic, 0);
+
+        ArgumentCaptor<BluetoothPeripheral> captorPeripheral = ArgumentCaptor.forClass(BluetoothPeripheral.class);
+        ArgumentCaptor<byte[]> captorValue = ArgumentCaptor.forClass(byte[].class);
+        ArgumentCaptor<BluetoothGattCharacteristic> captorCharacteristic = ArgumentCaptor.forClass(BluetoothGattCharacteristic.class);
+        ArgumentCaptor<GattStatus> captorStatus = ArgumentCaptor.forClass(GattStatus.class);
+        verify(peripheralCallback).onCharacteristicWrite(captorPeripheral.capture(), captorValue.capture(), captorCharacteristic.capture(), captorStatus.capture());
+
+        byte[] value = captorValue.getValue();
+        assertEquals(0, value[0]);  // Check if original value is returned and not the one in the characteristic
+        assertEquals(peripheral, captorPeripheral.getValue());
+        assertEquals(characteristic, captorCharacteristic.getValue());
+        assertEquals(GattStatus.SUCCESS, (GattStatus) captorStatus.getValue() );
+    }
+
+    @Test
+    public void writeWithoutResponseCharacteristicTest() throws Exception {
+        BluetoothGattCallback callback = connectAndGetCallback();
+        callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
+
+        BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"), PROPERTY_WRITE_NO_RESPONSE,0);
+
+        when(gatt.writeCharacteristic(characteristic)).thenReturn(true);
+
+        peripheral.writeCharacteristic(characteristic, new byte[]{0}, WriteType.WITHOUT_RESPONSE);
+
+        verify(gatt, timeout(1000)).writeCharacteristic(any(BluetoothGattCharacteristic.class));
+        assertEquals(WRITE_TYPE_NO_RESPONSE, characteristic.getWriteType());
 
         byte[] originalByteArray = new byte[]{0x01};
         characteristic.setValue(originalByteArray);
