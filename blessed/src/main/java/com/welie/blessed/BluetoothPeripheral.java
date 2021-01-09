@@ -1114,8 +1114,7 @@ public class BluetoothPeripheral {
             return false;
         }
 
-        // Check if this characteristic actually has READ property
-        if ((characteristic.getProperties() & PROPERTY_READ) == 0) {
+        if (doesNotSupportReading(characteristic)) {
             Timber.e("characteristic does not have read property");
             return false;
         }
@@ -1143,6 +1142,10 @@ public class BluetoothPeripheral {
             Timber.e("could not enqueue read characteristic command");
         }
         return result;
+    }
+
+    private boolean doesNotSupportReading(@NotNull BluetoothGattCharacteristic characteristic) {
+        return (characteristic.getProperties() & PROPERTY_READ) == 0;
     }
 
     /**
