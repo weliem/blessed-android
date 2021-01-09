@@ -318,22 +318,25 @@ public class BluetoothPeripheralTest {
 
     @Test
     public void writeWithResponseCharacteristicTest() throws Exception {
+        // Given
         BluetoothGattCallback callback = connectAndGetCallback();
         callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
-
         BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"), PROPERTY_WRITE,0);
-
         when(gatt.writeCharacteristic(characteristic)).thenReturn(true);
 
+        // When
         peripheral.writeCharacteristic(characteristic, new byte[]{0}, WriteType.WITH_RESPONSE);
 
-        verify(gatt, timeout(1000)).writeCharacteristic(any(BluetoothGattCharacteristic.class));
+        // Then
+        verify(gatt, timeout(1000)).writeCharacteristic(characteristic);
         assertEquals(WRITE_TYPE_DEFAULT, characteristic.getWriteType());
 
+        // When
         byte[] originalByteArray = new byte[]{0x01};
         characteristic.setValue(originalByteArray);
         callback.onCharacteristicWrite(gatt, characteristic, 0);
 
+        // Then
         ArgumentCaptor<BluetoothPeripheral> captorPeripheral = ArgumentCaptor.forClass(BluetoothPeripheral.class);
         ArgumentCaptor<byte[]> captorValue = ArgumentCaptor.forClass(byte[].class);
         ArgumentCaptor<BluetoothGattCharacteristic> captorCharacteristic = ArgumentCaptor.forClass(BluetoothGattCharacteristic.class);
@@ -349,22 +352,25 @@ public class BluetoothPeripheralTest {
 
     @Test
     public void writeWithoutResponseCharacteristicTest() throws Exception {
+        // Given
         BluetoothGattCallback callback = connectAndGetCallback();
         callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
-
         BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"), PROPERTY_WRITE_NO_RESPONSE,0);
-
         when(gatt.writeCharacteristic(characteristic)).thenReturn(true);
 
+        // When
         peripheral.writeCharacteristic(characteristic, new byte[]{0}, WriteType.WITHOUT_RESPONSE);
 
-        verify(gatt, timeout(1000)).writeCharacteristic(any(BluetoothGattCharacteristic.class));
+        // Then
+        verify(gatt, timeout(1000)).writeCharacteristic(characteristic);
         assertEquals(WRITE_TYPE_NO_RESPONSE, characteristic.getWriteType());
 
+        // When
         byte[] originalByteArray = new byte[]{0x01};
         characteristic.setValue(originalByteArray);
-        callback.onCharacteristicWrite(gatt, characteristic, 0);
+        callback.onCharacteristicWrite(gatt, characteristic, GATT_SUCCESS);
 
+        // Then
         ArgumentCaptor<BluetoothPeripheral> captorPeripheral = ArgumentCaptor.forClass(BluetoothPeripheral.class);
         ArgumentCaptor<byte[]> captorValue = ArgumentCaptor.forClass(byte[].class);
         ArgumentCaptor<BluetoothGattCharacteristic> captorCharacteristic = ArgumentCaptor.forClass(BluetoothGattCharacteristic.class);
