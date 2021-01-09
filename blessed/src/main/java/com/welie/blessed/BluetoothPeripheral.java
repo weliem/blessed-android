@@ -1207,7 +1207,7 @@ public class BluetoothPeripheral {
             throw new IllegalArgumentException(VALUE_BYTE_ARRAY_IS_TOO_LONG);
         }
 
-        if (supportsWriteType(characteristic, writeType)) {
+        if (doesNotSupportWriteType(characteristic, writeType)) {
             Timber.e("characteristic <%s> does not support writeType '%s'", characteristic.getUuid(), writeType);
             return false;
         }
@@ -1257,7 +1257,7 @@ public class BluetoothPeripheral {
         return value.length > currentMtu - 3 && writeType == WriteType.WITH_RESPONSE;
     }
 
-    private boolean supportsWriteType(@NotNull BluetoothGattCharacteristic characteristic, @NotNull WriteType writeType) {
+    private boolean doesNotSupportWriteType(@NotNull BluetoothGattCharacteristic characteristic, @NotNull WriteType writeType) {
         return (characteristic.getProperties() & writeType.getProperty()) == 0;
     }
 
