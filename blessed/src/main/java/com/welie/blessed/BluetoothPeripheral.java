@@ -65,12 +65,6 @@ import static android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_LOW_POWER;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_INDICATE;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_NOTIFY;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_READ;
-import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE;
-import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE;
-import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE;
-import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
-import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE;
-import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_SIGNED;
 
 /**
  * Represents a remote Bluetooth peripheral and replaces BluetoothDevice and BluetoothGatt
@@ -193,7 +187,7 @@ public class BluetoothPeripheral {
     private static final String NO_VALID_WRITE_TYPE_PROVIDED = "no valid writeType provided";
     private static final String NO_VALID_VALUE_PROVIDED = "no valid value provided";
     private static final String NO_VALID_DESCRIPTOR_PROVIDED = "no valid descriptor provided";
-    private static final String PERIPHERAL_NOT_CONNECTECTED = "peripheral not connectected";
+    private static final String PERIPHERAL_NOT_CONNECTED = "peripheral not connectected";
     private static final String VALUE_BYTE_ARRAY_IS_EMPTY = "value byte array is empty";
     private static final String VALUE_BYTE_ARRAY_IS_TOO_LONG = "value byte array is too long";
 
@@ -1091,7 +1085,7 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
 
         if (!isConnected()) {
-            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
+            Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
 
@@ -1116,7 +1110,7 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(characteristic, NO_VALID_CHARACTERISTIC_PROVIDED);
 
         if (!isConnected()) {
-            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
+            Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
 
@@ -1170,7 +1164,7 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(writeType, NO_VALID_WRITE_TYPE_PROVIDED);
 
         if (!isConnected()) {
-            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
+            Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
 
@@ -1201,7 +1195,7 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(writeType, NO_VALID_WRITE_TYPE_PROVIDED);
 
         if (!isConnected()) {
-            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
+            Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
 
@@ -1277,7 +1271,7 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(descriptor, NO_VALID_DESCRIPTOR_PROVIDED);
 
         if (!isConnected()) {
-            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
+            Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
 
@@ -1319,7 +1313,7 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(value, NO_VALID_VALUE_PROVIDED);
 
         if (!isConnected()) {
-            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
+            Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
 
@@ -1375,7 +1369,7 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
 
         if (!isConnected()) {
-            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
+            Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
 
@@ -1399,7 +1393,7 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(characteristic, NO_VALID_CHARACTERISTIC_PROVIDED);
 
         if (!isConnected()) {
-            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
+            Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
 
@@ -1475,7 +1469,7 @@ public class BluetoothPeripheral {
      */
     public boolean readRemoteRssi() {
         if (!isConnected()) {
-            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
+            Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
 
@@ -1520,7 +1514,7 @@ public class BluetoothPeripheral {
         }
 
         if (!isConnected()) {
-            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
+            Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
 
@@ -1562,7 +1556,7 @@ public class BluetoothPeripheral {
         }
 
         if (!isConnected()) {
-            Timber.e(PERIPHERAL_NOT_CONNECTECTED);
+            Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
 
