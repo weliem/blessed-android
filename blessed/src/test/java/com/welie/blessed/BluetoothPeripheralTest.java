@@ -400,14 +400,16 @@ public class BluetoothPeripheralTest {
 
     @Test
     public void writeCharacteristicNotWritePropertyTest() throws Exception {
-        peripheral.connect();
-
-        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
-
+        // Given
+        BluetoothGattCallback callback = connectAndGetCallback();
+        callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
         BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"), 0,0);
 
-        peripheral.writeCharacteristic(characteristic, new byte[] { 0, 0 }, WriteType.WITH_RESPONSE);
+        // When
+        boolean result = peripheral.writeCharacteristic(characteristic, new byte[] { 0, 0 }, WriteType.WITH_RESPONSE);
 
+        // Then
+        assertFalse(result);
         verify(gatt, never()).writeCharacteristic(any(BluetoothGattCharacteristic.class));
     }
 
