@@ -296,7 +296,7 @@ class BluetoothHandler {
     };
 
     // Callback for central
-    private final BluetoothCentralManagerCallback bluetoothCentralCallback = new BluetoothCentralManagerCallback() {
+    private final BluetoothCentralManagerCallback bluetoothCentralManagerCallback = new BluetoothCentralManagerCallback() {
 
         @Override
         public void onConnectedPeripheral(@NotNull BluetoothPeripheral peripheral) {
@@ -360,7 +360,7 @@ class BluetoothHandler {
         Timber.plant(new Timber.DebugTree());
 
         // Create BluetoothCentral
-        central = new BluetoothCentralManager(context, bluetoothCentralCallback, new Handler());
+        central = new BluetoothCentralManager(context, bluetoothCentralManagerCallback, new Handler());
 
         // Scan for peripherals with a certain service UUIDs
         central.startPairingPopupHack();
