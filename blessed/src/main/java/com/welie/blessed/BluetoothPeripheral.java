@@ -698,7 +698,7 @@ public class BluetoothPeripheral {
      *
      * @param context  Android application environment.
      * @param device   Wrapped Android bluetooth device.
-     * @param listener Callback to {@link BluetoothCentral}.
+     * @param listener Callback to {@link BluetoothCentralManager}.
      */
     BluetoothPeripheral(@NotNull Context context, @NotNull BluetoothDevice device, @NotNull InternalCallback listener, @Nullable BluetoothPeripheralCallback peripheralCallback, @Nullable Handler callbackHandler) {
         this.context = Objects.requireNonNull(context, "no valid context provided");
@@ -868,7 +868,7 @@ public class BluetoothPeripheral {
     /**
      * Disconnect the bluetooth peripheral.
      *
-     * <p>When the disconnection has been completed {@link BluetoothCentralCallback#onDisconnectedPeripheral(BluetoothPeripheral, HciStatus)} will be called.
+     * <p>When the disconnection has been completed {@link BluetoothCentralManagerCallback#onDisconnectedPeripheral(BluetoothPeripheral, HciStatus)} will be called.
      */
     private void disconnect() {
         if (state == BluetoothProfile.STATE_CONNECTED || state == BluetoothProfile.STATE_CONNECTING) {
@@ -965,7 +965,7 @@ public class BluetoothPeripheral {
 
     /**
      * Get the services supported by the connected bluetooth peripheral.
-     * Only services that are also supported by {@link BluetoothCentral} are included.
+     * Only services that are also supported by {@link BluetoothCentralManager} are included.
      *
      * @return Supported services.
      */

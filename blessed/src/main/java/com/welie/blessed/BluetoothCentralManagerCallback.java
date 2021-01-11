@@ -27,7 +27,7 @@ import android.bluetooth.le.ScanResult;
 
 import org.jetbrains.annotations.NotNull;
 
-public abstract class BluetoothCentralCallback {
+public abstract class BluetoothCentralManagerCallback {
 
     /**
      * Successfully connected with a peripheral.

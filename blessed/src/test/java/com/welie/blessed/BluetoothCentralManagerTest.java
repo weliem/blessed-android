@@ -22,7 +22,6 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadow.api.Shadow;
 import org.robolectric.shadows.ShadowApplication;
-import org.robolectric.shadows.ShadowBluetoothAdapter;
 import org.robolectric.shadows.ShadowPackageManager;
 
 import java.lang.reflect.Field;
@@ -32,7 +31,7 @@ import java.util.UUID;
 
 import static android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES;
 import static android.os.Build.VERSION_CODES.M;
-import static com.welie.blessed.BluetoothCentral.SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES;
+import static com.welie.blessed.BluetoothCentralManager.SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
@@ -40,8 +39,6 @@ import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -56,8 +53,8 @@ import android.os.ParcelUuid;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = { M }, shadows={ShadowBluetoothLEAdapter.class} )
-public class BluetoothCentralTest {
-    private BluetoothCentral central;
+public class BluetoothCentralManagerTest {
+    private BluetoothCentralManager central;
     private ShadowApplication application;
     private ShadowBluetoothLEAdapter bluetoothAdapter;
     private Context context;
@@ -66,7 +63,7 @@ public class BluetoothCentralTest {
     private BluetoothLeScanner scanner;
 
     @Mock
-    private BluetoothCentralCallback callback;
+    private BluetoothCentralManagerCallback callback;
 
     @Mock
     private BluetoothPeripheralCallback peripheralCallback;
@@ -90,7 +87,7 @@ public class BluetoothCentralTest {
         ShadowPackageManager shadowPackageManager = shadowOf(packageManager);
         shadowPackageManager.setSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE, true);
 
-        central = new BluetoothCentral(context, callback, handler);
+        central = new BluetoothCentralManager(context, callback, handler);
     }
 
     @Test
@@ -100,7 +97,7 @@ public class BluetoothCentralTest {
         verify(scanner).startScan(anyList(), any(ScanSettings.class), any(ScanCallback.class));
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("defaultScanCallback");
+        Field field = BluetoothCentralManager.class.getDeclaredField("defaultScanCallback");
         field.setAccessible(true);
         ScanCallback scanCallback = (ScanCallback) field.get(central);
 
@@ -144,7 +141,7 @@ public class BluetoothCentralTest {
         assertEquals(BLP_SERVICE_UUID.toString(), uuid.toString());
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("defaultScanCallback");
+        Field field = BluetoothCentralManager.class.getDeclaredField("defaultScanCallback");
         field.setAccessible(true);
         ScanCallback scanCallback = (ScanCallback) field.get(central);
 
@@ -187,7 +184,7 @@ public class BluetoothCentralTest {
         assertEquals(myAddress, address);
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("defaultScanCallback");
+        Field field = BluetoothCentralManager.class.getDeclaredField("defaultScanCallback");
         field.setAccessible(true);
         ScanCallback scanCallback = (ScanCallback) field.get(central);
 
@@ -252,7 +249,7 @@ public class BluetoothCentralTest {
         assertNull(filters);
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("scanByNameCallback");
+        Field field = BluetoothCentralManager.class.getDeclaredField("scanByNameCallback");
         field.setAccessible(true);
         ScanCallback scanCallback = (ScanCallback) field.get(central);
 
@@ -357,7 +354,7 @@ public class BluetoothCentralTest {
         verify(scanner).startScan(anyList(), any(ScanSettings.class), any(ScanCallback.class));
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("defaultScanCallback");
+        Field field = BluetoothCentralManager.class.getDeclaredField("defaultScanCallback");
         field.setAccessible(true);
         ScanCallback scanCallback = (ScanCallback) field.get(central);
 
@@ -369,7 +366,7 @@ public class BluetoothCentralTest {
     @Test
     public void scanFailedAutoconnectTest() throws Exception {
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("autoConnectScanCallback");
+        Field field = BluetoothCentralManager.class.getDeclaredField("autoConnectScanCallback");
         field.setAccessible(true);
         ScanCallback scanCallback = (ScanCallback) field.get(central);
 
@@ -385,7 +382,7 @@ public class BluetoothCentralTest {
         central.scanForPeripheralsWithNames(new String[]{myName});
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("scanByNameCallback");
+        Field field = BluetoothCentralManager.class.getDeclaredField("scanByNameCallback");
         field.setAccessible(true);
         ScanCallback scanCallback = (ScanCallback) field.get(central);
 
@@ -401,7 +398,7 @@ public class BluetoothCentralTest {
         verify(scanner).startScan(anyList(), any(ScanSettings.class), any(ScanCallback.class));
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("defaultScanCallback");
+        Field field = BluetoothCentralManager.class.getDeclaredField("defaultScanCallback");
         field.setAccessible(true);
         ScanCallback scanCallback = (ScanCallback) field.get(central);
 
@@ -430,7 +427,7 @@ public class BluetoothCentralTest {
         verify(peripheral).connect();
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("internalCallback");
+        Field field = BluetoothCentralManager.class.getDeclaredField("internalCallback");
         field.setAccessible(true);
         BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
 
@@ -452,7 +449,7 @@ public class BluetoothCentralTest {
         verify(peripheral).connect();
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("internalCallback");
+        Field field = BluetoothCentralManager.class.getDeclaredField("internalCallback");
         field.setAccessible(true);
         BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
 
@@ -495,7 +492,7 @@ public class BluetoothCentralTest {
         verify(peripheral).connect();
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("internalCallback");
+        Field field = BluetoothCentralManager.class.getDeclaredField("internalCallback");
         field.setAccessible(true);
         BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
 
@@ -520,7 +517,7 @@ public class BluetoothCentralTest {
         verify(peripheral).connect();
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("internalCallback");
+        Field field = BluetoothCentralManager.class.getDeclaredField("internalCallback");
         field.setAccessible(true);
         BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
 
@@ -544,7 +541,7 @@ public class BluetoothCentralTest {
         verify(peripheral).connect();
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("internalCallback");
+        Field field = BluetoothCentralManager.class.getDeclaredField("internalCallback");
         field.setAccessible(true);
         BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
 
@@ -588,7 +585,7 @@ public class BluetoothCentralTest {
         verify(peripheral).connect();
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("internalCallback");
+        Field field = BluetoothCentralManager.class.getDeclaredField("internalCallback");
         field.setAccessible(true);
         BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
 
@@ -623,7 +620,7 @@ public class BluetoothCentralTest {
         verify(peripheral).cancelConnection();
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("internalCallback");
+        Field field = BluetoothCentralManager.class.getDeclaredField("internalCallback");
         field.setAccessible(true);
         BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
 
@@ -660,7 +657,7 @@ public class BluetoothCentralTest {
         verify(peripheral).autoConnect();
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("internalCallback");
+        Field field = BluetoothCentralManager.class.getDeclaredField("internalCallback");
         field.setAccessible(true);
         BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
 
@@ -688,7 +685,7 @@ public class BluetoothCentralTest {
         verify(scanner).startScan(anyList(), any(ScanSettings.class), any(ScanCallback.class));
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("autoConnectScanCallback");
+        Field field = BluetoothCentralManager.class.getDeclaredField("autoConnectScanCallback");
         field.setAccessible(true);
         ScanCallback scanCallback = (ScanCallback) field.get(central);
 
@@ -713,7 +710,7 @@ public class BluetoothCentralTest {
         verify(peripheral).connect();
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("internalCallback");
+        Field field = BluetoothCentralManager.class.getDeclaredField("internalCallback");
         field.setAccessible(true);
         BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
 
@@ -774,7 +771,7 @@ public class BluetoothCentralTest {
         verify(peripheral).connect();
 
         // Grab the scan callback that is used
-        Field field = BluetoothCentral.class.getDeclaredField("internalCallback");
+        Field field = BluetoothCentralManager.class.getDeclaredField("internalCallback");
         field.setAccessible(true);
         BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
 

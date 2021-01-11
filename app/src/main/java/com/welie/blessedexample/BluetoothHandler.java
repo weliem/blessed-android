@@ -8,8 +8,8 @@ import android.content.Intent;
 import android.os.Handler;
 
 import com.welie.blessed.BluetoothBytesParser;
-import com.welie.blessed.BluetoothCentral;
-import com.welie.blessed.BluetoothCentralCallback;
+import com.welie.blessed.BluetoothCentralManager;
+import com.welie.blessed.BluetoothCentralManagerCallback;
 import com.welie.blessed.BluetoothPeripheral;
 import com.welie.blessed.BluetoothPeripheralCallback;
 import com.welie.blessed.GattStatus;
@@ -98,7 +98,7 @@ class BluetoothHandler {
     private static final UUID CONTOUR_CLOCK = UUID.fromString("00001026-0002-11E2-9E96-0800200C9A66");
 
     // Local variables
-    public BluetoothCentral central;
+    public BluetoothCentralManager central;
     private static BluetoothHandler instance = null;
     private final Context context;
     private final Handler handler = new Handler();
@@ -296,7 +296,7 @@ class BluetoothHandler {
     };
 
     // Callback for central
-    private final BluetoothCentralCallback bluetoothCentralCallback = new BluetoothCentralCallback() {
+    private final BluetoothCentralManagerCallback bluetoothCentralCallback = new BluetoothCentralManagerCallback() {
 
         @Override
         public void onConnectedPeripheral(@NotNull BluetoothPeripheral peripheral) {
@@ -360,7 +360,7 @@ class BluetoothHandler {
         Timber.plant(new Timber.DebugTree());
 
         // Create BluetoothCentral
-        central = new BluetoothCentral(context, bluetoothCentralCallback, new Handler());
+        central = new BluetoothCentralManager(context, bluetoothCentralCallback, new Handler());
 
         // Scan for peripherals with a certain service UUIDs
         central.startPairingPopupHack();

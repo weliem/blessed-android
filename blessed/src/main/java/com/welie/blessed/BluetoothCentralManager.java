@@ -60,7 +60,7 @@ import timber.log.Timber;
  * Central class to connect and communicate with bluetooth peripherals.
  */
 @SuppressWarnings({"SpellCheckingInspection", "unused", "WeakerAccess", "UnusedReturnValue"})
-public class BluetoothCentral {
+public class BluetoothCentralManager {
 
     // Private constants
     private static final long SCAN_TIMEOUT = 180_000L;
@@ -107,7 +107,7 @@ public class BluetoothCentral {
     private @NotNull final BluetoothAdapter bluetoothAdapter;
     private @Nullable BluetoothLeScanner bluetoothScanner;
     private @Nullable BluetoothLeScanner autoConnectScanner;
-    private @NotNull final BluetoothCentralCallback bluetoothCentralCallback;
+    private @NotNull final BluetoothCentralManagerCallback bluetoothCentralCallback;
     private @NotNull final Map<String, BluetoothPeripheral> connectedPeripherals = new ConcurrentHashMap<>();
     private @NotNull final Map<String, BluetoothPeripheral> unconnectedPeripherals = new ConcurrentHashMap<>();
     private @NotNull final Map<String, BluetoothPeripheral> scannedPeripherals = new ConcurrentHashMap<>();
@@ -322,7 +322,7 @@ public class BluetoothCentral {
      * @param bluetoothCentralCallback the callback to call for updates
      * @param handler                  Handler to use for callbacks.
      */
-    public BluetoothCentral(@NotNull Context context, @NotNull BluetoothCentralCallback bluetoothCentralCallback, @NotNull Handler handler) {
+    public BluetoothCentralManager(@NotNull Context context, @NotNull BluetoothCentralManagerCallback bluetoothCentralCallback, @NotNull Handler handler) {
         this.context = Objects.requireNonNull(context, "no valid context provided");
         this.bluetoothCentralCallback = Objects.requireNonNull(bluetoothCentralCallback, "no valid bluetoothCallback provided");
         this.callBackHandler = Objects.requireNonNull(handler, "no valid handler provided");

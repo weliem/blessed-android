@@ -16,7 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
 
-import com.welie.blessed.BluetoothCentral;
+import com.welie.blessed.BluetoothCentralManager;
 import com.welie.blessed.BluetoothPeripheral;
 
 import java.text.DateFormat;
@@ -167,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private BluetoothPeripheral getPeripheral(String peripheralAddress) {
-        BluetoothCentral central = BluetoothHandler.getInstance(getApplicationContext()).central;
+        BluetoothCentralManager central = BluetoothHandler.getInstance(getApplicationContext()).central;
         return central.getPeripheral(peripheralAddress);
     }
 
