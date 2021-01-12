@@ -65,6 +65,7 @@ import static android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_LOW_POWER;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_INDICATE;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_NOTIFY;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_READ;
+import static com.welie.blessed.BluetoothBytesParser.bytes2String;
 
 /**
  * Represents a remote Bluetooth peripheral and replaces BluetoothDevice and BluetoothGatt
@@ -1715,22 +1716,6 @@ public class BluetoothPeripheral {
             default:
                 return "UNKNOWN";
         }
-    }
-
-    /**
-     * Converts byte array to hex string
-     *
-     * @param bytes the byte array to convert
-     * @return String representing the byte array as a HEX string
-     */
-    @NotNull
-    private static String bytes2String(@Nullable final byte[] bytes) {
-        if (bytes == null) return "";
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytes) {
-            sb.append(String.format("%02x", b & 0xff));
-        }
-        return sb.toString();
     }
 
     interface InternalCallback {
