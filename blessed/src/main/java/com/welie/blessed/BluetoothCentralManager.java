@@ -57,12 +57,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import timber.log.Timber;
 
 /**
- * Central class to connect and communicate with bluetooth peripherals.
+ * Central Manager class to scan and connect with bluetooth peripherals.
  */
 @SuppressWarnings({"SpellCheckingInspection", "unused", "WeakerAccess", "UnusedReturnValue"})
 public class BluetoothCentralManager {
 
-    // Private constants
     private static final long SCAN_TIMEOUT = 180_000L;
     private static final int SCAN_RESTART_DELAY = 1000;
     private static final int MAX_CONNECTION_RETRIES = 1;
@@ -107,7 +106,7 @@ public class BluetoothCentralManager {
     private @NotNull final BluetoothAdapter bluetoothAdapter;
     private @Nullable BluetoothLeScanner bluetoothScanner;
     private @Nullable BluetoothLeScanner autoConnectScanner;
-    private @NotNull final BluetoothCentralManagerCallback bluetoothCentralCallback;
+    private @NotNull final BluetoothCentralManagerCallback bluetoothCentralManagerCallback;
     private @NotNull final Map<String, BluetoothPeripheral> connectedPeripherals = new ConcurrentHashMap<>();
     private @NotNull final Map<String, BluetoothPeripheral> unconnectedPeripherals = new ConcurrentHashMap<>();
     private @NotNull final Map<String, BluetoothPeripheral> scannedPeripherals = new ConcurrentHashMap<>();
@@ -144,7 +143,7 @@ public class BluetoothCentralManager {
                                 if (isScanning()) {
                                     BluetoothPeripheral peripheral = getPeripheral(result.getDevice().getAddress());
                                     peripheral.setDevice(result.getDevice());
-                                    bluetoothCentralCallback.onDiscoveredPeripheral(peripheral, result);
+                                    bluetoothCentralManagerCallback.onDiscoveredPeripheral(peripheral, result);
                                 }
                             }
                         });
@@ -160,7 +159,7 @@ public class BluetoothCentralManager {
             callBackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    bluetoothCentralCallback.onScanFailed(errorCode);
+                    bluetoothCentralManagerCallback.onScanFailed(errorCode);
                 }
             });
         }
@@ -176,7 +175,7 @@ public class BluetoothCentralManager {
                         if (isScanning()) {
                             BluetoothPeripheral peripheral = getPeripheral(result.getDevice().getAddress());
                             peripheral.setDevice(result.getDevice());
-                            bluetoothCentralCallback.onDiscoveredPeripheral(peripheral, result);
+                            bluetoothCentralManagerCallback.onDiscoveredPeripheral(peripheral, result);
                         }
                     }
                 });
@@ -189,7 +188,7 @@ public class BluetoothCentralManager {
             callBackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    bluetoothCentralCallback.onScanFailed(errorCode);
+                    bluetoothCentralManagerCallback.onScanFailed(errorCode);
                 }
             });
         }
@@ -229,7 +228,7 @@ public class BluetoothCentralManager {
             callBackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    bluetoothCentralCallback.onScanFailed(errorCode);
+                    bluetoothCentralManagerCallback.onScanFailed(errorCode);
                 }
             });
         }
@@ -251,7 +250,7 @@ public class BluetoothCentralManager {
             callBackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    bluetoothCentralCallback.onConnectedPeripheral(peripheral);
+                    bluetoothCentralManagerCallback.onConnectedPeripheral(peripheral);
                 }
             });
         }
@@ -281,7 +280,7 @@ public class BluetoothCentralManager {
                 callBackHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        bluetoothCentralCallback.onConnectionFailed(peripheral, status);
+                        bluetoothCentralManagerCallback.onConnectionFailed(peripheral, status);
                     }
                 });
             }
@@ -302,7 +301,7 @@ public class BluetoothCentralManager {
             callBackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    bluetoothCentralCallback.onDisconnectedPeripheral(peripheral, status);
+                    bluetoothCentralManagerCallback.onDisconnectedPeripheral(peripheral, status);
                 }
             });
         }
@@ -316,15 +315,15 @@ public class BluetoothCentralManager {
     //endregion
 
     /**
-     * Construct a new BluetoothCentral object
+     * Construct a new BluetoothCentralManager object
      *
      * @param context                  Android application environment.
-     * @param bluetoothCentralCallback the callback to call for updates
+     * @param bluetoothCentralManagerCallback the callback to call for updates
      * @param handler                  Handler to use for callbacks.
      */
-    public BluetoothCentralManager(@NotNull Context context, @NotNull BluetoothCentralManagerCallback bluetoothCentralCallback, @NotNull Handler handler) {
+    public BluetoothCentralManager(@NotNull Context context, @NotNull BluetoothCentralManagerCallback bluetoothCentralManagerCallback, @NotNull Handler handler) {
         this.context = Objects.requireNonNull(context, "no valid context provided");
-        this.bluetoothCentralCallback = Objects.requireNonNull(bluetoothCentralCallback, "no valid bluetoothCallback provided");
+        this.bluetoothCentralManagerCallback = Objects.requireNonNull(bluetoothCentralManagerCallback, "no valid bluetoothCallback provided");
         this.callBackHandler = Objects.requireNonNull(handler, "no valid handler provided");
         this.bluetoothAdapter = Objects.requireNonNull(BluetoothAdapter.getDefaultAdapter(), "no bluetooth adapter found");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -349,7 +348,7 @@ public class BluetoothCentralManager {
     }
 
     /**
-     * Closes BluetoothCentral and cleans up internals. BluetoothCentral will not work anymore after this is called.
+     * Closes BluetoothCentralManager and cleans up internals. BluetoothCentralManager will not work anymore after this is called.
      */
     public void close() {
         unconnectedPeripherals.clear();
@@ -710,7 +709,7 @@ public class BluetoothCentralManager {
             callBackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    bluetoothCentralCallback.onDisconnectedPeripheral(peripheral, HciStatus.SUCCESS);
+                    bluetoothCentralManagerCallback.onDisconnectedPeripheral(peripheral, HciStatus.SUCCESS);
                 }
             });
 
@@ -1092,7 +1091,7 @@ public class BluetoothCentralManager {
                 callBackHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        bluetoothCentralCallback.onBluetoothAdapterStateChanged(state);
+                        bluetoothCentralManagerCallback.onBluetoothAdapterStateChanged(state);
                     }
                 });
 
