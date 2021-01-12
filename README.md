@@ -195,6 +195,9 @@ If you simply want the highest possible MTU, you can call `peripheral.requestMtu
 
 Once the MTU has been set, you can always access it by calling `getCurrentMtu()`. If you want to know the maximum length of the byte arrays that you can write, you can call the method `getMaximumWriteValueLength()`. Note that the maximum value depends on the write type you want to use.
 
+## Long reads and writes
+The library also supports so called 'long reads/writes'. You don't need to do anything special for them. Just read a characteristic or descriptor as you normally do, and if the characteristic's value is longer than MTU - 1, then a series of reads will be done by the Android BLE stack. But you will simply receive the 'long' characteristic value in the same way as normal reads. Similarily, for long writes, you just write to a characteristic or descriptor and the Android BLE stack will take care of the rest. But keep in mind that long writes only work with `WriteType.WITH_RESPONSE` and the maximum length of your byte array should be 512 or less. Note that not all peripherals support long reads/writes so this is not guaranteed to work always.
+
 ## Status codes
 When connecting or disconnecting, the callback methods will contain a parameter `HciStatus status`. This enum class will have the value `SUCCESS` if the operation succeeded and otherwise it will provide a value indicating what went wrong.
 Similarly, when doing GATT operations, the callbacks methods contain a parameter `GattStatus status`. These two enum classes replace the `int status` parameter that Android normally passes.
