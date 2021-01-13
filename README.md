@@ -13,11 +13,11 @@ BLESSED is a very compact Bluetooth Low Energy (BLE) library for Android 5 and h
 * *Higher abstraction methods for convenience*, so that you don't have to do a lot of low-level management to get stuff done
 
 The library consists of 3 core classes and 2 callback abstract classes:
-1. `BluetoothCentral`, and it companion abstract class `BluetoothCentralCallback`
+1. `BluetoothCentralManager`, and it companion abstract class `BluetoothCentralManagerCallback`
 2. `BluetoothPeripheral`, and it's companion abstract class `BluetoothPeripheralCallback`
 3. `BluetoothBytesParser`
 
-The `BluetoothCentral` class is used to scan for devices and manage connections. The `BluetoothPeripheral` class is a replacement for the standard Android `BluetoothDevice` and `BluetoothGatt` classes. It wraps all GATT related peripheral functionality. The `BluetoothBytesParser` class is a utility class that makes parsing byte arrays easy.
+The `BluetoothCentralManager` class is used to scan for devices and manage connections. The `BluetoothPeripheral` class is a replacement for the standard Android `BluetoothDevice` and `BluetoothGatt` classes. It wraps all GATT related peripheral functionality. The `BluetoothBytesParser` class is a utility class that makes parsing byte arrays easy.
 
 The BLESSED library was inspired by CoreBluetooth on iOS and provides the same level of abstraction, but at the same time it also stays true to Android by keeping most methods the same and allowing you to work with the standard classes for Services, Characteristics and Descriptors. If you already have developed using CoreBluetooth you can very easily port your code to Android using this library.
 
@@ -25,7 +25,7 @@ BLESSED is written in Java but has been optimized for Kotlin as well. When using
 
 ## Scanning
 
-There are 5 different scanning methods:
+The `BluetoothCentralManager` class has several differrent scanning methods:
 
 ```java
 public void scanForPeripherals()
@@ -38,7 +38,7 @@ public void scanForPeripheralsUsingFilters(List<ScanFilter> filters)
 They all work in the same way and take an array of either service UUIDs, peripheral names or mac addresses. When a peripheral is found you will get a callback on `onDiscoveredPeripheral` with the `BluetoothPeripheral` object and a `ScanResult` object that contains the scan details. So in order to setup a scan for a device with the Bloodpressure service and connect to it, you do:
 
 ```java
-private final BluetoothCentralCallback bluetoothCentralCallback = new BluetoothCentralCallback() {
+private final BluetoothCentralManagerCallback bluetoothCentralManagerCallback = new BluetoothCentralManagerCallback() {
         @Override
         public void onDiscoveredPeripheral(BluetoothPeripheral peripheral, ScanResult scanResult) {
             central.stopScan();
