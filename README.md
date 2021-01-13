@@ -47,7 +47,7 @@ private final BluetoothCentralManagerCallback bluetoothCentralManagerCallback = 
 };
 
 // Create BluetoothCentral and receive callbacks on the main thread
-BluetoothCentral central = BluetoothCentral(getApplicationContext(), bluetoothCentralCallback, new Handler(Looper.getMainLooper()));
+BluetoothCentralManager central = BluetoothCentralManager(getApplicationContext(), bluetoothCentralCallback, new Handler(Looper.getMainLooper()));
 
 // Define blood pressure service UUID
 UUID BLOODPRESSURE_SERVICE_UUID = UUID.fromString("00001810-0000-1000-8000-00805f9b34fb");
