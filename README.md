@@ -13,11 +13,11 @@ BLESSED is a very compact Bluetooth Low Energy (BLE) library for Android 5 and h
 * *Higher abstraction methods for convenience*, so that you don't have to do a lot of low-level management to get stuff done
 
 The library consists of 3 core classes and 2 callback abstract classes:
-1. `BluetoothCentral`, and it companion abstract class `BluetoothCentralCallback`
+1. `BluetoothCentralManager`, and it companion abstract class `BluetoothCentralManagerCallback`
 2. `BluetoothPeripheral`, and it's companion abstract class `BluetoothPeripheralCallback`
 3. `BluetoothBytesParser`
 
-The `BluetoothCentral` class is used to scan for devices and manage connections. The `BluetoothPeripheral` class is a replacement for the standard Android `BluetoothDevice` and `BluetoothGatt` classes. It wraps all GATT related peripheral functionality. The `BluetoothBytesParser` class is a utility class that makes parsing byte arrays easy.
+The `BluetoothCentralManager` class is used to scan for devices and manage connections. The `BluetoothPeripheral` class is a replacement for the standard Android `BluetoothDevice` and `BluetoothGatt` classes. It wraps all GATT related peripheral functionality. The `BluetoothBytesParser` class is a utility class that makes parsing byte arrays easy.
 
 The BLESSED library was inspired by CoreBluetooth on iOS and provides the same level of abstraction, but at the same time it also stays true to Android by keeping most methods the same and allowing you to work with the standard classes for Services, Characteristics and Descriptors. If you already have developed using CoreBluetooth you can very easily port your code to Android using this library.
 
@@ -25,7 +25,7 @@ BLESSED is written in Java but has been optimized for Kotlin as well. When using
 
 ## Scanning
 
-There are 5 different scanning methods:
+The `BluetoothCentralManager` class has several differrent scanning methods:
 
 ```java
 public void scanForPeripherals()
@@ -38,7 +38,7 @@ public void scanForPeripheralsUsingFilters(List<ScanFilter> filters)
 They all work in the same way and take an array of either service UUIDs, peripheral names or mac addresses. When a peripheral is found you will get a callback on `onDiscoveredPeripheral` with the `BluetoothPeripheral` object and a `ScanResult` object that contains the scan details. So in order to setup a scan for a device with the Bloodpressure service and connect to it, you do:
 
 ```java
-private final BluetoothCentralCallback bluetoothCentralCallback = new BluetoothCentralCallback() {
+private final BluetoothCentralManagerCallback bluetoothCentralManagerCallback = new BluetoothCentralManagerCallback() {
         @Override
         public void onDiscoveredPeripheral(BluetoothPeripheral peripheral, ScanResult scanResult) {
             central.stopScan();
@@ -47,7 +47,7 @@ private final BluetoothCentralCallback bluetoothCentralCallback = new BluetoothC
 };
 
 // Create BluetoothCentral and receive callbacks on the main thread
-BluetoothCentral central = BluetoothCentral(getApplicationContext(), bluetoothCentralCallback, new Handler(Looper.getMainLooper()));
+BluetoothCentralManager central = BluetoothCentralManager(getApplicationContext(), bluetoothCentralCallback, new Handler(Looper.getMainLooper()));
 
 // Define blood pressure service UUID
 UUID BLOODPRESSURE_SERVICE_UUID = UUID.fromString("00001810-0000-1000-8000-00805f9b34fb");
@@ -195,8 +195,14 @@ If you simply want the highest possible MTU, you can call `peripheral.requestMtu
 
 Once the MTU has been set, you can always access it by calling `getCurrentMtu()`. If you want to know the maximum length of the byte arrays that you can write, you can call the method `getMaximumWriteValueLength()`. Note that the maximum value depends on the write type you want to use.
 
+## Long reads and writes
+The library also supports so called 'long reads/writes'. You don't need to do anything special for them. Just read a characteristic or descriptor as you normally do, and if the characteristic's value is longer than MTU - 1, then a series of reads will be done by the Android BLE stack. But you will simply receive the 'long' characteristic value in the same way as normal reads. 
+
+Similarily, for long writes, you just write to a characteristic or descriptor and the Android BLE stack will take care of the rest. But keep in mind that long writes only work with `WriteType.WITH_RESPONSE` and the maximum length of your byte array should be 512 or less. Note that not all peripherals support long reads/writes so this is not guaranteed to work always.
+
 ## Status codes
 When connecting or disconnecting, the callback methods will contain a parameter `HciStatus status`. This enum class will have the value `SUCCESS` if the operation succeeded and otherwise it will provide a value indicating what went wrong.
+
 Similarly, when doing GATT operations, the callbacks methods contain a parameter `GattStatus status`. These two enum classes replace the `int status` parameter that Android normally passes.
 
 ## Example application
