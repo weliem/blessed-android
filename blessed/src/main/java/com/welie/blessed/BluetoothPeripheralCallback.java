@@ -138,4 +138,13 @@ public abstract class BluetoothPeripheralCallback {
      * @param status GATT status code
      */
     public void onMtuChanged(@NotNull final BluetoothPeripheral peripheral, int mtu, @NotNull GattStatus status) {}
+
+    /**
+     * Callback invoke as result of readPhy or setPhy operation
+     *
+     * @param txPhy the transmitter PHY in use.
+     * @param rxPhy the receiver PHY in use
+     * @param status GATT status code
+     */
+    public void onPhyUpdate(PhyType txPhy, PhyType rxPhy, GattStatus status) {}
 }

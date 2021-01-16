@@ -471,6 +471,44 @@ public class BluetoothPeripheral {
             });
             completedCommand();
         }
+
+        @Override
+        public void onPhyRead(BluetoothGatt gatt, final int txPhy, final int rxPhy, final int status) {
+            final GattStatus gattStatus = GattStatus.fromValue(status);
+            if (gattStatus != GattStatus.SUCCESS) {
+                Timber.e("read Phy failed, status '%s'", GattStatus.fromValue(status));
+            }
+
+            Timber.i("updated Phy: tx = %s, rx = %s", PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy));
+
+            callbackHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (peripheralCallback != null) {
+                        peripheralCallback.onPhyUpdate(PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy), gattStatus);
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void onPhyUpdate(BluetoothGatt gatt, final int txPhy, final int rxPhy, final int status) {
+            final GattStatus gattStatus = GattStatus.fromValue(status);
+            if (gattStatus != GattStatus.SUCCESS) {
+                Timber.e("update Phy failed, status '%s'", GattStatus.fromValue(status));
+            }
+
+            Timber.i("updated Phy: tx = %s, rx = %s", PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy));
+
+            callbackHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (peripheralCallback != null) {
+                        peripheralCallback.onPhyUpdate(PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy), gattStatus);
+                    }
+                }
+            });
+        }
     };
 
     private void successfullyConnected() {
@@ -1216,16 +1254,6 @@ public class BluetoothPeripheral {
             return false;
         }
 
-        if (willCauseLongWrite(value, writeType)) {
-            // Android will turn this into a Long Write because it is larger than the MTU - 3.
-            // When doing a Long Write the byte array will be automatically split in chunks of size MTU - 3.
-            // However, the peripheral's firmware must also support it, so it is not guaranteed to work.
-            // Long writes are also very inefficient because of the confirmation of each write operation.
-            // So it is better to increase MTU if possible. Hence a warning if this write becomes a long write...
-            // See https://stackoverflow.com/questions/48216517/rxandroidble-write-only-sends-the-first-20b
-            Timber.w("value byte array is longer than allowed by MTU, write will fail if peripheral does not support long writes");
-        }
-
         // Copy the value to avoid race conditions
         final byte[] bytesToWrite = copyOf(value);
 
@@ -1236,6 +1264,16 @@ public class BluetoothPeripheral {
                     currentWriteBytes = bytesToWrite;
                     characteristic.setWriteType(writeType.getWriteType());
                     characteristic.setValue(bytesToWrite);
+
+                    if (willCauseLongWrite(bytesToWrite, writeType)) {
+                        // Android will turn this into a Long Write because it is larger than the MTU - 3.
+                        // When doing a Long Write the byte array will be automatically split in chunks of size MTU - 3.
+                        // However, the peripheral's firmware must also support it, so it is not guaranteed to work.
+                        // Long writes are also very inefficient because of the confirmation of each write operation.
+                        // So it is better to increase MTU if possible. Hence a warning if this write becomes a long write...
+                        // See https://stackoverflow.com/questions/48216517/rxandroidble-write-only-sends-the-first-20b
+                        Timber.w("value byte array is longer than allowed by MTU, write will fail if peripheral does not support long writes");
+                    }
                     if (!bluetoothGatt.writeCharacteristic(characteristic)) {
                         Timber.e("writeCharacteristic failed for characteristic: %s", characteristic.getUuid());
                         completedCommand();
@@ -1583,6 +1621,87 @@ public class BluetoothPeripheral {
             nextCommand();
         } else {
             Timber.e("could not enqueue request connection priority command");
+        }
+        return result;
+    }
+
+    /**
+     * Set the preferred connection PHY for this app. Please note that this is just a
+     * recommendation, whether the PHY change will happen depends on other applications preferences,
+     * local and remote controller capabilities. Controller can override these settings.
+     * <p>
+     * {@link BluetoothPeripheralCallback#onPhyUpdate} will be triggered as a result of this call, even
+     * if no PHY change happens. It is also triggered when remote device updates the PHY.
+     *
+     * @param txPhy the desired TX PHY
+     * @param rxPhy the desired RX PHY
+     * @param phyOptions the desired optional sub-type for PHY_LE_CODED
+     * @return true if request was enqueued, false if not
+     */
+    public boolean setPreferredPhy(final PhyType txPhy, final PhyType rxPhy, final PhyOptions phyOptions) {
+        if (!isConnected()) {
+            Timber.e(PERIPHERAL_NOT_CONNECTED);
+            return false;
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            Timber.e("setPreferredPhy requires Android 8.0 or newer");
+            return false;
+        }
+
+        boolean result = commandQueue.add(new Runnable() {
+            @Override
+            public void run() {
+                if (isConnected()) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        bluetoothGatt.setPreferredPhy(txPhy.getMask(), rxPhy.getMask(), phyOptions.getValue());
+                        Timber.i("setting preferred Phy: tx = %s, rx = %s, options = %s", txPhy, rxPhy, phyOptions);
+                    }
+                }
+
+                // complete command immediately as there is no callback for it
+                completedCommand();
+            }
+        });
+
+        if (result) {
+            nextCommand();
+        } else {
+            Timber.e("could not enqueue setPreferredPhy command");
+        }
+        return result;
+    }
+
+    public boolean readPhy() {
+        if (!isConnected()) {
+            Timber.e(PERIPHERAL_NOT_CONNECTED);
+            return false;
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            Timber.e("setPreferredPhy requires Android 8.0 or newer");
+            return false;
+        }
+
+        boolean result = commandQueue.add(new Runnable() {
+            @Override
+            public void run() {
+                if (isConnected()) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        bluetoothGatt.readPhy();
+                        Timber.d("reading Phy");
+                    }
+                }
+
+                // complete command immediately as there is no callback for it
+                completedCommand();
+            }
+        });
+
+        if (result) {
+            nextCommand();
+        } else {
+            Timber.e("could not enqueue readyPhy command");
         }
         return result;
     }
