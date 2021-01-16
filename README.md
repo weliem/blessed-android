@@ -205,6 +205,41 @@ When connecting or disconnecting, the callback methods will contain a parameter 
 
 Similarly, when doing GATT operations, the callbacks methods contain a parameter `GattStatus status`. These two enum classes replace the `int status` parameter that Android normally passes.
 
+## Bluetooth 5 support
+As of Android 8, Bluetooth 5 is natively supported. One of the things that Bluetooth 5 brings, is new physical layer options that either give more speed or longer range.
+The options you can choose are:
+* PHY_LE_1M: 1M PHY, compatible with Bluetooth 4.0, 4.1, 4.2 and 5.0
+* PHY_LE_2M: 2M PHY for higher speeds
+* PHY_LE_CODED: Bluetooth 5, Coded PHY for long range connections
+
+You can set a preferred Phy by calling:
+```java
+public boolean setPreferredPhy(final PhyType txPhy, final PhyType rxPhy, final PhyOptions phyOptions)
+```
+
+By calling `setPreferredPhy()` you indicate what you would like to have but it is not guaranteed that you get what you ask for. That depends on what the peripheral will actually support and give you.
+If you are requesting `PHY_LE_CODE` you can also provide PhyOptions which has 3 possible values:
+* PHY_OPTION_NO_PREFERRED, for no preference (use this when asking for PHY_LE_1M or PHY_LE_2M)
+* PHY_OPTION_S2, for 2x long range
+* PHY_OPTION_S8, for 4x long range
+    
+The result of this negotiation will be received on:
+
+```java
+public void onPhyUpdate(PhyType txPhy, PhyType rxPhy, GattStatus status)
+```
+
+As you can see the Phy for sending and receiving can be different but most of the time you will see the same Phy for both.
+Note that `onPhyUpdate` will also be called by the Android stack when a connection is established or when the Phy changes for other reasons.
+If you don't call `setPreferredPhy()`, Android seems to pick `PHY_LE_2M` if the peripheral supports Bluetooth 5. So in practice you only need to call `setPreferredPhy` if you want to use `PHY_LE_CODED`.
+
+You can request the current values at any point by calling:
+```java
+public boolean readPhy()
+```
+
+The result will be again delivered on `onPhyUpdate()`
+
 ## Example application
 
 An example application is provided in the repo. It shows how to connect to Blood Pressure meters, Heart Rate monitors, Weight scales, Glucose Meters, Pulse Oximeters and Thermometers, read the data and show it on screen. It only works with peripherals that use the Bluetooth SIG services. Working peripherals include:
