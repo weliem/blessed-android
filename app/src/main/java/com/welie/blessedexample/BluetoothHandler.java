@@ -113,7 +113,7 @@ class BluetoothHandler {
             // Request a higher MTU, iOS always asks for 185
             peripheral.requestMtu(185);
 
-            // Try to get a PHY_LE_2M connection
+            // Try to get a PHY_LE_2M connection (requires Bluetooth 5)
             peripheral.setPreferredPhy(PhyType.PHY_LE_2M, PhyType.PHY_LE_2M, PhyOptions.PHY_OPTION_NO_PREFERRED);
 
             // Request a new connection priority
