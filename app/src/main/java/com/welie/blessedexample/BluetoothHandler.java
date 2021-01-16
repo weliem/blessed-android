@@ -14,6 +14,8 @@ import com.welie.blessed.BluetoothPeripheral;
 import com.welie.blessed.BluetoothPeripheralCallback;
 import com.welie.blessed.GattStatus;
 import com.welie.blessed.HciStatus;
+import com.welie.blessed.PhyOptions;
+import com.welie.blessed.PhyType;
 import com.welie.blessed.WriteType;
 
 import org.jetbrains.annotations.NotNull;
@@ -108,10 +110,11 @@ class BluetoothHandler {
     private final BluetoothPeripheralCallback peripheralCallback = new BluetoothPeripheralCallback() {
         @Override
         public void onServicesDiscovered(@NotNull BluetoothPeripheral peripheral) {
-            Timber.i("discovered services");
-
             // Request a higher MTU, iOS always asks for 185
             peripheral.requestMtu(185);
+
+            // Try to get a PHY_LE_2M connection
+            peripheral.setPreferredPhy(PhyType.PHY_LE_2M, PhyType.PHY_LE_2M, PhyOptions.PHY_OPTION_NO_PREFERRED);
 
             // Request a new connection priority
             peripheral.requestConnectionPriority(CONNECTION_PRIORITY_HIGH);
