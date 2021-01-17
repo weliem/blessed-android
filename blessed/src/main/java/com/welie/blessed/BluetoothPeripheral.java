@@ -1110,6 +1110,10 @@ public class BluetoothPeripheral {
         return bluetoothGatt != null && state == BluetoothProfile.STATE_CONNECTED;
     }
 
+    private boolean notConnected() {
+        return !isConnected();
+    }
+
     /**
      * Read the value of a characteristic.
      *
@@ -1123,7 +1127,7 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
         Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
 
-        if (!isConnected()) {
+        if (notConnected()) {
             Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
@@ -1134,6 +1138,8 @@ public class BluetoothPeripheral {
         }
         return false;
     }
+
+
 
     /**
      * Read the value of a characteristic.
@@ -1148,7 +1154,7 @@ public class BluetoothPeripheral {
     public boolean readCharacteristic(@NotNull final BluetoothGattCharacteristic characteristic) {
         Objects.requireNonNull(characteristic, NO_VALID_CHARACTERISTIC_PROVIDED);
 
-        if (!isConnected()) {
+        if (notConnected()) {
             Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
@@ -1205,7 +1211,7 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(value, NO_VALID_VALUE_PROVIDED);
         Objects.requireNonNull(writeType, NO_VALID_WRITE_TYPE_PROVIDED);
 
-        if (!isConnected()) {
+        if (notConnected()) {
             Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
@@ -1236,7 +1242,7 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(value, NO_VALID_VALUE_PROVIDED);
         Objects.requireNonNull(writeType, NO_VALID_WRITE_TYPE_PROVIDED);
 
-        if (!isConnected()) {
+        if (notConnected()) {
             Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
@@ -1263,7 +1269,6 @@ public class BluetoothPeripheral {
                 if (isConnected()) {
                     currentWriteBytes = bytesToWrite;
                     characteristic.setWriteType(writeType.getWriteType());
-                    characteristic.setValue(bytesToWrite);
 
                     if (willCauseLongWrite(bytesToWrite, writeType)) {
                         // Android will turn this into a Long Write because it is larger than the MTU - 3.
@@ -1274,6 +1279,7 @@ public class BluetoothPeripheral {
                         // See https://stackoverflow.com/questions/48216517/rxandroidble-write-only-sends-the-first-20b
                         Timber.w("value byte array is longer than allowed by MTU, write will fail if peripheral does not support long writes");
                     }
+                    characteristic.setValue(bytesToWrite);
                     if (!bluetoothGatt.writeCharacteristic(characteristic)) {
                         Timber.e("writeCharacteristic failed for characteristic: %s", characteristic.getUuid());
                         completedCommand();
@@ -1312,7 +1318,7 @@ public class BluetoothPeripheral {
     public boolean readDescriptor(@NotNull final BluetoothGattDescriptor descriptor) {
         Objects.requireNonNull(descriptor, NO_VALID_DESCRIPTOR_PROVIDED);
 
-        if (!isConnected()) {
+        if (notConnected()) {
             Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
@@ -1354,7 +1360,7 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(descriptor, NO_VALID_DESCRIPTOR_PROVIDED);
         Objects.requireNonNull(value, NO_VALID_VALUE_PROVIDED);
 
-        if (!isConnected()) {
+        if (notConnected()) {
             Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
@@ -1410,7 +1416,7 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
         Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
 
-        if (!isConnected()) {
+        if (notConnected()) {
             Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
@@ -1434,7 +1440,7 @@ public class BluetoothPeripheral {
     public boolean setNotify(@NotNull final BluetoothGattCharacteristic characteristic, final boolean enable) {
         Objects.requireNonNull(characteristic, NO_VALID_CHARACTERISTIC_PROVIDED);
 
-        if (!isConnected()) {
+        if (notConnected()) {
             Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
@@ -1462,7 +1468,7 @@ public class BluetoothPeripheral {
         boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
-                if (!isConnected()) {
+                if (notConnected()) {
                     completedCommand();
                     return;
                 }
@@ -1510,7 +1516,7 @@ public class BluetoothPeripheral {
      * @return true if the operation was enqueued, false otherwise
      */
     public boolean readRemoteRssi() {
-        if (!isConnected()) {
+        if (notConnected()) {
             Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
@@ -1524,7 +1530,6 @@ public class BluetoothPeripheral {
                         completedCommand();
                     }
                 } else {
-                    Timber.e("cannot get rssi, peripheral not connected");
                     completedCommand();
                 }
             }
@@ -1555,7 +1560,7 @@ public class BluetoothPeripheral {
             throw new IllegalArgumentException("mtu must be between 23 and 517");
         }
 
-        if (!isConnected()) {
+        if (notConnected()) {
             Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
@@ -1567,9 +1572,10 @@ public class BluetoothPeripheral {
                     if (!bluetoothGatt.requestMtu(mtu)) {
                         Timber.e("requestMtu failed");
                         completedCommand();
+                    } else {
+                        Timber.i("requesting MTU of %d", mtu);
                     }
                 } else {
-                    Timber.e("cannot request MTU, peripheral not connected");
                     completedCommand();
                 }
             }
@@ -1597,7 +1603,7 @@ public class BluetoothPeripheral {
             throw new IllegalArgumentException("connection priority not valid");
         }
 
-        if (!isConnected()) {
+        if (notConnected()) {
             Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
@@ -1611,9 +1617,11 @@ public class BluetoothPeripheral {
                     } else {
                         Timber.d("requesting connection priority %d", priority);
                     }
-                    // complete command immediately as there is no callback for it
-                    completedCommand();
                 }
+
+                // complete command immediately as this command is not blocking
+                completedCommand();
+
             }
         });
 
@@ -1639,7 +1647,7 @@ public class BluetoothPeripheral {
      * @return true if request was enqueued, false if not
      */
     public boolean setPreferredPhy(final PhyType txPhy, final PhyType rxPhy, final PhyOptions phyOptions) {
-        if (!isConnected()) {
+        if (notConnected()) {
             Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
@@ -1659,7 +1667,7 @@ public class BluetoothPeripheral {
                     }
                 }
 
-                // complete command immediately as there is no callback for it
+                // complete command immediately as this command is not blocking
                 completedCommand();
             }
         });
@@ -1672,8 +1680,12 @@ public class BluetoothPeripheral {
         return result;
     }
 
+    /**
+     * Read the current transmitter PHY and receiver PHY of the connection. The values are returned
+     * in {@link BluetoothPeripheralCallback#onPhyUpdate}
+     */
     public boolean readPhy() {
-        if (!isConnected()) {
+        if (notConnected()) {
             Timber.e(PERIPHERAL_NOT_CONNECTED);
             return false;
         }
@@ -1693,7 +1705,7 @@ public class BluetoothPeripheral {
                     }
                 }
 
-                // complete command immediately as there is no callback for it
+                // complete command immediately as this command is not blocking
                 completedCommand();
             }
         });
