@@ -178,7 +178,7 @@ It is also possible to remove a bond by calling `removeBond`. Note that this met
 Lastly, it is also possible to automatically issue a PIN code when pairing. Use the method `setPinCodeForPeripheral` to register a 6 digit PIN code. Once bonding starts, BLESSED will automatically issue the PIN code and the UI dialog to enter the PIN code will not appear anymore.
 
 ## Requesting a higher MTU to increase throughput
-By default the MTU is 23 which allows you to send and receive byte arrays of MTU - 3 = 20 bytes at a time. The 3 bytes overhead are used by the ATT packets themselves. If your peripheral supports a higher MTU, you can request that by calling:
+The default MTU is 23 bytes, which allows you to send and receive byte arrays of MTU - 3 = 20 bytes at a time. The 3 bytes overhead are used by the ATT packet. If your peripheral supports a higher MTU, you can request that by calling:
 
 ```java
 public void requestMtu(int mtu)
@@ -214,7 +214,7 @@ The options you can choose are:
 
 You can set a preferred Phy by calling:
 ```java
-public boolean setPreferredPhy(final PhyType txPhy, final PhyType rxPhy, final PhyOptions phyOptions)
+public boolean setPreferredPhy(PhyType txPhy, PhyType rxPhy, PhyOptions phyOptions)
 ```
 
 By calling `setPreferredPhy()` you indicate what you would like to have but it is not guaranteed that you get what you ask for. That depends on what the peripheral will actually support and give you.
