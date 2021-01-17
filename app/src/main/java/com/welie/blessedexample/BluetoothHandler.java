@@ -114,7 +114,7 @@ class BluetoothHandler {
             peripheral.requestMtu(185);
 
             // Try to get a PHY_LE_2M connection (requires Bluetooth 5)
-            peripheral.setPreferredPhy(PhyType.PHY_LE_2M, PhyType.PHY_LE_2M, PhyOptions.PHY_OPTION_NO_PREFERRED);
+            peripheral.setPreferredPhy(PhyType.LE_2M, PhyType.LE_2M, PhyOptions.NO_PREFERRED);
 
             // Request a new connection priority
             peripheral.requestConnectionPriority(CONNECTION_PRIORITY_HIGH);
