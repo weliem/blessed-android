@@ -178,7 +178,7 @@ It is also possible to remove a bond by calling `removeBond`. Note that this met
 Lastly, it is also possible to automatically issue a PIN code when pairing. Use the method `setPinCodeForPeripheral` to register a 6 digit PIN code. Once bonding starts, BLESSED will automatically issue the PIN code and the UI dialog to enter the PIN code will not appear anymore.
 
 ## Requesting a higher MTU to increase throughput
-By default the MTU is 23 which allows you to send and receive byte arrays of 20 bytes at a time. If your peripheral supports higher a higher MTU, you can request that by calling:
+By default the MTU is 23 which allows you to send and receive byte arrays of MTU - 3 = 20 bytes at a time. The 3 bytes overhead are used by the ATT packets themselves. If your peripheral supports a higher MTU, you can request that by calling:
 
 ```java
 public void requestMtu(int mtu)
@@ -198,7 +198,7 @@ Once the MTU has been set, you can always access it by calling `getCurrentMtu()`
 ## Long reads and writes
 The library also supports so called 'long reads/writes'. You don't need to do anything special for them. Just read a characteristic or descriptor as you normally do, and if the characteristic's value is longer than MTU - 1, then a series of reads will be done by the Android BLE stack. But you will simply receive the 'long' characteristic value in the same way as normal reads. 
 
-Similarily, for long writes, you just write to a characteristic or descriptor and the Android BLE stack will take care of the rest. But keep in mind that long writes only work with `WriteType.WITH_RESPONSE` and the maximum length of your byte array should be 512 or less. Note that not all peripherals support long reads/writes so this is not guaranteed to work always.
+Similarly, for long writes, you just write to a characteristic or descriptor and the Android BLE stack will take care of the rest. But keep in mind that long writes only work with `WriteType.WITH_RESPONSE` and the maximum length of your byte array should be 512 or less. Note that not all peripherals support long reads/writes so this is not guaranteed to work always.
 
 ## Status codes
 When connecting or disconnecting, the callback methods will contain a parameter `HciStatus status`. This enum class will have the value `SUCCESS` if the operation succeeded and otherwise it will provide a value indicating what went wrong.
@@ -206,11 +206,11 @@ When connecting or disconnecting, the callback methods will contain a parameter 
 Similarly, when doing GATT operations, the callbacks methods contain a parameter `GattStatus status`. These two enum classes replace the `int status` parameter that Android normally passes.
 
 ## Bluetooth 5 support
-As of Android 8, Bluetooth 5 is natively supported. One of the things that Bluetooth 5 brings, is new physical layer options that either give more speed or longer range.
+As of Android 8, Bluetooth 5 is natively supported. One of the things that Bluetooth 5 brings, is new physical layer options, called **Phy** that either give more speed or longer range.
 The options you can choose are:
-* PHY_LE_1M: 1M PHY, compatible with Bluetooth 4.0, 4.1, 4.2 and 5.0
-* PHY_LE_2M: 2M PHY for higher speeds
-* PHY_LE_CODED: Bluetooth 5, Coded PHY for long range connections
+* **LE_1M**,  1 mbit PHY, compatible with Bluetooth 4.0, 4.1, 4.2 and 5.0
+* **LE_2M**, 2 mbit PHY for higher speeds, requires Bluetooth 5.0
+* **LE_CODED**, Coded PHY for long range connections, requires Bluetooth 5.0
 
 You can set a preferred Phy by calling:
 ```java
@@ -218,10 +218,10 @@ public boolean setPreferredPhy(final PhyType txPhy, final PhyType rxPhy, final P
 ```
 
 By calling `setPreferredPhy()` you indicate what you would like to have but it is not guaranteed that you get what you ask for. That depends on what the peripheral will actually support and give you.
-If you are requesting `PHY_LE_CODE` you can also provide PhyOptions which has 3 possible values:
-* PHY_OPTION_NO_PREFERRED, for no preference (use this when asking for PHY_LE_1M or PHY_LE_2M)
-* PHY_OPTION_S2, for 2x long range
-* PHY_OPTION_S8, for 4x long range
+If you are requesting `LE_CODED` you can also provide PhyOptions which has 3 possible values:
+* **NO_PREFERRED**, for no preference (use this when asking for LE_1M or LE_2M)
+* **S2**, for 2x long range
+* **S8**, for 4x long range
     
 The result of this negotiation will be received on:
 
