@@ -1331,6 +1331,7 @@ public class BluetoothPeripheral {
                         Timber.e("readDescriptor failed for characteristic: %s", descriptor.getUuid());
                         completedCommand();
                     } else {
+                        Timber.d("reading descriptor <%s>", descriptor.getUuid());
                         nrTries++;
                     }
                 } else {
