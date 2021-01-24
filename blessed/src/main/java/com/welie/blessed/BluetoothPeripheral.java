@@ -459,9 +459,9 @@ public class BluetoothPeripheral {
             final GattStatus gattStatus = GattStatus.fromValue(status);
             if (gattStatus != GattStatus.SUCCESS) {
                 Timber.e("read Phy failed, status '%s'", GattStatus.fromValue(status));
+            } else {
+                Timber.i("updated Phy: tx = %s, rx = %s", PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy));
             }
-
-            Timber.i("updated Phy: tx = %s, rx = %s", PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy));
 
             callbackHandler.post(new Runnable() {
                 @Override
@@ -469,6 +469,7 @@ public class BluetoothPeripheral {
                     peripheralCallback.onPhyUpdate(PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy), gattStatus);
                 }
             });
+            completedCommand();
         }
 
         @Override
@@ -476,9 +477,9 @@ public class BluetoothPeripheral {
             final GattStatus gattStatus = GattStatus.fromValue(status);
             if (gattStatus != GattStatus.SUCCESS) {
                 Timber.e("update Phy failed, status '%s'", GattStatus.fromValue(status));
+            } else {
+                Timber.i("updated Phy: tx = %s, rx = %s", PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy));
             }
-
-            Timber.i("updated Phy: tx = %s, rx = %s", PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy));
 
             callbackHandler.post(new Runnable() {
                 @Override
@@ -486,6 +487,7 @@ public class BluetoothPeripheral {
                     peripheralCallback.onPhyUpdate(PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy), gattStatus);
                 }
             });
+            completedCommand();
         }
     };
 
@@ -1637,6 +1639,7 @@ public class BluetoothPeripheral {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         Timber.i("setting preferred Phy: tx = %s, rx = %s, options = %s", txPhy, rxPhy, phyOptions);
                         bluetoothGatt.setPreferredPhy(txPhy.getMask(), rxPhy.getMask(), phyOptions.getValue());
+                        return;
                     }
                 }
 
@@ -1675,6 +1678,7 @@ public class BluetoothPeripheral {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         bluetoothGatt.readPhy();
                         Timber.d("reading Phy");
+                        return;
                     }
                 }
 
