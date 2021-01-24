@@ -147,4 +147,6 @@ public abstract class BluetoothPeripheralCallback {
      * @param status GATT status code
      */
     public void onPhyUpdate(PhyType txPhy, PhyType rxPhy, GattStatus status) {}
+
+    static class NULL extends BluetoothPeripheralCallback { }
 }

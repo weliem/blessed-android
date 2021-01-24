@@ -856,6 +856,11 @@ public class BluetoothPeripheralTest {
         verify(gatt).disconnect();
     }
 
+    @Test
+    public void testPeripheralCallbackEmptyNoCrash() {
+        BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"),PROPERTY_NOTIFY,0);
+        peripheral.peripheralCallback.onCharacteristicUpdate(peripheral, new byte[]{0x00}, characteristic, GattStatus.ATTRIBUTE_NOT_FOUND);
+    }
 
     private BluetoothGattCallback connectAndGetCallback() {
         peripheral.connect();

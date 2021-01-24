@@ -204,8 +204,8 @@ public class BluetoothPeripheral {
     @NotNull
     private final InternalCallback listener;
 
-    @Nullable
-    private BluetoothPeripheralCallback peripheralCallback;
+    @NotNull
+    protected BluetoothPeripheralCallback peripheralCallback = new BluetoothPeripheralCallback.NULL();
 
     @NotNull
     private final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
@@ -293,9 +293,7 @@ public class BluetoothPeripheral {
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    if (peripheralCallback != null) {
-                        peripheralCallback.onServicesDiscovered(BluetoothPeripheral.this);
-                    }
+                    peripheralCallback.onServicesDiscovered(BluetoothPeripheral.this);
                 }
             });
         }
@@ -327,18 +325,14 @@ public class BluetoothPeripheral {
                 callbackHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        if (peripheralCallback != null) {
-                            peripheralCallback.onNotificationStateUpdate(BluetoothPeripheral.this, parentCharacteristic, gattStatus);
-                        }
+                        peripheralCallback.onNotificationStateUpdate(BluetoothPeripheral.this, parentCharacteristic, gattStatus);
                     }
                 });
             } else {
                 callbackHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        if (peripheralCallback != null) {
-                            peripheralCallback.onDescriptorWrite(BluetoothPeripheral.this, currentWriteBytes, descriptor, gattStatus);
-                        }
+                        peripheralCallback.onDescriptorWrite(BluetoothPeripheral.this, currentWriteBytes, descriptor, gattStatus);
                     }
                 });
             }
@@ -357,9 +351,7 @@ public class BluetoothPeripheral {
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    if (peripheralCallback != null) {
-                        peripheralCallback.onDescriptorRead(BluetoothPeripheral.this, value, descriptor, gattStatus);
-                    }
+                    peripheralCallback.onDescriptorRead(BluetoothPeripheral.this, value, descriptor, gattStatus);
                 }
             });
             completedCommand();
@@ -371,9 +363,7 @@ public class BluetoothPeripheral {
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    if (peripheralCallback != null) {
-                        peripheralCallback.onCharacteristicUpdate(BluetoothPeripheral.this, value, characteristic, GattStatus.SUCCESS);
-                    }
+                    peripheralCallback.onCharacteristicUpdate(BluetoothPeripheral.this, value, characteristic, GattStatus.SUCCESS);
                 }
             });
         }
@@ -390,9 +380,7 @@ public class BluetoothPeripheral {
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    if (peripheralCallback != null) {
-                        peripheralCallback.onCharacteristicUpdate(BluetoothPeripheral.this, value, characteristic, gattStatus);
-                    }
+                    peripheralCallback.onCharacteristicUpdate(BluetoothPeripheral.this, value, characteristic, gattStatus);
                 }
             });
             completedCommand();
@@ -411,9 +399,7 @@ public class BluetoothPeripheral {
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    if (peripheralCallback != null) {
-                        peripheralCallback.onCharacteristicWrite(BluetoothPeripheral.this, value, characteristic, gattStatus);
-                    }
+                    peripheralCallback.onCharacteristicWrite(BluetoothPeripheral.this, value, characteristic, gattStatus);
                 }
             });
             completedCommand();
@@ -445,9 +431,7 @@ public class BluetoothPeripheral {
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    if (peripheralCallback != null) {
-                        peripheralCallback.onReadRemoteRssi(BluetoothPeripheral.this, rssi, gattStatus);
-                    }
+                    peripheralCallback.onReadRemoteRssi(BluetoothPeripheral.this, rssi, gattStatus);
                 }
             });
             completedCommand();
@@ -464,9 +448,7 @@ public class BluetoothPeripheral {
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    if (peripheralCallback != null) {
-                        peripheralCallback.onMtuChanged(BluetoothPeripheral.this, mtu, gattStatus);
-                    }
+                    peripheralCallback.onMtuChanged(BluetoothPeripheral.this, mtu, gattStatus);
                 }
             });
             completedCommand();
@@ -484,9 +466,7 @@ public class BluetoothPeripheral {
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    if (peripheralCallback != null) {
-                        peripheralCallback.onPhyUpdate(PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy), gattStatus);
-                    }
+                    peripheralCallback.onPhyUpdate(PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy), gattStatus);
                 }
             });
         }
@@ -503,9 +483,7 @@ public class BluetoothPeripheral {
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    if (peripheralCallback != null) {
-                        peripheralCallback.onPhyUpdate(PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy), gattStatus);
-                    }
+                    peripheralCallback.onPhyUpdate(PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy), gattStatus);
                 }
             });
         }
@@ -635,9 +613,7 @@ public class BluetoothPeripheral {
                 callbackHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        if (peripheralCallback != null) {
-                            peripheralCallback.onBondingStarted(BluetoothPeripheral.this);
-                        }
+                        peripheralCallback.onBondingStarted(BluetoothPeripheral.this);
                     }
                 });
                 break;
@@ -646,9 +622,7 @@ public class BluetoothPeripheral {
                 callbackHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        if (peripheralCallback != null) {
-                            peripheralCallback.onBondingSucceeded(BluetoothPeripheral.this);
-                        }
+                        peripheralCallback.onBondingSucceeded(BluetoothPeripheral.this);
                     }
                 });
 
@@ -683,9 +657,7 @@ public class BluetoothPeripheral {
                     callbackHandler.post(new Runnable() {
                         @Override
                         public void run() {
-                            if (peripheralCallback != null) {
-                                peripheralCallback.onBondingFailed(BluetoothPeripheral.this);
-                            }
+                            peripheralCallback.onBondingFailed(BluetoothPeripheral.this);
                         }
                     });
                 } else {
@@ -698,9 +670,7 @@ public class BluetoothPeripheral {
                     callbackHandler.post(new Runnable() {
                         @Override
                         public void run() {
-                            if (peripheralCallback != null) {
-                                peripheralCallback.onBondLost(BluetoothPeripheral.this);
-                            }
+                            peripheralCallback.onBondLost(BluetoothPeripheral.this);
                         }
                     });
                 }
@@ -743,7 +713,9 @@ public class BluetoothPeripheral {
         this.context = Objects.requireNonNull(context, "no valid context provided");
         this.device = Objects.requireNonNull(device, "no valid device provided");
         this.listener = Objects.requireNonNull(listener, "no valid listener provided");
-        this.peripheralCallback = peripheralCallback;
+        if (peripheralCallback != null) {
+            this.peripheralCallback = peripheralCallback;
+        }
         this.callbackHandler = (callbackHandler != null) ? callbackHandler : new Handler(Looper.getMainLooper());
     }
 
@@ -1663,8 +1635,8 @@ public class BluetoothPeripheral {
             public void run() {
                 if (isConnected()) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        bluetoothGatt.setPreferredPhy(txPhy.getMask(), rxPhy.getMask(), phyOptions.getValue());
                         Timber.i("setting preferred Phy: tx = %s, rx = %s, options = %s", txPhy, rxPhy, phyOptions);
+                        bluetoothGatt.setPreferredPhy(txPhy.getMask(), rxPhy.getMask(), phyOptions.getValue());
                     }
                 }
 
