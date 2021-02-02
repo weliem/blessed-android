@@ -63,7 +63,7 @@ public class BluetoothPeripheralManager {
     private @NotNull final BluetoothLeAdvertiser bluetoothLeAdvertiser;
     private @NotNull final BluetoothGattServer bluetoothGattServer;
     private @NotNull final BluetoothPeripheralManagerCallback callback;
-    private @NotNull final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
+    protected @NotNull final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
     private @NotNull final HashMap<BluetoothGattCharacteristic, byte[]> writeLongCharacteristicTemporaryBytes = new HashMap<>();
     private @NotNull final HashMap<BluetoothGattDescriptor, byte[]> writeLongDescriptorTemporaryBytes = new HashMap<>();
     private @NotNull final Map<String, BluetoothCentral> connectedCentrals = new ConcurrentHashMap<>();
@@ -71,7 +71,7 @@ public class BluetoothPeripheralManager {
     private @NotNull byte[] currentNotifyValue = new byte[0];
     private volatile boolean commandQueueBusy = false;
 
-    private final BluetoothGattServerCallback bluetoothGattServerCallback = new BluetoothGattServerCallback() {
+    protected final BluetoothGattServerCallback bluetoothGattServerCallback = new BluetoothGattServerCallback() {
         @Override
         public void onConnectionStateChange(final BluetoothDevice device, int status, int newState) {
 
@@ -477,7 +477,7 @@ public class BluetoothPeripheralManager {
             public void run() {
                 if (!bluetoothGattServer.addService(service)) {
                     Timber.e("adding service %s failed", service.getUuid());
-                    BluetoothPeripheralManager.this.completedCommand();
+                    completedCommand();
                 }
             }
         });
