@@ -6,8 +6,12 @@ import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.AdvertiseCallback;
+import android.bluetooth.le.AdvertiseData;
+import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.content.Context;
+import android.os.ParcelUuid;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -111,5 +115,43 @@ public class BluetoothPeripheralManagerTest {
 
         // Then
         verify(server).getServices();
+    }
+
+    @Test
+    public void When_close_is_called_then_advertising_is_stopped_and_the_server_is_closed() {
+        // When
+        peripheralManager.close();
+
+        // Then
+        verify(bluetoothLeAdvertiser).stopAdvertising(any(AdvertiseCallback.class));
+        verify(peripheralManagerCallback).onAdvertisingStopped();
+        verify(server).close();
+    }
+
+    @Test
+    public void When_startAdvertising_is_called_then_advertising_is_started() {
+        // Given
+        when(bluetoothAdapter.isMultipleAdvertisementSupported()).thenReturn(true);
+        AdvertiseSettings advertiseSettings = new AdvertiseSettings.Builder()
+                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
+                .setConnectable(true)
+                .setTimeout(0)
+                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM)
+                .build();
+
+        AdvertiseData advertiseData = new AdvertiseData.Builder()
+                .setIncludeTxPowerLevel(true)
+                .addServiceUuid(new ParcelUuid(DIS_SERVICE_UUID))
+                .build();
+
+        AdvertiseData scanResponse = new AdvertiseData.Builder()
+                .setIncludeDeviceName(true)
+                .build();
+
+        // When
+        peripheralManager.startAdvertising(advertiseSettings, advertiseData, scanResponse);
+
+        // Then
+        verify(bluetoothLeAdvertiser).startAdvertising(advertiseSettings, advertiseData, scanResponse, peripheralManager.advertiseCallback);
     }
 }

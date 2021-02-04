@@ -361,7 +361,7 @@ public class BluetoothPeripheralManager {
         }
     };
 
-    private final AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
+    protected final AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
         @Override
         public void onStartSuccess(@NotNull final AdvertiseSettings settingsInEffect) {
             Timber.i("advertising started");
