@@ -59,6 +59,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import timber.log.Timber;
 
+import static android.bluetooth.BluetoothDevice.BOND_BONDED;
+import static android.bluetooth.BluetoothDevice.BOND_BONDING;
+import static android.bluetooth.BluetoothDevice.BOND_NONE;
 import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
 import static android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_BALANCED;
 import static android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_LOW_POWER;
@@ -79,87 +82,12 @@ public class BluetoothPeripheral {
     private static final UUID CCC_DESCRIPTOR_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
     /**
-     * Bluetooth device type, Unknown
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int DEVICE_TYPE_UNKNOWN = 0;
-
-    /**
-     * Bluetooth device type, Classic - BR/EDR devices
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int DEVICE_TYPE_CLASSIC = 1;
-
-    /**
-     * Bluetooth device type, Low Energy - LE-only
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int DEVICE_TYPE_LE = 2;
-
-    /**
-     * Bluetooth device type, Dual Mode - BR/EDR/LE
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int DEVICE_TYPE_DUAL = 3;
-
-    /**
-     * Indicates the remote device is not bonded (paired).
-     * <p>There is no shared link key with the remote device, so communication
-     * (if it is allowed at all) will be unauthenticated and unencrypted.
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int BOND_NONE = 10;
-
-    /**
-     * Indicates bonding (pairing) is in progress with the remote device.
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int BOND_BONDING = 11;
-
-    /**
-     * Indicates the remote device is bonded (paired).
-     * <p>A shared link keys exists locally for the remote device, so
-     * communication can be authenticated and encrypted.
-     * <p><i>Being bonded (paired) with a remote device does not necessarily
-     * mean the device is currently connected. It just means that the pending
-     * procedure was completed at some earlier time, and the link key is still
-     * stored locally, ready to use on the next connection.
-     * </i>
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int BOND_BONDED = 12;
-
-    /**
-     * The profile is in disconnected state
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int STATE_DISCONNECTED = 0;
-
-    /**
-     * The profile is in connecting state
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int STATE_CONNECTING = 1;
-
-    /**
-     * The profile is in connected state
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int STATE_CONNECTED = 2;
-
-    /**
-     * The profile is in disconnecting state
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static final int STATE_DISCONNECTING = 3;
-
-    // Minimal and default MTU
-    private static final int DEFAULT_MTU = 23;
-
-    /**
      * Max MTU that Android can handle
      */
     public static final int MAX_MTU = 517;
+
+    // Minimal and default MTU
+    private static final int DEFAULT_MTU = 23;
 
     // Maximum number of retries of commands
     private static final int MAX_TRIES = 2;
@@ -940,10 +868,10 @@ public class BluetoothPeripheral {
     /**
      * Get the type of the peripheral.
      *
-     * @return the device type {@link #DEVICE_TYPE_CLASSIC}, {@link #DEVICE_TYPE_LE} {@link #DEVICE_TYPE_DUAL}. {@link #DEVICE_TYPE_UNKNOWN} if it's not available
+     * @return the PeripheralType
      */
-    public int getType() {
-        return device.getType();
+    public PeripheralType getType() {
+        return PeripheralType.fromValue(device.getType());
     }
 
     /**
@@ -965,15 +893,11 @@ public class BluetoothPeripheral {
     /**
      * Get the bond state of the bluetooth peripheral.
      *
-     * <p>Possible values for the bond state are:
-     * {@link #BOND_NONE},
-     * {@link #BOND_BONDING},
-     * {@link #BOND_BONDED}.
-     *
-     * @return returns the bond state
+     * @return the bond state
      */
-    public int getBondState() {
-        return device.getBondState();
+    @NotNull
+    public BondState getBondState() {
+        return BondState.fromValue(device.getBondState());
     }
 
     /**
@@ -1031,16 +955,11 @@ public class BluetoothPeripheral {
     /**
      * Returns the connection state of the peripheral.
      *
-     * <p>Possible values for the connection state are:
-     * {@link #STATE_CONNECTED},
-     * {@link #STATE_CONNECTING},
-     * {@link #STATE_DISCONNECTED},
-     * {@link #STATE_DISCONNECTING}.
-     *
      * @return the connection state.
      */
-    public int getState() {
-        return state;
+    @NotNull
+    public ConnectionState getState() {
+        return ConnectionState.fromValue(state);
     }
 
     /**

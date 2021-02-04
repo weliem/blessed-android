@@ -612,8 +612,8 @@ public class BluetoothCentralManager {
             }
 
             // Check if the peripheral is cached or not. If not, issue a warning
-            int deviceType = peripheral.getType();
-            if (deviceType == BluetoothDevice.DEVICE_TYPE_UNKNOWN) {
+            PeripheralType peripheralType = peripheral.getType();
+            if (peripheralType == PeripheralType.UNKNOWN) {
                 // The peripheral is not cached so connection is likely to fail
                 Timber.w("peripheral with address '%s' is not in the Bluetooth cache, hence connection may fail", peripheral.getAddress());
             }
@@ -651,8 +651,8 @@ public class BluetoothCentralManager {
             }
 
             // Check if the peripheral is cached or not
-            int deviceType = peripheral.getType();
-            if (deviceType == BluetoothDevice.DEVICE_TYPE_UNKNOWN) {
+            PeripheralType peripheralType = peripheral.getType();
+            if (peripheralType == PeripheralType.UNKNOWN) {
                 // The peripheral is not cached so we cannot autoconnect
                 Timber.d("peripheral with address '%s' not in Bluetooth cache, autoconnecting by scanning", peripheral.getAddress());
                 scannedPeripherals.remove(peripheral.getAddress());
@@ -662,7 +662,7 @@ public class BluetoothCentralManager {
             }
 
             // Check if the peripheral supports BLE
-            if (!(deviceType == BluetoothDevice.DEVICE_TYPE_LE || deviceType == BluetoothDevice.DEVICE_TYPE_DUAL)) {
+            if (!(peripheralType == PeripheralType.LE || peripheralType == PeripheralType.DUAL)) {
                 // This device does not support Bluetooth LE, so we cannot connect
                 Timber.e("peripheral does not support Bluetooth LE");
                 return;
@@ -744,7 +744,7 @@ public class BluetoothCentralManager {
 
         // Split the list in cached and uncached peripherals
         for (BluetoothPeripheral peripheral : batch.keySet()) {
-            if (peripheral.getType() == BluetoothDevice.DEVICE_TYPE_UNKNOWN) {
+            if (peripheral.getType() == PeripheralType.UNKNOWN) {
                 uncachedPeripherals.put(peripheral, batch.get(peripheral));
             } else {
                 cachedPeripherals.put(peripheral, batch.get(peripheral));

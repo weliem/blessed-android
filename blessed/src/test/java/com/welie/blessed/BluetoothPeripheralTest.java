@@ -44,6 +44,9 @@ import static android.bluetooth.BluetoothProfile.STATE_CONNECTED;
 import static android.bluetooth.BluetoothProfile.STATE_DISCONNECTED;
 import static android.bluetooth.BluetoothProfile.STATE_DISCONNECTING;
 import static android.os.Build.VERSION_CODES.M;
+import static com.welie.blessed.ConnectionState.CONNECTED;
+import static com.welie.blessed.ConnectionState.DISCONNECTED;
+import static com.welie.blessed.ConnectionState.DISCONNECTING;
 import static junit.framework.Assert.assertFalse;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
@@ -108,7 +111,7 @@ public class BluetoothPeripheralTest {
         BluetoothGattCallback callback = captor.getValue();
         callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
 
-        assertEquals(STATE_CONNECTED,  peripheral.getState());
+        assertEquals(CONNECTED,  peripheral.getState());
     }
 
     @Test
@@ -128,7 +131,7 @@ public class BluetoothPeripheralTest {
         BluetoothGattCallback callback = captor.getValue();
         callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
 
-        assertEquals(STATE_CONNECTED,  peripheral.getState());
+        assertEquals(CONNECTED,  peripheral.getState());
     }
 
     @Test
@@ -148,13 +151,13 @@ public class BluetoothPeripheralTest {
 
         verify(gatt).disconnect();
 
-        assertEquals(STATE_DISCONNECTING,  peripheral.getState());
+        assertEquals(DISCONNECTING,  peripheral.getState());
 
         callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_DISCONNECTED);
 
         verify(gatt).close();
 
-        assertEquals(STATE_DISCONNECTED,  peripheral.getState());
+        assertEquals(DISCONNECTED,  peripheral.getState());
     }
 
     @Test
@@ -175,7 +178,7 @@ public class BluetoothPeripheralTest {
 
         verify(gatt).close();
 
-        assertEquals(STATE_DISCONNECTED,  peripheral.getState());
+        assertEquals(DISCONNECTED,  peripheral.getState());
     }
 
     @Test
