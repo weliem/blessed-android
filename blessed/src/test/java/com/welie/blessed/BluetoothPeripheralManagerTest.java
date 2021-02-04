@@ -84,4 +84,32 @@ public class BluetoothPeripheralManagerTest {
         verify(peripheralManagerCallback, timeout(1000)).onServiceAdded(GattStatus.SUCCESS.getValue(), service);
         assertEquals(0, peripheralManager.commandQueue.size());
     }
+
+    @Test
+    public void When_removeService_is_called_then_the_service_is_removed() {
+        // When
+        BluetoothGattService service = new BluetoothGattService(DIS_SERVICE_UUID, SERVICE_TYPE_PRIMARY);
+        peripheralManager.remove(service);
+
+        // Then
+        verify(server).removeService(service);
+    }
+
+    @Test
+    public void When_removeAllServices_is_called_then_all_services_are_removed() {
+        // When
+        peripheralManager.removeAllServices();
+
+        // Then
+        verify(server).clearServices();
+    }
+
+    @Test
+    public void When_getServices_is_called_then_all_services_are_returned() {
+        // When
+        peripheralManager.getServices();
+
+        // Then
+        verify(server).getServices();
+    }
 }
