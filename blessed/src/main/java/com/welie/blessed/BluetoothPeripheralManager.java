@@ -48,13 +48,13 @@ public class BluetoothPeripheralManager {
 
     private static final UUID CCC_DESCRIPTOR_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
-    private static final String CONTEXT_IS_NULL = "Context is null";
+    private static final String CONTEXT_IS_NULL = "context is null";
     private static final String BLUETOOTH_MANAGER_IS_NULL = "BluetoothManager is null";
     private static final String SERVICE_IS_NULL = "service is null";
-    private static final String CHARACTERISTIC_IS_NULL = "Characteristic is null";
-    private static final String DEVICE_IS_NULL = "Device is null";
-    private static final String CHARACTERISTIC_VALUE_IS_NULL = "Characteristic value is null";
-    private static final String CENTRAL_IS_NULL = "Central is null";
+    private static final String CHARACTERISTIC_IS_NULL = "characteristic is null";
+    private static final String DEVICE_IS_NULL = "device is null";
+    private static final String CHARACTERISTIC_VALUE_IS_NULL = "characteristic value is null";
+    private static final String CENTRAL_IS_NULL = "central is null";
 
     private @NotNull final Context context;
     private @NotNull final Handler mainHandler = new Handler(Looper.getMainLooper());
