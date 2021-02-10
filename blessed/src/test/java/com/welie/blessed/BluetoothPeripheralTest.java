@@ -642,7 +642,7 @@ public class BluetoothPeripheralTest {
         BluetoothGattCallback callback = connectAndGetCallback();
         callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
 
-        peripheral.requestConnectionPriority(CONNECTION_PRIORITY_HIGH);
+        peripheral.requestConnectionPriority(ConnectionPriority.HIGH);
 
         verify(gatt).requestConnectionPriority(CONNECTION_PRIORITY_HIGH);
     }

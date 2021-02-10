@@ -34,8 +34,19 @@ import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_SIGNED;
  * WriteType describes the type of write that can be done
  */
 public enum WriteType {
+    /**
+     * Write characteristic and requesting acknowledgement by the remote peripheral
+     */
     WITH_RESPONSE(WRITE_TYPE_DEFAULT, PROPERTY_WRITE),
+
+    /**
+     * Write characteristic without requiring a response by the remote peripheral
+     */
     WITHOUT_RESPONSE(WRITE_TYPE_NO_RESPONSE, PROPERTY_WRITE_NO_RESPONSE),
+
+    /**
+     * Write characteristic including authentication signature
+     */
     SIGNED(WRITE_TYPE_SIGNED, PROPERTY_SIGNED_WRITE);
 
     final int writeType;

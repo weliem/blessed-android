@@ -23,32 +23,34 @@
 
 package com.welie.blessed;
 
-/**
- * This class represents the possible Phy options
- */
-public enum PhyOptions {
+import static android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_BALANCED;
+import static android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_HIGH;
+import static android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_LOW_POWER;
+
+public enum ConnectionPriority {
     /**
-     * No preferred option. Use this value in combination with PHY_LE_1M and PHY_LE_2M
+     * Use the connection parameters recommended by the Bluetooth SIG.
+     * This is the default value if no connection parameter update
+     * is requested.
      */
-    NO_PREFERRED(0),
+    BALANCED(CONNECTION_PRIORITY_BALANCED),
 
     /**
-     * Prefer 2x range option with throughput of +/- 500 Kbps
+     * Request a high priority, low latency connection.
+     * An application should only request high priority connection parameters to transfer large
+     * amounts of data over LE quickly. Once the transfer is complete, the application should
+     * request BALANCED connection parameters to reduce energy use.
      */
-    S2(1),
+    HIGH(CONNECTION_PRIORITY_HIGH),
 
     /**
-     * Prefer 4x range option with throughput of +/- 125 Kbps
+     * Request low power, reduced data rate connection parameters.
      */
-    S8(2);
+    LOW_POWER(CONNECTION_PRIORITY_LOW_POWER);
 
-    PhyOptions(final int value) {
+    ConnectionPriority(int value) {
         this.value = value;
     }
 
-    private final int value;
-
-    int getValue() {
-        return value;
-    }
+    final int value;
 }

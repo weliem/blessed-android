@@ -119,6 +119,7 @@ public class BluetoothPeripheral {
     private static final String PERIPHERAL_NOT_CONNECTED = "peripheral not connectected";
     private static final String VALUE_BYTE_ARRAY_IS_EMPTY = "value byte array is empty";
     private static final String VALUE_BYTE_ARRAY_IS_TOO_LONG = "value byte array is too long";
+    private static final String PRIORITY_IS_NULL = "priority is null";
 
     @NotNull
     private final Context context;
@@ -1492,10 +1493,8 @@ public class BluetoothPeripheral {
      * @param priority the requested connection priority
      * @return true if request was enqueued, false if not
      */
-    public boolean requestConnectionPriority(final int priority) {
-        if (priority < CONNECTION_PRIORITY_BALANCED || priority > CONNECTION_PRIORITY_LOW_POWER) {
-            throw new IllegalArgumentException("connection priority not valid");
-        }
+    public boolean requestConnectionPriority(@NotNull final ConnectionPriority priority) {
+        Objects.requireNonNull(priority, PRIORITY_IS_NULL);
 
         if (notConnected()) {
             Timber.e(PERIPHERAL_NOT_CONNECTED);
@@ -1506,10 +1505,10 @@ public class BluetoothPeripheral {
             @Override
             public void run() {
                 if (isConnected()) {
-                    if (!bluetoothGatt.requestConnectionPriority(priority)) {
+                    if (!bluetoothGatt.requestConnectionPriority(priority.value)) {
                         Timber.e("could not request connection priority");
                     } else {
-                        Timber.d("requesting connection priority %d", priority);
+                        Timber.d("requesting connection priority %s", priority);
                     }
                 }
 
