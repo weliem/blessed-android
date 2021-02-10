@@ -643,6 +643,12 @@ public class BluetoothPeripheralManager {
         }
     }
 
+    @Nullable
+    public BluetoothCentral getCentral(@NotNull String address) {
+        Objects.requireNonNull(address, "address is null");
+        return connectedCentrals.get(address);
+    }
+
     @NotNull
     private BluetoothCentral getCentral(@NotNull BluetoothDevice device) {
         Objects.requireNonNull(device, DEVICE_IS_NULL);

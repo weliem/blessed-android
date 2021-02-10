@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
@@ -25,11 +26,14 @@ import org.mockito.verification.Timeout;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.UUID;
 
 import static android.bluetooth.BluetoothGattService.SERVICE_TYPE_PRIMARY;
 import static com.welie.blessed.BluetoothPeripheralManager.CCC_DESCRIPTOR_UUID;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -45,6 +49,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static android.os.Build.VERSION_CODES.M;
 import static org.robolectric.RuntimeEnvironment.application;
+import static org.robolectric.RuntimeEnvironment.getCompileTimeResourceTable;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = {M})
@@ -326,7 +331,7 @@ public class BluetoothPeripheralManagerTest {
         verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 2, GattStatus.SUCCESS.getValue(), 18, secondChunk);
 
         // When
-        peripheralManager.bluetoothGattServerCallback.onExecuteWrite(device, 3,  true);
+        peripheralManager.bluetoothGattServerCallback.onExecuteWrite(device, 3, true);
 
         // Then
         verify(peripheralManagerCallback, timeout(VERIFY_MARGIN)).onCharacteristicWrite(any(BluetoothCentral.class), any(BluetoothGattCharacteristic.class), any(byte[].class));
@@ -365,7 +370,7 @@ public class BluetoothPeripheralManagerTest {
         when(descriptor.getUuid()).thenReturn(CCC_DESCRIPTOR_UUID);
 
         // When
-        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device,1, descriptor, false, true, 0, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, false, true, 0, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
 
         // Then
         verify(descriptor, timeout(VERIFY_MARGIN)).setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
@@ -381,7 +386,7 @@ public class BluetoothPeripheralManagerTest {
         when(descriptor.getUuid()).thenReturn(CCC_DESCRIPTOR_UUID);
 
         // When
-        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device,1, descriptor, false, true, 0, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, false, true, 0, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
 
         // Then
         verify(descriptor, timeout(VERIFY_MARGIN)).setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
@@ -397,7 +402,7 @@ public class BluetoothPeripheralManagerTest {
         when(descriptor.getUuid()).thenReturn(CCC_DESCRIPTOR_UUID);
 
         // When
-        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device,1, descriptor, false, true, 0, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, false, true, 0, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
 
         // Then
         verify(descriptor, timeout(VERIFY_MARGIN)).setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
@@ -413,7 +418,7 @@ public class BluetoothPeripheralManagerTest {
         when(descriptor.getUuid()).thenReturn(CCC_DESCRIPTOR_UUID);
 
         // When
-        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device,1, descriptor, false, true, 0, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, false, true, 0, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
 
         // Then
         verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.REQUEST_NOT_SUPPORTED.getValue(), 0, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
@@ -428,7 +433,7 @@ public class BluetoothPeripheralManagerTest {
         when(descriptor.getUuid()).thenReturn(CCC_DESCRIPTOR_UUID);
 
         // When
-        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device,1, descriptor, false, true, 0, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, false, true, 0, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
 
         // Then
         verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.REQUEST_NOT_SUPPORTED.getValue(), 0, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
@@ -444,7 +449,7 @@ public class BluetoothPeripheralManagerTest {
         byte[] value = new byte[]{0x00};
 
         // When
-        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device,1, descriptor, false, true, 0, value);
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, false, true, 0, value);
 
         // Then
         verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.INVALID_ATTRIBUTE_VALUE_LENGTH.getValue(), 0, value);
@@ -460,7 +465,7 @@ public class BluetoothPeripheralManagerTest {
         byte[] value = new byte[]{0x02, 0x01};
 
         // When
-        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device,1, descriptor, false, true, 0, value);
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, false, true, 0, value);
 
         // Then
         verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.VALUE_NOT_ALLOWED.getValue(), 0, value);
@@ -490,7 +495,7 @@ public class BluetoothPeripheralManagerTest {
         verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 2, GattStatus.SUCCESS.getValue(), 18, secondChunk);
 
         // When
-        peripheralManager.bluetoothGattServerCallback.onExecuteWrite(device, 3,  true);
+        peripheralManager.bluetoothGattServerCallback.onExecuteWrite(device, 3, true);
 
         // Then
         verify(peripheralManagerCallback, timeout(VERIFY_MARGIN)).onDescriptorWrite(any(BluetoothCentral.class), any(BluetoothGattDescriptor.class), any(byte[].class));
@@ -498,4 +503,171 @@ public class BluetoothPeripheralManagerTest {
         verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 3, GattStatus.SUCCESS.getValue(), 0, null);
     }
 
+    @Test
+    public void When_a_long_write_descriptor_requests_are_received_with_incorrect_offset_then_the_error_invalid_offset_is_given() {
+        // Given
+        byte[] value = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
+        byte[] firstChunk = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18};
+        byte[] secondChunk = new byte[]{19, 20, 21, 22, 23, 24};
+        when(descriptor.getCharacteristic()).thenReturn(characteristic);
+        when(descriptor.getValue()).thenReturn(value);
+        when(descriptor.getUuid()).thenReturn(UUID.fromString("00002901-0000-1000-8000-00805f9b34fb"));
+        when(peripheralManagerCallback.onCharacteristicWrite(any(BluetoothCentral.class), any(BluetoothGattCharacteristic.class), any(byte[].class))).thenReturn(GattStatus.SUCCESS);
+
+        // When
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, true, true, 0, firstChunk);
+
+        // Then
+        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.SUCCESS.getValue(), 0, firstChunk);
+
+        // When
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 2, descriptor, true, true, 19, secondChunk);
+
+        // Then
+        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 2, GattStatus.INVALID_OFFSET.getValue(), 19, secondChunk);
+    }
+
+    @Test
+    public void When_a_write_descriptor_request_is_received_and_approved_then_descriptor_value_is_set_and_confirmed() {
+        // Given
+        byte[] value = new byte[]{0x00, 0x01, 0x02};
+        when(descriptor.getValue()).thenReturn(value);
+        when(descriptor.getCharacteristic()).thenReturn(characteristic);
+        when(descriptor.getUuid()).thenReturn(UUID.fromString("00002901-0000-1000-8000-00805f9b34fb"));
+        when(peripheralManagerCallback.onDescriptorWrite(any(BluetoothCentral.class), any(BluetoothGattDescriptor.class), any(byte[].class))).thenReturn(GattStatus.SUCCESS);
+
+        // When
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, false, true, 0, value);
+
+        // Then
+        verify(descriptor, timeout(VERIFY_MARGIN)).setValue(value);
+        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.SUCCESS.getValue(), 0, value);
+    }
+
+    @Test
+    public void When_long_write_descriptor_requests_are_received_and_cancelled_then_descriptor_value_is_not_set() {
+        // Given
+        byte[] value = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
+        byte[] firstChunk = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18};
+        byte[] secondChunk = new byte[]{19, 20, 21, 22, 23, 24};
+        when(descriptor.getCharacteristic()).thenReturn(characteristic);
+        when(descriptor.getValue()).thenReturn(value);
+        when(descriptor.getUuid()).thenReturn(UUID.fromString("00002901-0000-1000-8000-00805f9b34fb"));
+        when(peripheralManagerCallback.onDescriptorWrite(any(BluetoothCentral.class), any(BluetoothGattDescriptor.class), any(byte[].class))).thenReturn(GattStatus.SUCCESS);
+
+        // When
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, true, true, 0, firstChunk);
+
+        // Then
+        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.SUCCESS.getValue(), 0, firstChunk);
+
+        // When
+        peripheralManager.bluetoothGattServerCallback.onExecuteWrite(device, 3, false);
+
+        // Then
+        verify(peripheralManagerCallback, never()).onDescriptorWrite(any(BluetoothCentral.class), any(BluetoothGattDescriptor.class), any(byte[].class));
+        verify(descriptor, never()).setValue(value);
+        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 3, GattStatus.SUCCESS.getValue(), 0, null);
+    }
+
+    @Test
+    public void When_notifyCharacteristicChanged_is_called_for_a_characteristic_that_does_not_notify_then_false_is_returned() {
+        // Given
+        when(characteristic.getProperties()).thenReturn(BluetoothGattCharacteristic.PROPERTY_READ);
+        byte[] value = new byte[]{0x00, 0x01, 0x02};
+
+        // When
+        boolean result = peripheralManager.notifyCharacteristicChanged(value, characteristic);
+
+        // Then
+        assertFalse(result);
+    }
+
+    @Test
+    public void When_notifyCharacteristicChanged_is_called_for_a_notify_characteristic_that_supports_notify_then_a_notification_is_sent() {
+        // Given
+        when(characteristic.getProperties()).thenReturn(BluetoothGattCharacteristic.PROPERTY_NOTIFY);
+        when(characteristic.getValue()).thenReturn(new byte[]{0x00});
+        byte[] value = new byte[]{0x00, 0x01, 0x02};
+
+        // When
+        peripheralManager.bluetoothGattServerCallback.onConnectionStateChange(device, GattStatus.SUCCESS.getValue(), BluetoothProfile.STATE_CONNECTED);
+        when(bluetoothManager.getConnectedDevices(BluetoothGattServer.GATT)).thenReturn(Collections.singletonList(device));
+        boolean result = peripheralManager.notifyCharacteristicChanged(value, characteristic);
+
+        // Then
+        assertTrue(result);
+        verify(characteristic).setValue(value);
+
+        when(characteristic.getValue()).thenReturn(value);
+        verify(server).notifyCharacteristicChanged(device, characteristic, false);
+    }
+
+    @Test
+    public void When_notifyCharacteristicChanged_is_called_for_a_indicate_characteristic_that_supports_notify_then_a_notification_is_sent() {
+        // Given
+        when(characteristic.getProperties()).thenReturn(BluetoothGattCharacteristic.PROPERTY_INDICATE);
+        when(characteristic.getValue()).thenReturn(new byte[]{0x00});
+        byte[] value = new byte[]{0x00, 0x01, 0x02};
+
+        // When
+        peripheralManager.bluetoothGattServerCallback.onConnectionStateChange(device, GattStatus.SUCCESS.getValue(), BluetoothProfile.STATE_CONNECTED);
+        when(bluetoothManager.getConnectedDevices(BluetoothGattServer.GATT)).thenReturn(Collections.singletonList(device));
+        boolean result = peripheralManager.notifyCharacteristicChanged(value, characteristic);
+
+        // Then
+        assertTrue(result);
+        verify(characteristic).setValue(value);
+
+        when(characteristic.getValue()).thenReturn(value);
+        verify(server, timeout(VERIFY_MARGIN)).notifyCharacteristicChanged(device, characteristic, true);
+    }
+
+    @Test
+    public void When_a_notification_has_been_sent_then_onNotificationSent_is_sent() {
+        // Given
+        byte[] value = new byte[]{0x00, 0x01, 0x02};
+        when(characteristic.getValue()).thenReturn(value);
+        when(characteristic.getProperties()).thenReturn(BluetoothGattCharacteristic.PROPERTY_INDICATE);
+        peripheralManager.bluetoothGattServerCallback.onConnectionStateChange(device, GattStatus.SUCCESS.getValue(), BluetoothProfile.STATE_CONNECTED);
+        when(bluetoothManager.getConnectedDevices(BluetoothGattServer.GATT)).thenReturn(Collections.singletonList(device));
+
+        // When
+        peripheralManager.notifyCharacteristicChanged(value, characteristic);
+        verify(server).notifyCharacteristicChanged(device, characteristic, true);
+
+        peripheralManager.bluetoothGattServerCallback.onNotificationSent(device, GattStatus.SUCCESS.getValue());
+        verify(peripheralManagerCallback, timeout(VERIFY_MARGIN)).onNotificationSent(any(BluetoothCentral.class), any(byte[].class), any(BluetoothGattCharacteristic.class), any(GattStatus.class));
+    }
+
+    @Test
+    public void When_a_central_connects_then_onCentralConnected_is_called() {
+        // When
+        peripheralManager.bluetoothGattServerCallback.onConnectionStateChange(device, GattStatus.SUCCESS.getValue(), BluetoothProfile.STATE_CONNECTED);
+        when(bluetoothManager.getConnectedDevices(BluetoothGattServer.GATT)).thenReturn(Collections.singletonList(device));
+
+        // Then
+        verify(peripheralManagerCallback, timeout(VERIFY_MARGIN)).onCentralConnected(any(BluetoothCentral.class));
+    }
+
+    @Test
+    public void Given_a_connected_central_when_cancelConnection_is_called_then_it_is_disconnected_and_onCentralDisconnected_is_called() {
+        // Given
+        when(bluetoothAdapter.getRemoteDevice(device.getAddress())).thenReturn(device);
+        peripheralManager.bluetoothGattServerCallback.onConnectionStateChange(device, GattStatus.SUCCESS.getValue(), BluetoothProfile.STATE_CONNECTED);
+        when(bluetoothManager.getConnectedDevices(BluetoothGattServer.GATT)).thenReturn(Collections.singletonList(device));
+        BluetoothCentral central = peripheralManager.getCentral(device.getAddress());
+
+        // When
+        peripheralManager.cancelConnection(central);
+
+        // Then
+        verify(server, timeout(VERIFY_MARGIN)).cancelConnection(device);
+
+        // When
+        peripheralManager.bluetoothGattServerCallback.onConnectionStateChange(device, 0, GattStatus.SUCCESS.getValue());
+
+        // Then
+        verify(peripheralManagerCallback, timeout(VERIFY_MARGIN)).onCentralDisconnected(central);
+    }
 }
