@@ -55,6 +55,7 @@ public class BluetoothPeripheralManager {
     private static final String DEVICE_IS_NULL = "device is null";
     private static final String CHARACTERISTIC_VALUE_IS_NULL = "characteristic value is null";
     private static final String CENTRAL_IS_NULL = "central is null";
+    private static final String ADDRESS_IS_NULL = "address is null";
 
     private @NotNull final Context context;
     private @NotNull final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -645,7 +646,7 @@ public class BluetoothPeripheralManager {
 
     @Nullable
     public BluetoothCentral getCentral(@NotNull String address) {
-        Objects.requireNonNull(address, "address is null");
+        Objects.requireNonNull(address, ADDRESS_IS_NULL);
         return connectedCentrals.get(address);
     }
 

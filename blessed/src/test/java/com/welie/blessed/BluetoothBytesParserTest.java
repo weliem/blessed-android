@@ -1,11 +1,14 @@
 package com.welie.blessed;
 
+import junit.framework.Assert;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -24,9 +27,11 @@ import static java.nio.ByteOrder.BIG_ENDIAN;
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.assertNull;
 
 import static android.os.Build.VERSION_CODES.M;
+import static org.junit.Assert.assertArrayEquals;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = { M }, shadows={ShadowBluetoothLEAdapter.class} )
@@ -775,5 +780,13 @@ public class BluetoothBytesParserTest {
         parser.setValue(new byte[]{0x12, 0x34, 0x56});
         String string = parser.toString();
         assertEquals("123456", string);
+    }
+
+    @Test
+    public void hexString_to_byte_array_Test() {
+        byte[] value = new byte[]{0x01, 0x40, (byte) 0x80, (byte) 0x81, (byte)0xA0, (byte)0xF0, (byte) 0xFF};
+        String valueString = BluetoothBytesParser.bytes2String(value);
+        byte[] decodedValue = BluetoothBytesParser.string2bytes(valueString);
+        assertArrayEquals(value, decodedValue);
     }
 }
