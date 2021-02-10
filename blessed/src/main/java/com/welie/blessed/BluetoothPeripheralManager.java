@@ -46,7 +46,7 @@ import static com.welie.blessed.BluetoothBytesParser.mergeArrays;
 @SuppressWarnings("UnusedReturnValue")
 public class BluetoothPeripheralManager {
 
-    private static final UUID CCC_DESCRIPTOR_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
+    protected static final UUID CCC_DESCRIPTOR_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
     private static final String CONTEXT_IS_NULL = "context is null";
     private static final String BLUETOOTH_MANAGER_IS_NULL = "BluetoothManager is null";

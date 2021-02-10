@@ -28,6 +28,7 @@ import org.robolectric.annotation.Config;
 import java.util.UUID;
 
 import static android.bluetooth.BluetoothGattService.SERVICE_TYPE_PRIMARY;
+import static com.welie.blessed.BluetoothPeripheralManager.CCC_DESCRIPTOR_UUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
@@ -354,4 +355,147 @@ public class BluetoothPeripheralManagerTest {
         // Then
         verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 2, GattStatus.INVALID_OFFSET.getValue(), 19, secondChunk);
     }
+
+    @Test
+    public void When_a_CCC_descriptor_is_written_with_valid_indicate_value_then_it_is_set_and_onNotifyEnabled_is_called() {
+        // Given
+        when(descriptor.getCharacteristic()).thenReturn(characteristic);
+        when(characteristic.getProperties()).thenReturn(BluetoothGattCharacteristic.PROPERTY_INDICATE);
+        when(descriptor.getPermissions()).thenReturn(BluetoothGattDescriptor.PERMISSION_WRITE);
+        when(descriptor.getUuid()).thenReturn(CCC_DESCRIPTOR_UUID);
+
+        // When
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device,1, descriptor, false, true, 0, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+
+        // Then
+        verify(descriptor, timeout(VERIFY_MARGIN)).setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+        verify(peripheralManagerCallback).onNotifyingEnabled(any(BluetoothCentral.class), any(BluetoothGattCharacteristic.class));
+    }
+
+    @Test
+    public void When_a_CCC_descriptor_is_written_with_valid_notify_value_then_it_is_set_and_onNotifyEnabled_is_called() {
+        // Given
+        when(descriptor.getCharacteristic()).thenReturn(characteristic);
+        when(characteristic.getProperties()).thenReturn(BluetoothGattCharacteristic.PROPERTY_NOTIFY);
+        when(descriptor.getPermissions()).thenReturn(BluetoothGattDescriptor.PERMISSION_WRITE);
+        when(descriptor.getUuid()).thenReturn(CCC_DESCRIPTOR_UUID);
+
+        // When
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device,1, descriptor, false, true, 0, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+
+        // Then
+        verify(descriptor, timeout(VERIFY_MARGIN)).setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+        verify(peripheralManagerCallback).onNotifyingEnabled(any(BluetoothCentral.class), any(BluetoothGattCharacteristic.class));
+    }
+
+    @Test
+    public void When_a_CCC_descriptor_is_written_with_valid_disable_value_then_it_is_set_and_onNotifyDisable_is_called() {
+        // Given
+        when(descriptor.getCharacteristic()).thenReturn(characteristic);
+        when(characteristic.getProperties()).thenReturn(BluetoothGattCharacteristic.PROPERTY_NOTIFY);
+        when(descriptor.getPermissions()).thenReturn(BluetoothGattDescriptor.PERMISSION_WRITE);
+        when(descriptor.getUuid()).thenReturn(CCC_DESCRIPTOR_UUID);
+
+        // When
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device,1, descriptor, false, true, 0, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+
+        // Then
+        verify(descriptor, timeout(VERIFY_MARGIN)).setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+        verify(peripheralManagerCallback).onNotifyingDisabled(any(BluetoothCentral.class), any(BluetoothGattCharacteristic.class));
+    }
+
+    @Test
+    public void When_a_CCC_descriptor_for_a_indicate_characteristic_is_written_with_invalid_value_then_an_error_is_given() {
+        // Given
+        when(descriptor.getCharacteristic()).thenReturn(characteristic);
+        when(characteristic.getProperties()).thenReturn(BluetoothGattCharacteristic.PROPERTY_INDICATE);
+        when(descriptor.getPermissions()).thenReturn(BluetoothGattDescriptor.PERMISSION_WRITE);
+        when(descriptor.getUuid()).thenReturn(CCC_DESCRIPTOR_UUID);
+
+        // When
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device,1, descriptor, false, true, 0, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+
+        // Then
+        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.REQUEST_NOT_SUPPORTED.getValue(), 0, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+    }
+
+    @Test
+    public void When_a_CCC_descriptor_for_a_notify_characteristic_is_written_with_invalid_value_then_an_error_is_given() {
+        // Given
+        when(descriptor.getCharacteristic()).thenReturn(characteristic);
+        when(characteristic.getProperties()).thenReturn(BluetoothGattCharacteristic.PROPERTY_NOTIFY);
+        when(descriptor.getPermissions()).thenReturn(BluetoothGattDescriptor.PERMISSION_WRITE);
+        when(descriptor.getUuid()).thenReturn(CCC_DESCRIPTOR_UUID);
+
+        // When
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device,1, descriptor, false, true, 0, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+
+        // Then
+        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.REQUEST_NOT_SUPPORTED.getValue(), 0, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+    }
+
+    @Test
+    public void When_a_CCC_descriptor_is_written_with_invalid_length_value_then_an_error_is_given() {
+        // Given
+        when(descriptor.getCharacteristic()).thenReturn(characteristic);
+        when(characteristic.getProperties()).thenReturn(BluetoothGattCharacteristic.PROPERTY_NOTIFY);
+        when(descriptor.getPermissions()).thenReturn(BluetoothGattDescriptor.PERMISSION_WRITE);
+        when(descriptor.getUuid()).thenReturn(CCC_DESCRIPTOR_UUID);
+        byte[] value = new byte[]{0x00};
+
+        // When
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device,1, descriptor, false, true, 0, value);
+
+        // Then
+        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.INVALID_ATTRIBUTE_VALUE_LENGTH.getValue(), 0, value);
+    }
+
+    @Test
+    public void When_a_CCC_descriptor_is_written_with_invalid_value_then_an_error_is_given() {
+        // Given
+        when(descriptor.getCharacteristic()).thenReturn(characteristic);
+        when(characteristic.getProperties()).thenReturn(BluetoothGattCharacteristic.PROPERTY_NOTIFY);
+        when(descriptor.getPermissions()).thenReturn(BluetoothGattDescriptor.PERMISSION_WRITE);
+        when(descriptor.getUuid()).thenReturn(CCC_DESCRIPTOR_UUID);
+        byte[] value = new byte[]{0x02, 0x01};
+
+        // When
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device,1, descriptor, false, true, 0, value);
+
+        // Then
+        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.VALUE_NOT_ALLOWED.getValue(), 0, value);
+    }
+
+    @Test
+    public void When_a_long_write_descriptor_requests_are_received_and_approved_then_descriptor_value_is_set_and_confirmed() {
+        // Given
+        byte[] value = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
+        byte[] firstChunk = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18};
+        byte[] secondChunk = new byte[]{19, 20, 21, 22, 23, 24};
+        when(descriptor.getCharacteristic()).thenReturn(characteristic);
+        when(descriptor.getValue()).thenReturn(value);
+        when(descriptor.getUuid()).thenReturn(UUID.fromString("00002901-0000-1000-8000-00805f9b34fb"));
+        when(peripheralManagerCallback.onDescriptorWrite(any(BluetoothCentral.class), any(BluetoothGattDescriptor.class), any(byte[].class))).thenReturn(GattStatus.SUCCESS);
+
+        // When
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, true, true, 0, firstChunk);
+
+        // Then
+        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.SUCCESS.getValue(), 0, firstChunk);
+
+        // When
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 2, descriptor, true, true, 18, secondChunk);
+
+        // Then
+        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 2, GattStatus.SUCCESS.getValue(), 18, secondChunk);
+
+        // When
+        peripheralManager.bluetoothGattServerCallback.onExecuteWrite(device, 3,  true);
+
+        // Then
+        verify(peripheralManagerCallback, timeout(VERIFY_MARGIN)).onDescriptorWrite(any(BluetoothCentral.class), any(BluetoothGattDescriptor.class), any(byte[].class));
+        verify(descriptor, timeout(VERIFY_MARGIN)).setValue(value);
+        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 3, GattStatus.SUCCESS.getValue(), 0, null);
+    }
+
 }
