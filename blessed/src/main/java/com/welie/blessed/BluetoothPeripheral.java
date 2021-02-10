@@ -421,13 +421,13 @@ public class BluetoothPeripheral {
     };
 
     private void successfullyConnected() {
-        int bondstate = device.getBondState();
+        BondState bondstate = getBondState();
         long timePassed = SystemClock.elapsedRealtime() - connectTimestamp;
-        Timber.i("connected to '%s' (%s) in %.1fs", getName(), bondStateToString(bondstate), timePassed / 1000.0f);
+        Timber.i("connected to '%s' (%s) in %.1fs", getName(), bondstate, timePassed / 1000.0f);
 
-        if (bondstate == BOND_NONE || bondstate == BOND_BONDED) {
+        if (bondstate == BondState.NONE || bondstate == BondState.BONDED) {
             delayedDiscoverServices(getServiceDiscoveryDelay(bondstate));
-        } else if (bondstate == BOND_BONDING) {
+        } else if (bondstate == BondState.BONDING) {
             // Apparently the bonding process has already started, so let it complete. We'll do discoverServices once bonding finished
             Timber.i("waiting for bonding to complete");
         }
@@ -449,7 +449,7 @@ public class BluetoothPeripheral {
         mainHandler.postDelayed(discoverServicesRunnable, delay);
     }
 
-    private long getServiceDiscoveryDelay(int bondstate) {
+    private long getServiceDiscoveryDelay(BondState bondstate) {
         long delayWhenBonded = 0;
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N) {
             // It seems delays when bonded are only needed in versions Nougat or lower
@@ -458,7 +458,7 @@ public class BluetoothPeripheral {
             // If they don't have it the delay isn't needed but we do it anyway to keep code simple
             delayWhenBonded = 1000L;
         }
-        return bondstate == BOND_BONDED ? delayWhenBonded : 0;
+        return bondstate == BondState.BONDED ? delayWhenBonded : 0;
     }
 
     private void successfullyDisconnected(int previousState) {
@@ -1487,8 +1487,6 @@ public class BluetoothPeripheral {
 
     /**
      * Request a different connection priority.
-     * <p>
-     * Use the standard parameters for Android: CONNECTION_PRIORITY_BALANCED, CONNECTION_PRIORITY_HIGH, or CONNECTION_PRIORITY_LOW_POWER. There is no callback for this function.
      *
      * @param priority the requested connection priority
      * @return true if request was enqueued, false if not
@@ -1699,19 +1697,6 @@ public class BluetoothPeripheral {
                     }
                 }
             });
-        }
-    }
-
-    private String bondStateToString(final int state) {
-        switch (state) {
-            case BOND_NONE:
-                return "BOND_NONE";
-            case BOND_BONDING:
-                return "BOND_BONDING";
-            case BOND_BONDED:
-                return "BOND_BONDED";
-            default:
-                return "UNKNOWN";
         }
     }
 
