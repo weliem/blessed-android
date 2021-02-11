@@ -16,11 +16,11 @@ public abstract class BluetoothPeripheralManagerCallback {
     /**
      * Indicates whether a local service has been added successfully.
      *
-     * @param status  Returns {@link BluetoothGatt#GATT_SUCCESS} if the service was added
+     * @param status  Returns SUCCESS if the service was added
      *                successfully.
      * @param service The service that has been added
      */
-    public void onServiceAdded(int status, @NotNull BluetoothGattService service) {
+    public void onServiceAdded(GattStatus status, @NotNull BluetoothGattService service) {
     }
 
     /**

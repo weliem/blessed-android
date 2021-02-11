@@ -156,7 +156,7 @@ public class BluetoothPeripheralManager {
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    callback.onServiceAdded(status, service);
+                    callback.onServiceAdded(GattStatus.fromValue(status), service);
                 }
             });
             completedCommand();
