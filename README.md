@@ -21,7 +21,7 @@ The library consists of 5 core classes and corresponding callback abstract class
 
 The `BluetoothCentralManager` class is used to scan for devices and manage connections. The `BluetoothPeripheral` class is a replacement for the standard Android `BluetoothDevice` and `BluetoothGatt` classes. It wraps all GATT related peripheral functionality. 
 
-The `BluetoothPeripheralManager` class is used to create your own peripheral running on an Android phone. You can add service, control advertising and deal with requests from remote centrals, represented by the `BluetoothCentral` class. For more about creating your own peripherals see the separate guide.
+The `BluetoothPeripheralManager` class is used to create your own peripheral running on an Android phone. You can add service, control advertising and deal with requests from remote centrals, represented by the `BluetoothCentral` class. For more about creating your own peripherals see the separate guide: [creating your own peripheral](SERVER.md)
 
 The `BluetoothBytesParser` class is a utility class that makes parsing byte arrays easy. You can also use it construct your own byte arrays by adding integers, floats or strings.
 
