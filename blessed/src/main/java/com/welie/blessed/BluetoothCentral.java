@@ -24,51 +24,57 @@
 package com.welie.blessed;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
 
 /**
- * This class represents the possible Phy types
+ * This class represent a remote Central
  */
-public enum PhyType {
-    /**
-     * A Physical Layer (PHY) connection of 1 mbit. Compatible with Bluetooth 4.0, 4.1, 4.2 and 5.0
-     */
-    LE_1M(1,1),
-
-    /**
-     * A Physical Layer (PHY) connection of 2 mbit. Requires Bluetooth 5
-     */
-    LE_2M (2,2),
-
-    /**
-     * A Physical Layer (PHY) connection with long range. Requires Bluetooth 5
-     */
-    LE_CODED(3, 4),
-
-    /**
-     * Unknown Phy Type. Not to be used.
-     */
-    UNKNOWN_PHY_TYPE(-1,-1);
-
-    PhyType(final int value, final int mask) {
-        this.value = value;
-        this.mask = mask;
-    }
-    private final int value;
-    private final int mask;
-
-    int getValue() {
-        return value;
-    }
-    int getMask() {
-        return mask;
-    }
+public class BluetoothCentral {
 
     @NotNull
-    public static PhyType fromValue(int value) {
-        for (PhyType type : values()) {
-            if (type.getValue() == value)
-                return type;
+    private final String address;
+
+    @Nullable
+    private final String name;
+
+    private int currentMtu = 23;
+
+    public BluetoothCentral(@NotNull String address, @Nullable String name) {
+        this.address = Objects.requireNonNull(address, "Address is null");
+        this.name = name;
+    }
+
+    public @NotNull String getAddress() {
+        return address;
+    }
+
+    public @Nullable String getName() {
+        return name;
+    }
+
+    protected void setCurrentMtu(int currentMtu) {
+        this.currentMtu = currentMtu;
+    }
+
+    public int getCurrentMtu() {
+        return currentMtu;
+    }
+
+    /**
+     * Get maximum length of byte array that can be written depending on WriteType
+     *
+     * This value is derived from the current negotiated MTU or the maximum characteristic length (512)
+     */
+    public int getMaximumWriteValueLength(WriteType writeType) {
+        switch (writeType) {
+            case WITH_RESPONSE:
+                return 512;
+            case SIGNED:
+                return currentMtu - 15;
+            default:
+                return currentMtu - 3;
         }
-        return UNKNOWN_PHY_TYPE;
     }
 }

@@ -731,6 +731,21 @@ public class BluetoothBytesParser {
     }
 
     /**
+     * Convert a hex string to byte array
+     *
+     */
+    @NotNull
+    public static byte[] string2bytes(@Nullable final String hexString) {
+        if (hexString == null) return new byte[0];
+        byte[] result = new byte[hexString.length() / 2];
+        for (int i=0; i < result.length ; i++) {
+            int index = i * 2;
+            result[i] = (byte) Integer.parseInt(hexString.substring(index, index + 2), 16);
+        }
+        return result;
+    }
+
+    /**
      * Merge multiple arrays intro one array
      *
      * @param arrays Arrays to merge

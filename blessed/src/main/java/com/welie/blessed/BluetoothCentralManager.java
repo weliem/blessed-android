@@ -67,36 +67,6 @@ public class BluetoothCentralManager {
     private static final int MAX_CONNECTION_RETRIES = 1;
     private static final int MAX_CONNECTED_PERIPHERALS = 7;
 
-    /**
-     * Failed to start scan as BLE scan with the same settings is already started by the app.
-     */
-    public static final int SCAN_FAILED_ALREADY_STARTED = 1;
-
-    /**
-     * Failed to start scan as app cannot be registered.
-     */
-    public static final int SCAN_FAILED_APPLICATION_REGISTRATION_FAILED = 2;
-
-    /**
-     * Failed to start scan due an internal error
-     */
-    public static final int SCAN_FAILED_INTERNAL_ERROR = 3;
-
-    /**
-     * Failed to start power optimized scan as this feature is not supported.
-     */
-    public static final int SCAN_FAILED_FEATURE_UNSUPPORTED = 4;
-
-    /**
-     * Failed to start scan as it is out of hardware resources.
-     */
-    public static final int SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES = 5;
-
-    /**
-     * Failed to start scan as application tries to scan too frequently.
-     */
-    public static final int SCAN_FAILED_SCANNING_TOO_FREQUENTLY = 6;
-
     private static final String NO_PERIPHERAL_ADDRESS_PROVIDED = "no peripheral address provided";
     private static final String NO_VALID_PERIPHERAL_PROVIDED = "no valid peripheral provided";
     private static final String NO_VALID_PERIPHERAL_CALLBACK_SPECIFIED = "no valid peripheral callback specified";
@@ -155,11 +125,12 @@ public class BluetoothCentralManager {
 
         @Override
         public void onScanFailed(final int errorCode) {
-            Timber.e("scan failed with error code %d (%s)", errorCode, scanErrorToString(errorCode));
+            final ScanFailure scanFailure = ScanFailure.fromValue(errorCode);
+            Timber.e("scan failed with error code %d (%s)", errorCode, scanFailure);
             callBackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    bluetoothCentralManagerCallback.onScanFailed(errorCode);
+                    bluetoothCentralManagerCallback.onScanFailed(scanFailure);
                 }
             });
         }
@@ -184,11 +155,12 @@ public class BluetoothCentralManager {
 
         @Override
         public void onScanFailed(final int errorCode) {
-            Timber.e("scan failed with error code %d (%s)", errorCode, scanErrorToString(errorCode));
+            final ScanFailure scanFailure = ScanFailure.fromValue(errorCode);
+            Timber.e("scan failed with error code %d (%s)", errorCode, scanFailure);
             callBackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    bluetoothCentralManagerCallback.onScanFailed(errorCode);
+                    bluetoothCentralManagerCallback.onScanFailed(scanFailure);
                 }
             });
         }
@@ -224,11 +196,12 @@ public class BluetoothCentralManager {
 
         @Override
         public void onScanFailed(final int errorCode) {
-            Timber.e("scan failed with error code %d (%s)", errorCode, scanErrorToString(errorCode));
+            final ScanFailure scanFailure = ScanFailure.fromValue(errorCode);
+            Timber.e("scan failed with error code %d (%s)", errorCode, scanFailure);
             callBackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    bluetoothCentralManagerCallback.onScanFailed(errorCode);
+                    bluetoothCentralManagerCallback.onScanFailed(scanFailure);
                 }
             });
         }
@@ -612,8 +585,8 @@ public class BluetoothCentralManager {
             }
 
             // Check if the peripheral is cached or not. If not, issue a warning
-            int deviceType = peripheral.getType();
-            if (deviceType == BluetoothDevice.DEVICE_TYPE_UNKNOWN) {
+            PeripheralType peripheralType = peripheral.getType();
+            if (peripheralType == PeripheralType.UNKNOWN) {
                 // The peripheral is not cached so connection is likely to fail
                 Timber.w("peripheral with address '%s' is not in the Bluetooth cache, hence connection may fail", peripheral.getAddress());
             }
@@ -651,8 +624,8 @@ public class BluetoothCentralManager {
             }
 
             // Check if the peripheral is cached or not
-            int deviceType = peripheral.getType();
-            if (deviceType == BluetoothDevice.DEVICE_TYPE_UNKNOWN) {
+            PeripheralType peripheralType = peripheral.getType();
+            if (peripheralType == PeripheralType.UNKNOWN) {
                 // The peripheral is not cached so we cannot autoconnect
                 Timber.d("peripheral with address '%s' not in Bluetooth cache, autoconnecting by scanning", peripheral.getAddress());
                 scannedPeripherals.remove(peripheral.getAddress());
@@ -662,7 +635,7 @@ public class BluetoothCentralManager {
             }
 
             // Check if the peripheral supports BLE
-            if (!(deviceType == BluetoothDevice.DEVICE_TYPE_LE || deviceType == BluetoothDevice.DEVICE_TYPE_DUAL)) {
+            if (!(peripheralType == PeripheralType.LE || peripheralType == PeripheralType.DUAL)) {
                 // This device does not support Bluetooth LE, so we cannot connect
                 Timber.e("peripheral does not support Bluetooth LE");
                 return;
@@ -744,7 +717,7 @@ public class BluetoothCentralManager {
 
         // Split the list in cached and uncached peripherals
         for (BluetoothPeripheral peripheral : batch.keySet()) {
-            if (peripheral.getType() == BluetoothDevice.DEVICE_TYPE_UNKNOWN) {
+            if (peripheral.getType() == PeripheralType.UNKNOWN) {
                 uncachedPeripherals.put(peripheral, batch.get(peripheral));
             } else {
                 cachedPeripherals.put(peripheral, batch.get(peripheral));
@@ -1131,25 +1104,6 @@ public class BluetoothCentralManager {
                 expectingBluetoothOffDisconnects = false;
                 Timber.d("bluetooth turning on");
                 break;
-        }
-    }
-
-    private String scanErrorToString(final int errorCode) {
-        switch (errorCode) {
-            case SCAN_FAILED_ALREADY_STARTED:
-                return "ALREADY STARTED";
-            case SCAN_FAILED_APPLICATION_REGISTRATION_FAILED:
-                return "APPLICATION REGISTRATION FAILED";
-            case SCAN_FAILED_INTERNAL_ERROR:
-                return "INTERNAL ERROR";
-            case SCAN_FAILED_FEATURE_UNSUPPORTED:
-                return "FEATURE UNSUPPORTED";
-            case SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES:
-                return "OUT OF HARDWARE RESOURCES";
-            case SCAN_FAILED_SCANNING_TOO_FREQUENTLY:
-                return "SCANNING TOO FREQUENTLY";
-            default:
-                return "UNKNOWN";
         }
     }
 }

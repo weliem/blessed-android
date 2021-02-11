@@ -23,32 +23,45 @@
 
 package com.welie.blessed;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
- * This class represents the possible Phy options
+ * This class represents the possible connection states
  */
-public enum PhyOptions {
+public enum ConnectionState {
     /**
-     * No preferred option. Use this value in combination with PHY_LE_1M and PHY_LE_2M
+     * The peripheral is in disconnected
      */
-    NO_PREFERRED(0),
+    DISCONNECTED(0),
 
     /**
-     * Prefer 2x range option with throughput of +/- 500 Kbps
+     * The peripheral is in connecting
      */
-    S2(1),
+    CONNECTING(1),
 
     /**
-     * Prefer 4x range option with throughput of +/- 125 Kbps
+     * The peripheral is in connected
      */
-    S8(2);
+    CONNECTED(2),
 
-    PhyOptions(final int value) {
+    /**
+     * The peripheral is in disconnecting
+     */
+    DISCONNECTING(3);
+
+    ConnectionState(int value) {
         this.value = value;
     }
 
     private final int value;
 
-    int getValue() {
-        return value;
+    @NotNull
+    public static ConnectionState fromValue(int value) {
+        for (ConnectionState type : values()) {
+            if (type.value == value) {
+                return type;
+            }
+        }
+        return DISCONNECTED;
     }
 }

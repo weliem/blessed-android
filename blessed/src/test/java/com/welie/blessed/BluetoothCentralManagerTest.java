@@ -420,7 +420,7 @@ public class BluetoothCentralManagerTest {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
-        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
+        when(peripheral.getType()).thenReturn(PeripheralType.LE);
 
         central.connectPeripheral(peripheral, peripheralCallback);
 
@@ -442,7 +442,7 @@ public class BluetoothCentralManagerTest {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
-        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
+        when(peripheral.getType()).thenReturn(PeripheralType.LE);
 
         central.connectPeripheral(peripheral, peripheralCallback);
 
@@ -468,7 +468,7 @@ public class BluetoothCentralManagerTest {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
-        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
+        when(peripheral.getType()).thenReturn(PeripheralType.LE);
 
         central.connectPeripheral(peripheral, peripheralCallback);
 
@@ -485,7 +485,7 @@ public class BluetoothCentralManagerTest {
 
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
-        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
+        when(peripheral.getType()).thenReturn(PeripheralType.LE);
 
         central.connectPeripheral(peripheral, peripheralCallback);
 
@@ -510,7 +510,7 @@ public class BluetoothCentralManagerTest {
 
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
-        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
+        when(peripheral.getType()).thenReturn(PeripheralType.LE);
 
         central.connectPeripheral(peripheral, peripheralCallback);
 
@@ -534,7 +534,7 @@ public class BluetoothCentralManagerTest {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
-        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
+        when(peripheral.getType()).thenReturn(PeripheralType.LE);
 
         central.connectPeripheral(peripheral, peripheralCallback);
 
@@ -578,7 +578,7 @@ public class BluetoothCentralManagerTest {
 
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
-        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
+        when(peripheral.getType()).thenReturn(PeripheralType.LE);
 
         central.connectPeripheral(peripheral, peripheralCallback);
 
@@ -609,7 +609,7 @@ public class BluetoothCentralManagerTest {
 
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
-        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
+        when(peripheral.getType()).thenReturn(PeripheralType.LE);
 
         central.connectPeripheral(peripheral, peripheralCallback);
 
@@ -635,7 +635,7 @@ public class BluetoothCentralManagerTest {
 
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
-        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_UNKNOWN);
+        when(peripheral.getType()).thenReturn(PeripheralType.UNKNOWN);
 
         central.autoConnectPeripheral(peripheral, peripheralCallback);
 
@@ -650,7 +650,7 @@ public class BluetoothCentralManagerTest {
 
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
-        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
+        when(peripheral.getType()).thenReturn(PeripheralType.LE);
 
         central.autoConnectPeripheral(peripheral, peripheralCallback);
 
@@ -678,7 +678,7 @@ public class BluetoothCentralManagerTest {
 
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
-        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_UNKNOWN);
+        when(peripheral.getType()).thenReturn(PeripheralType.UNKNOWN);
         central.autoConnectPeripheral(peripheral, peripheralCallback);
 
         verify(peripheral, never()).autoConnect();
@@ -703,7 +703,7 @@ public class BluetoothCentralManagerTest {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
-        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
+        when(peripheral.getType()).thenReturn(PeripheralType.LE);
 
         central.connectPeripheral(peripheral, peripheralCallback);
 
@@ -730,7 +730,7 @@ public class BluetoothCentralManagerTest {
 
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
-        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_UNKNOWN);
+        when(peripheral.getType()).thenReturn(PeripheralType.UNKNOWN);
         central.autoConnectPeripheral(peripheral, peripheralCallback);
 
         verify(peripheral, never()).autoConnect();
@@ -764,7 +764,7 @@ public class BluetoothCentralManagerTest {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
-        when(peripheral.getType()).thenReturn(BluetoothDevice.DEVICE_TYPE_LE);
+        when(peripheral.getType()).thenReturn(PeripheralType.LE);
 
         central.connectPeripheral(peripheral, peripheralCallback);
 

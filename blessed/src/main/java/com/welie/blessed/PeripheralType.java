@@ -23,32 +23,50 @@
 
 package com.welie.blessed;
 
+import org.jetbrains.annotations.NotNull;
+
+import static android.bluetooth.BluetoothDevice.DEVICE_TYPE_CLASSIC;
+import static android.bluetooth.BluetoothDevice.DEVICE_TYPE_DUAL;
+import static android.bluetooth.BluetoothDevice.DEVICE_TYPE_LE;
+import static android.bluetooth.BluetoothDevice.DEVICE_TYPE_UNKNOWN;
+
 /**
- * This class represents the possible Phy options
+ * This class represents the possible peripheral types
  */
-public enum PhyOptions {
+public enum PeripheralType {
     /**
-     * No preferred option. Use this value in combination with PHY_LE_1M and PHY_LE_2M
+     * Unknown peripheral type, peripheral is not cached
      */
-    NO_PREFERRED(0),
+    UNKNOWN(DEVICE_TYPE_UNKNOWN),
 
     /**
-     * Prefer 2x range option with throughput of +/- 500 Kbps
+     * Classic - BR/EDR peripheral
      */
-    S2(1),
+    CLASSIC(DEVICE_TYPE_CLASSIC),
 
     /**
-     * Prefer 4x range option with throughput of +/- 125 Kbps
+     * Bluetooth Low Energy peripheral
      */
-    S8(2);
+    LE(DEVICE_TYPE_LE),
 
-    PhyOptions(final int value) {
+    /**
+     * Dual Mode - BR/EDR/LE
+     */
+    DUAL(DEVICE_TYPE_DUAL);
+
+    PeripheralType(int value) {
         this.value = value;
     }
 
     private final int value;
 
-    int getValue() {
-        return value;
+    @NotNull
+    public static PeripheralType fromValue(int value) {
+        for (PeripheralType type : values()) {
+            if (type.value == value) {
+                return type;
+            }
+        }
+        return UNKNOWN;
     }
 }

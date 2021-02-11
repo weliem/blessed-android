@@ -12,10 +12,12 @@ import com.welie.blessed.BluetoothCentralManager;
 import com.welie.blessed.BluetoothCentralManagerCallback;
 import com.welie.blessed.BluetoothPeripheral;
 import com.welie.blessed.BluetoothPeripheralCallback;
+import com.welie.blessed.ConnectionPriority;
 import com.welie.blessed.GattStatus;
 import com.welie.blessed.HciStatus;
 import com.welie.blessed.PhyOptions;
 import com.welie.blessed.PhyType;
+import com.welie.blessed.ScanFailure;
 import com.welie.blessed.WriteType;
 
 import org.jetbrains.annotations.NotNull;
@@ -117,7 +119,7 @@ class BluetoothHandler {
             peripheral.setPreferredPhy(PhyType.LE_2M, PhyType.LE_2M, PhyOptions.NO_PREFERRED);
 
             // Request a new connection priority
-            peripheral.requestConnectionPriority(CONNECTION_PRIORITY_HIGH);
+            peripheral.requestConnectionPriority(ConnectionPriority.HIGH);
 
             // Read manufacturer and model number from the Device Information Service
             peripheral.readCharacteristic(DIS_SERVICE_UUID, MANUFACTURER_NAME_CHARACTERISTIC_UUID);
@@ -344,8 +346,8 @@ class BluetoothHandler {
         }
 
         @Override
-        public void onScanFailed(int errorCode) {
-            Timber.i("scanning failed with error %d", errorCode);
+        public void onScanFailed(ScanFailure scanFailure) {
+            Timber.i("scanning failed with error %s", scanFailure);
         }
     };
 

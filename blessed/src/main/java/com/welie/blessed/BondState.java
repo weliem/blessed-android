@@ -23,32 +23,48 @@
 
 package com.welie.blessed;
 
+import org.jetbrains.annotations.NotNull;
+
+import static android.bluetooth.BluetoothDevice.BOND_BONDED;
+import static android.bluetooth.BluetoothDevice.BOND_BONDING;
+import static android.bluetooth.BluetoothDevice.BOND_NONE;
+
 /**
- * This class represents the possible Phy options
+ * The class represents the various possible bond states
  */
-public enum PhyOptions {
+public enum BondState {
     /**
-     * No preferred option. Use this value in combination with PHY_LE_1M and PHY_LE_2M
+     * Indicates the remote peripheral is not bonded.
+     * There is no shared link key with the remote peripheral, so communication
+     * (if it is allowed at all) will be unauthenticated and unencrypted.
      */
-    NO_PREFERRED(0),
+    NONE(BOND_NONE),
 
     /**
-     * Prefer 2x range option with throughput of +/- 500 Kbps
+     * Indicates bonding is in progress with the remote peripheral.
      */
-    S2(1),
+    BONDING(BOND_BONDING),
 
     /**
-     * Prefer 4x range option with throughput of +/- 125 Kbps
+     * Indicates the remote peripheral is bonded.
+     * A shared link keys exists locally for the remote peripheral, so
+     * communication can be authenticated and encrypted.
      */
-    S8(2);
+    BONDED(BOND_BONDED);
 
-    PhyOptions(final int value) {
+    BondState(int value) {
         this.value = value;
     }
 
     private final int value;
 
-    int getValue() {
-        return value;
+    @NotNull
+    public static BondState fromValue(int value) {
+        for (BondState type : values()) {
+            if (type.value == value) {
+                return type;
+            }
+        }
+        return NONE;
     }
 }
