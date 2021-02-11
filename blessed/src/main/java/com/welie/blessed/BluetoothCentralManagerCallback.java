@@ -63,9 +63,9 @@ public abstract class BluetoothCentralManagerCallback {
     /**
      * Scanning failed
      *
-     * @param errorCode the status code for the scanning failure
+     * @param scanFailure the status code for the scanning failure
      */
-    public void onScanFailed(final int errorCode) {}
+    public void onScanFailed(@NotNull final ScanFailure scanFailure) {}
 
     /**
      * Bluetooth adapter status changed

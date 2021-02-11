@@ -17,6 +17,7 @@ import com.welie.blessed.GattStatus;
 import com.welie.blessed.HciStatus;
 import com.welie.blessed.PhyOptions;
 import com.welie.blessed.PhyType;
+import com.welie.blessed.ScanFailure;
 import com.welie.blessed.WriteType;
 
 import org.jetbrains.annotations.NotNull;
@@ -345,8 +346,8 @@ class BluetoothHandler {
         }
 
         @Override
-        public void onScanFailed(int errorCode) {
-            Timber.i("scanning failed with error %d", errorCode);
+        public void onScanFailed(ScanFailure scanFailure) {
+            Timber.i("scanning failed with error %s", scanFailure);
         }
     };
 
