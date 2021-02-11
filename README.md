@@ -12,12 +12,18 @@ BLESSED is a very compact Bluetooth Low Energy (BLE) library for Android 5 and h
 * *Workarounds for some known Android bugs*, so you don't have to research any workarounds
 * *Higher abstraction methods for convenience*, so that you don't have to do a lot of low-level management to get stuff done
 
-The library consists of 3 core classes and 2 callback abstract classes:
+The library consists of 5 core classes and corresponding callback abstract classes:
 1. `BluetoothCentralManager`, and it companion abstract class `BluetoothCentralManagerCallback`
 2. `BluetoothPeripheral`, and it's companion abstract class `BluetoothPeripheralCallback`
-3. `BluetoothBytesParser`
+3. `BluetoothPeripheralManager`, and it's companion abstract class `BluetoothPeripheralManagerCallback`
+4. `BluetoothCentral`, which has no callback class
+5. `BluetoothBytesParser`
 
-The `BluetoothCentralManager` class is used to scan for devices and manage connections. The `BluetoothPeripheral` class is a replacement for the standard Android `BluetoothDevice` and `BluetoothGatt` classes. It wraps all GATT related peripheral functionality. The `BluetoothBytesParser` class is a utility class that makes parsing byte arrays easy.
+The `BluetoothCentralManager` class is used to scan for devices and manage connections. The `BluetoothPeripheral` class is a replacement for the standard Android `BluetoothDevice` and `BluetoothGatt` classes. It wraps all GATT related peripheral functionality. 
+
+The `BluetoothPeripheralManager` class is used to create your own peripheral running on an Android phone. You can add service, control advertising and deal with requests from remote centrals, represented by the `BluetoothCentral` class. For more about creating your own peripherals see the separate guide.
+
+The `BluetoothBytesParser` class is a utility class that makes parsing byte arrays easy. You can also use it construct your own byte arrays by adding integers, floats or strings.
 
 The BLESSED library was inspired by CoreBluetooth on iOS and provides the same level of abstraction, but at the same time it also stays true to Android by keeping most methods the same and allowing you to work with the standard classes for Services, Characteristics and Descriptors. If you already have developed using CoreBluetooth you can very easily port your code to Android using this library.
 
