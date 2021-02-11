@@ -42,7 +42,7 @@ public abstract class BluetoothPeripheralManagerCallback {
      *                successfully.
      * @param service The service that has been added
      */
-    public void onServiceAdded(GattStatus status, @NotNull BluetoothGattService service) {
+    public void onServiceAdded(@NotNull GattStatus status, @NotNull BluetoothGattService service) {
     }
 
     /**
