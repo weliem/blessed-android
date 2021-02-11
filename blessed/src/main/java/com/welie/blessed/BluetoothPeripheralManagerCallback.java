@@ -20,7 +20,7 @@ public abstract class BluetoothPeripheralManagerCallback {
      *                successfully.
      * @param service The service that has been added
      */
-    void onServiceAdded(int status, @NotNull BluetoothGattService service) {
+    public void onServiceAdded(int status, @NotNull BluetoothGattService service) {
     }
 
     /**
@@ -33,7 +33,7 @@ public abstract class BluetoothPeripheralManagerCallback {
      * @param bluetoothCentral the central that is doing the request
      * @param characteristic the characteristic to be read
      */
-    void onCharacteristicRead(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattCharacteristic characteristic) {
+    public void onCharacteristicRead(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattCharacteristic characteristic) {
     }
 
     /**
@@ -50,7 +50,7 @@ public abstract class BluetoothPeripheralManagerCallback {
      * @param value the value the central wants to write
      * @return GattStatus.SUCCESS if the value is acceptable, otherwise an appropriate status
      */
-    GattStatus onCharacteristicWrite(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattCharacteristic characteristic, @NotNull byte[] value) {
+    public GattStatus onCharacteristicWrite(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattCharacteristic characteristic, @NotNull byte[] value) {
         return GattStatus.SUCCESS;
     }
 
@@ -64,7 +64,7 @@ public abstract class BluetoothPeripheralManagerCallback {
      * @param bluetoothCentral the central that is doing the request
      * @param descriptor the descriptor to be read
      */
-    void onDescriptorRead(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattDescriptor descriptor) {
+    public void onDescriptorRead(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattDescriptor descriptor) {
     }
 
     /**
@@ -81,7 +81,7 @@ public abstract class BluetoothPeripheralManagerCallback {
      * @param value the value the central wants to write
      * @return GattStatus.SUCCESS if the value is acceptable, otherwise an appropriate status
      */
-    GattStatus onDescriptorWrite(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattDescriptor descriptor, @NotNull byte[] value) {
+    public GattStatus onDescriptorWrite(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattDescriptor descriptor, @NotNull byte[] value) {
         return GattStatus.SUCCESS;
     }
 
@@ -91,7 +91,7 @@ public abstract class BluetoothPeripheralManagerCallback {
      * @param bluetoothCentral the central
      * @param characteristic the characteristic
      */
-    void onNotifyingEnabled(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattCharacteristic characteristic) {
+    public void onNotifyingEnabled(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattCharacteristic characteristic) {
     }
 
     /**
@@ -100,7 +100,7 @@ public abstract class BluetoothPeripheralManagerCallback {
      * @param bluetoothCentral the central
      * @param characteristic the characteristic
      */
-    void onNotifyingDisabled(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattCharacteristic characteristic) {
+    public void onNotifyingDisabled(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattCharacteristic characteristic) {
     }
 
     /**
@@ -111,7 +111,7 @@ public abstract class BluetoothPeripheralManagerCallback {
      * @param characteristic the characteristic for which the notification was sent
      * @param status the status of the operation
      */
-    void onNotificationSent(@NotNull BluetoothCentral bluetoothCentral, @NotNull byte[] value, @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
+    public void onNotificationSent(@NotNull BluetoothCentral bluetoothCentral, @NotNull byte[] value, @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
     }
 
     /**
@@ -119,7 +119,7 @@ public abstract class BluetoothPeripheralManagerCallback {
      *
      * @param bluetoothCentral the central
      */
-    void onCentralConnected(@NotNull BluetoothCentral bluetoothCentral) {
+    public void onCentralConnected(@NotNull BluetoothCentral bluetoothCentral) {
     }
 
     /**
@@ -127,15 +127,15 @@ public abstract class BluetoothPeripheralManagerCallback {
      *
      * @param bluetoothCentral the central
      */
-    void onCentralDisconnected(@NotNull BluetoothCentral bluetoothCentral) {
+    public void onCentralDisconnected(@NotNull BluetoothCentral bluetoothCentral) {
     }
 
     /**
-     * Advertising has successfully start
+     * Advertising has successfully started
      *
      * @param settingsInEffect the AdvertiseSettings that are currently active
      */
-    void onAdvertisingStarted(@NotNull AdvertiseSettings settingsInEffect) {
+    public void onAdvertisingStarted(@NotNull AdvertiseSettings settingsInEffect) {
     }
 
     /**
@@ -143,14 +143,14 @@ public abstract class BluetoothPeripheralManagerCallback {
      *
      * @param advertiseError the error explaining why the advertising failed
      */
-    void onAdvertiseFailure(@NotNull AdvertiseError advertiseError) {
+    public void onAdvertiseFailure(@NotNull AdvertiseError advertiseError) {
     }
 
     /**
      * Advertising has stopped
      *
      */
-    void onAdvertisingStopped() {
+    public void onAdvertisingStopped() {
     }
 }
 
