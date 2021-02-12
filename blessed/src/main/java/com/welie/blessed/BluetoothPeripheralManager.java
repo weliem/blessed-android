@@ -213,7 +213,7 @@ public class BluetoothPeripheralManager {
                     }
 
                     if (responseNeeded) {
-                        bluetoothGattServer.sendResponse(device, requestId, status.getValue(), offset, safeValue);
+                        bluetoothGattServer.sendResponse(device, requestId, status.value, offset, safeValue);
                     }
                 }
             });
@@ -277,7 +277,7 @@ public class BluetoothPeripheralManager {
                     }
 
                     if (responseNeeded) {
-                        bluetoothGattServer.sendResponse(device, requestId, status.getValue(), offset, safeValue);
+                        bluetoothGattServer.sendResponse(device, requestId, status.value, offset, safeValue);
                     }
 
                     if (status == GattStatus.SUCCESS && descriptor.getUuid().equals(CCC_DESCRIPTOR_UUID)) {
@@ -343,14 +343,14 @@ public class BluetoothPeripheralManager {
                                 }
                             }
                         }
-                        bluetoothGattServer.sendResponse(device, requestId, status.getValue(), 0, null);
+                        bluetoothGattServer.sendResponse(device, requestId, status.value, 0, null);
                     }
                 });
             } else {
                 // Long write was cancelled, clean up already received bytes
                 writeLongCharacteristicTemporaryBytes.clear();
                 writeLongDescriptorTemporaryBytes.clear();
-                bluetoothGattServer.sendResponse(device, requestId, GattStatus.SUCCESS.getValue(), 0, null);
+                bluetoothGattServer.sendResponse(device, requestId, GattStatus.SUCCESS.value, 0, null);
             }
         }
 

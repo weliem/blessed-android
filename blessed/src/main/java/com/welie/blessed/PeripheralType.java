@@ -54,14 +54,14 @@ public enum PeripheralType {
      */
     DUAL(DEVICE_TYPE_DUAL);
 
-    PeripheralType(int value) {
+    PeripheralType(final int value) {
         this.value = value;
     }
 
-    private final int value;
+    public final int value;
 
     @NotNull
-    public static PeripheralType fromValue(int value) {
+    public static PeripheralType fromValue(final int value) {
         for (PeripheralType type : values()) {
             if (type.value == value) {
                 return type;

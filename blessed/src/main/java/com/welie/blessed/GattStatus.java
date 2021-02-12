@@ -255,20 +255,16 @@ public enum GattStatus {
      */
     UNKNOWN_STATUS_CODE(0xFFFF);
 
-    GattStatus(int value) {
+    GattStatus(final int value) {
         this.value = value;
     }
 
-    private final int value;
-
-    public int getValue() {
-        return value;
-    }
+    public final int value;
 
     @NotNull
-    public static GattStatus fromValue(int value) {
+    public static GattStatus fromValue(final int value) {
         for (GattStatus type : values()) {
-            if (type.getValue() == value)
+            if (type.value == value)
                 return type;
         }
         return UNKNOWN_STATUS_CODE;

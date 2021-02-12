@@ -62,20 +62,16 @@ public enum AdvertiseError {
 
     UNKNOWN_ERROR(-1);
 
-    final int value;
+    public final int value;
 
-    AdvertiseError(int value) {
+    AdvertiseError(final int value) {
         this.value = value;
     }
 
-    int getValue() {
-        return value;
-    }
-
     @NotNull
-    static AdvertiseError fromValue(int value) {
+    static AdvertiseError fromValue(final int value) {
         for (AdvertiseError type : values()) {
-            if (type.getValue() == value)
+            if (type.value == value)
                 return type;
         }
         return UNKNOWN_ERROR;

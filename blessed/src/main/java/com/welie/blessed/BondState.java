@@ -52,14 +52,14 @@ public enum BondState {
      */
     BONDED(BOND_BONDED);
 
-    BondState(int value) {
+    BondState(final int value) {
         this.value = value;
     }
 
-    private final int value;
+    public final int value;
 
     @NotNull
-    public static BondState fromValue(int value) {
+    public static BondState fromValue(final int value) {
         for (BondState type : values()) {
             if (type.value == value) {
                 return type;

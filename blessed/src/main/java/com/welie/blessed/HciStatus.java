@@ -389,20 +389,16 @@ public enum HciStatus {
      */
     UNKNOWN_STATUS_CODE(0xFFFF);
 
-    HciStatus(int value) {
+    HciStatus(final int value) {
         this.value = value;
     }
 
-    private final int value;
-
-    public int getValue() {
-        return value;
-    }
+    public final int value;
 
     @NotNull
-    public static HciStatus fromValue(int value) {
+    public static HciStatus fromValue(final int value) {
         for (HciStatus type : values()) {
-            if (type.getValue() == value)
+            if (type.value == value)
                 return type;
         }
         return UNKNOWN_STATUS_CODE;

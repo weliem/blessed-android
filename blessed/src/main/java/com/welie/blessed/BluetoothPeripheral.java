@@ -497,15 +497,15 @@ public class BluetoothPeripheral {
             listener.connectFailed(BluetoothPeripheral.this, adjustedStatus);
         } else if (previousState == BluetoothProfile.STATE_CONNECTED && newState == BluetoothProfile.STATE_DISCONNECTED && !servicesDiscovered) {
             // We got a disconnection before the services were even discovered
-            Timber.i("peripheral '%s' disconnected with status '%s' (%d) before completing service discovery", getName(), status, status.getValue());
+            Timber.i("peripheral '%s' disconnected with status '%s' (%d) before completing service discovery", getName(), status, status.value);
             completeDisconnect(false, status);
             listener.connectFailed(BluetoothPeripheral.this, status);
         } else {
             // See if we got connection drop
             if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                Timber.i("peripheral '%s' disconnected with status '%s' (%d)", getName(), status, status.getValue());
+                Timber.i("peripheral '%s' disconnected with status '%s' (%d)", getName(), status, status.value);
             } else {
-                Timber.i("unexpected connection state change for '%s' status '%s' (%d)", getName(), status, status.getValue());
+                Timber.i("unexpected connection state change for '%s' status '%s' (%d)", getName(), status, status.value);
             }
             completeDisconnect(true, status);
         }
@@ -798,7 +798,7 @@ public class BluetoothPeripheral {
             mainHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.getValue(), BluetoothProfile.STATE_DISCONNECTED);
+                    bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_DISCONNECTED);
                 }
             }, 50);
         } else {
@@ -1554,7 +1554,7 @@ public class BluetoothPeripheral {
                 if (isConnected()) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         Timber.i("setting preferred Phy: tx = %s, rx = %s, options = %s", txPhy, rxPhy, phyOptions);
-                        bluetoothGatt.setPreferredPhy(txPhy.getMask(), rxPhy.getMask(), phyOptions.getValue());
+                        bluetoothGatt.setPreferredPhy(txPhy.mask, rxPhy.mask, phyOptions.value);
                         return;
                     }
                 }
@@ -1896,7 +1896,7 @@ public class BluetoothPeripheral {
                 mainHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.CONNECTION_FAILED_ESTABLISHMENT.getValue(), BluetoothProfile.STATE_DISCONNECTED);
+                        bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.CONNECTION_FAILED_ESTABLISHMENT.value, BluetoothProfile.STATE_DISCONNECTED);
                     }
                 }, 50);
 

@@ -53,20 +53,14 @@ public enum PhyType {
         this.value = value;
         this.mask = mask;
     }
-    private final int value;
-    private final int mask;
 
-    int getValue() {
-        return value;
-    }
-    int getMask() {
-        return mask;
-    }
+    public final int value;
+    public final int mask;
 
     @NotNull
-    public static PhyType fromValue(int value) {
+    public static PhyType fromValue(final int value) {
         for (PhyType type : values()) {
-            if (type.getValue() == value)
+            if (type.value == value)
                 return type;
         }
         return UNKNOWN_PHY_TYPE;

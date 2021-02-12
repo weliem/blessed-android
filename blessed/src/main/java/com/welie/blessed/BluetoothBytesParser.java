@@ -28,6 +28,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -392,6 +393,17 @@ public class BluetoothBytesParser {
      */
     public byte[] getValue() {
         return mValue;
+    }
+
+    /*
+     * Read bytes and return the ByteArray of the length passed in.  This will increment the offset
+     *
+     * @return The DateTime read from the bytes. This will cause an exception if bytes run past end. Will return 0 epoch if unparsable
+     */
+    public byte[] getByteArray(final int length) {
+        byte[] array = Arrays.copyOfRange(mValue, offset, offset + length);
+        offset += length;
+        return array;
     }
 
     /**

@@ -48,9 +48,9 @@ public enum ConnectionPriority {
      */
     LOW_POWER(CONNECTION_PRIORITY_LOW_POWER);
 
-    ConnectionPriority(int value) {
+    ConnectionPriority(final int value) {
         this.value = value;
     }
 
-    final int value;
+    public final int value;
 }

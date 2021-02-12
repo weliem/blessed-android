@@ -789,4 +789,14 @@ public class BluetoothBytesParserTest {
         byte[] decodedValue = BluetoothBytesParser.string2bytes(valueString);
         assertArrayEquals(value, decodedValue);
     }
+
+    @Test
+    public void getByteArray_Test() {
+        byte[] value = new byte[]{0x01, 0x40, (byte) 0x80, (byte) 0x81, (byte)0xA0, (byte)0xF0, (byte) 0xFF};
+        BluetoothBytesParser parser = new BluetoothBytesParser(value);
+        byte[] byteArray = parser.getByteArray(3);
+
+        assertArrayEquals(new byte[]{0x01, 0x40, (byte) 0x80}, byteArray);
+        assertEquals(3, parser.getOffset() );
+    }
 }

@@ -31,17 +31,13 @@ import java.util.UUID;
 
 import static android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES;
 import static android.os.Build.VERSION_CODES.M;
-import static com.welie.blessed.BluetoothCentralManager.SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES;
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
-import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -358,9 +354,9 @@ public class BluetoothCentralManagerTest {
         field.setAccessible(true);
         ScanCallback scanCallback = (ScanCallback) field.get(central);
 
-        scanCallback.onScanFailed(SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES);
+        scanCallback.onScanFailed(ScanFailure.OUT_OF_HARDWARE_RESOURCES.value);
 
-        verify(callback).onScanFailed(SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES);
+        verify(callback).onScanFailed(ScanFailure.OUT_OF_HARDWARE_RESOURCES);
     }
 
     @Test
@@ -370,9 +366,9 @@ public class BluetoothCentralManagerTest {
         field.setAccessible(true);
         ScanCallback scanCallback = (ScanCallback) field.get(central);
 
-        scanCallback.onScanFailed(SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES);
+        scanCallback.onScanFailed(ScanFailure.OUT_OF_HARDWARE_RESOURCES.value);
 
-        verify(callback).onScanFailed(SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES);
+        verify(callback).onScanFailed(ScanFailure.OUT_OF_HARDWARE_RESOURCES);
     }
 
     @Test
@@ -386,9 +382,9 @@ public class BluetoothCentralManagerTest {
         field.setAccessible(true);
         ScanCallback scanCallback = (ScanCallback) field.get(central);
 
-        scanCallback.onScanFailed(SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES);
+        scanCallback.onScanFailed(ScanFailure.OUT_OF_HARDWARE_RESOURCES.value);
 
-        verify(callback).onScanFailed(SCAN_FAILED_OUT_OF_HARDWARE_RESOURCES);
+        verify(callback).onScanFailed(ScanFailure.OUT_OF_HARDWARE_RESOURCES);
     }
 
     @Test

@@ -49,14 +49,14 @@ public enum ConnectionState {
      */
     DISCONNECTING(3);
 
-    ConnectionState(int value) {
+    ConnectionState(final int value) {
         this.value = value;
     }
 
-    private final int value;
+    public final int value;
 
     @NotNull
-    public static ConnectionState fromValue(int value) {
+    public static ConnectionState fromValue(final int value) {
         for (ConnectionState type : values()) {
             if (type.value == value) {
                 return type;

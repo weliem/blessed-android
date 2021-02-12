@@ -67,14 +67,14 @@ public enum ScanFailure {
 
     UNKNOWN(-1);
 
-    ScanFailure(int value) {
+    ScanFailure(final int value) {
         this.value = value;
     }
 
     public final int value;
 
     @NotNull
-    public static ScanFailure fromValue(int value) {
+    public static ScanFailure fromValue(final int value) {
         for (ScanFailure type : values()) {
             if (type.value == value) {
                 return type;

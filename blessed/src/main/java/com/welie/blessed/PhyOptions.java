@@ -46,9 +46,5 @@ public enum PhyOptions {
         this.value = value;
     }
 
-    private final int value;
-
-    int getValue() {
-        return value;
-    }
+    public final int value;
 }
