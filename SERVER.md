@@ -75,7 +75,19 @@ public void onCharacteristicRead(@NotNull BluetoothCentral central, @NotNull Blu
 }
 ```
 
-When a write request happens, you get a callback on `onCharacteristicWrite`. If you want to validate the value before it is assigned to the characteristic you can do that by overriding this method. If you consider the value valid, you must return GattStatus.SUCCESS and otherwise you return some other GattStatus value that represents the error. After you return GattStatus.SUCCESS, the value is assigned to the characteristic. Otherwise the characteristics's value will remain unchanged and the remote central will receive an error.
+When a write request happens, you get a callback on `onCharacteristicWrite`. If you want to validate the value before it is assigned to the characteristic you can do that by overriding this method. If you consider the value valid, you must return GattStatus.SUCCESS and otherwise you return some other GattStatus value that represents the error. After you return GattStatus.SUCCESS, the value is assigned to the characteristic. Otherwise the characteristics's value will remain unchanged and the remote central will receive an error. For example:
+
+```java
+@Override
+public GattStatus onCharacteristicWrite(@NotNull BluetoothCentral central, @NotNull BluetoothGattCharacteristic characteristic, @NotNull byte[] value) {
+    if (isValid(value, characteristic)) {
+        return GattStatus.SUCCESS;
+    } else {
+        // Return an error, typical INVALID_ATTRIBUTE_VALUE_LENGTH or VALUE_NOT_ALLOWED
+        return GattStatus.VALUE_NOT_ALLOWED;
+    }
+}
+```
 
 ## Implementing descriptor read or write requests
 
