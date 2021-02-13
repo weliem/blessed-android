@@ -346,7 +346,7 @@ class BluetoothHandler {
         }
 
         @Override
-        public void onScanFailed(ScanFailure scanFailure) {
+        public void onScanFailed(@NotNull ScanFailure scanFailure) {
             Timber.i("scanning failed with error %s", scanFailure);
         }
     };

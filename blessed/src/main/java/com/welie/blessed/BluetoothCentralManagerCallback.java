@@ -27,6 +27,9 @@ import android.bluetooth.le.ScanResult;
 
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Callbacks for the BluetoothCentralManager class
+ */
 public abstract class BluetoothCentralManagerCallback {
 
     /**

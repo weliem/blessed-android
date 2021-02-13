@@ -49,19 +49,11 @@ public enum WriteType {
      */
     SIGNED(WRITE_TYPE_SIGNED, PROPERTY_SIGNED_WRITE);
 
-    final int writeType;
-    final int property;
+    public final int writeType;
+    public final int property;
 
-    WriteType(int writeType, int property) {
+    WriteType(final int writeType, final int property) {
         this.writeType = writeType;
         this.property = property;
-    }
-
-    int getWriteType() {
-        return writeType;
-    }
-
-    int getProperty() {
-        return property;
     }
 }

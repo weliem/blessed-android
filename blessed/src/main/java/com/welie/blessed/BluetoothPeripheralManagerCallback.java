@@ -42,8 +42,7 @@ public abstract class BluetoothPeripheralManagerCallback {
      *                successfully.
      * @param service The service that has been added
      */
-    public void onServiceAdded(@NotNull GattStatus status, @NotNull BluetoothGattService service) {
-    }
+    public void onServiceAdded(@NotNull GattStatus status, @NotNull BluetoothGattService service) { }
 
     /**
      * A remote central has requested to read a local characteristic.
@@ -55,8 +54,7 @@ public abstract class BluetoothPeripheralManagerCallback {
      * @param bluetoothCentral the central that is doing the request
      * @param characteristic the characteristic to be read
      */
-    public void onCharacteristicRead(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattCharacteristic characteristic) {
-    }
+    public void onCharacteristicRead(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattCharacteristic characteristic) { }
 
     /**
      * A remote central has requested to write a local characteristic.
@@ -86,8 +84,7 @@ public abstract class BluetoothPeripheralManagerCallback {
      * @param bluetoothCentral the central that is doing the request
      * @param descriptor the descriptor to be read
      */
-    public void onDescriptorRead(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattDescriptor descriptor) {
-    }
+    public void onDescriptorRead(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattDescriptor descriptor) { }
 
     /**
      * A remote central has requested to write a local descriptor.
@@ -113,8 +110,7 @@ public abstract class BluetoothPeripheralManagerCallback {
      * @param bluetoothCentral the central
      * @param characteristic the characteristic
      */
-    public void onNotifyingEnabled(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattCharacteristic characteristic) {
-    }
+    public void onNotifyingEnabled(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattCharacteristic characteristic) { }
 
     /**
      * A remote central has disabled notifications or indications for a characteristic
@@ -122,8 +118,7 @@ public abstract class BluetoothPeripheralManagerCallback {
      * @param bluetoothCentral the central
      * @param characteristic the characteristic
      */
-    public void onNotifyingDisabled(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattCharacteristic characteristic) {
-    }
+    public void onNotifyingDisabled(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattCharacteristic characteristic) { }
 
     /**
      * A notification has been sent to a central
@@ -141,38 +136,33 @@ public abstract class BluetoothPeripheralManagerCallback {
      *
      * @param bluetoothCentral the central
      */
-    public void onCentralConnected(@NotNull BluetoothCentral bluetoothCentral) {
-    }
+    public void onCentralConnected(@NotNull BluetoothCentral bluetoothCentral) { }
 
     /**
      * A remote central has disconnected
      *
      * @param bluetoothCentral the central
      */
-    public void onCentralDisconnected(@NotNull BluetoothCentral bluetoothCentral) {
-    }
+    public void onCentralDisconnected(@NotNull BluetoothCentral bluetoothCentral) { }
 
     /**
      * Advertising has successfully started
      *
      * @param settingsInEffect the AdvertiseSettings that are currently active
      */
-    public void onAdvertisingStarted(@NotNull AdvertiseSettings settingsInEffect) {
-    }
+    public void onAdvertisingStarted(@NotNull AdvertiseSettings settingsInEffect) { }
 
     /**
      * Advertising has failed
      *
      * @param advertiseError the error explaining why the advertising failed
      */
-    public void onAdvertiseFailure(@NotNull AdvertiseError advertiseError) {
-    }
+    public void onAdvertiseFailure(@NotNull AdvertiseError advertiseError) { }
 
     /**
      * Advertising has stopped
      *
      */
-    public void onAdvertisingStopped() {
-    }
+    public void onAdvertisingStopped() { }
 }
 

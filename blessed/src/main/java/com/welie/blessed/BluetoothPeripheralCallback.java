@@ -28,6 +28,9 @@ import android.bluetooth.BluetoothGattDescriptor;
 
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Callbacks for the BluetoothPeripheral class
+ */
 @SuppressWarnings("SpellCheckingInspection")
 public abstract class BluetoothPeripheralCallback {
 
@@ -146,7 +149,7 @@ public abstract class BluetoothPeripheralCallback {
      * @param rxPhy the receiver PHY in use
      * @param status GATT status code
      */
-    public void onPhyUpdate(PhyType txPhy, PhyType rxPhy, GattStatus status) {}
+    public void onPhyUpdate(@NotNull PhyType txPhy, @NotNull PhyType rxPhy, @NotNull GattStatus status) {}
 
     static class NULL extends BluetoothPeripheralCallback { }
 }

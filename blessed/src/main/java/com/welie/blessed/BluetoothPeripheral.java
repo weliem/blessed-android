@@ -1162,7 +1162,7 @@ public class BluetoothPeripheral {
             public void run() {
                 if (isConnected()) {
                     currentWriteBytes = bytesToWrite;
-                    characteristic.setWriteType(writeType.getWriteType());
+                    characteristic.setWriteType(writeType.writeType);
 
                     if (willCauseLongWrite(bytesToWrite, writeType)) {
                         // Android will turn this into a Long Write because it is larger than the MTU - 3.
@@ -1200,7 +1200,7 @@ public class BluetoothPeripheral {
     }
 
     private boolean doesNotSupportWriteType(@NotNull BluetoothGattCharacteristic characteristic, @NotNull WriteType writeType) {
-        return (characteristic.getProperties() & writeType.getProperty()) == 0;
+        return (characteristic.getProperties() & writeType.property) == 0;
     }
 
     /**
