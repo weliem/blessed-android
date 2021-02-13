@@ -145,11 +145,12 @@ public abstract class BluetoothPeripheralCallback {
     /**
      * Callback invoke as result of readPhy or setPhy operation
      *
+     * @param peripheral the peripheral
      * @param txPhy the transmitter PHY in use.
      * @param rxPhy the receiver PHY in use
      * @param status GATT status code
      */
-    public void onPhyUpdate(@NotNull PhyType txPhy, @NotNull PhyType rxPhy, @NotNull GattStatus status) {}
+    public void onPhyUpdate(@NotNull final BluetoothPeripheral peripheral, @NotNull PhyType txPhy, @NotNull PhyType rxPhy, @NotNull GattStatus status) {}
 
     /**
      * Callback invoked when the connection parameters are updated.
@@ -157,6 +158,7 @@ public abstract class BluetoothPeripheralCallback {
      * This can happen as a result of requestConnectionPriority() or when the stack/peripheral decides to change the connection parameters.
      * This callback is only called for Android 8 (Oreo) or newer.
      *
+     * @param peripheral the peripheral
      * @param interval Connection interval used on this connection, 1.25ms unit.
      *                 Valid range is from 6 (7.5ms) to 3200 (4000ms).
      * @param latency  Slave latency for the connection in number of connection events.
@@ -165,7 +167,7 @@ public abstract class BluetoothPeripheralCallback {
      *                 Valid range is from 10 (0.1s) to 3200 (32s).
      * @param status GATT status code
      */
-    public void onConnectionUpdated(final int interval, final int latency, final int timeout, @NotNull GattStatus status) {}
+    public void onConnectionUpdated(@NotNull final BluetoothPeripheral peripheral, final int interval, final int latency, final int timeout, @NotNull GattStatus status) {}
 
     /**
      * NULL class to maintain deal with nullability

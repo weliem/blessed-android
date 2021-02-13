@@ -396,7 +396,7 @@ public class BluetoothPeripheral {
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    peripheralCallback.onPhyUpdate(PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy), gattStatus);
+                    peripheralCallback.onPhyUpdate(BluetoothPeripheral.this, PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy), gattStatus);
                 }
             });
             completedCommand();
@@ -414,7 +414,7 @@ public class BluetoothPeripheral {
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    peripheralCallback.onPhyUpdate(PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy), gattStatus);
+                    peripheralCallback.onPhyUpdate(BluetoothPeripheral.this, PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy), gattStatus);
                 }
             });
             completedCommand();
@@ -435,7 +435,7 @@ public class BluetoothPeripheral {
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    peripheralCallback.onConnectionUpdated(interval, latency, timeout, gattStatus);
+                    peripheralCallback.onConnectionUpdated(BluetoothPeripheral.this, interval, latency, timeout, gattStatus);
                 }
             });
         }
