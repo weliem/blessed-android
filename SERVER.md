@@ -114,7 +114,26 @@ Note that you have to pass the value for the characteristic. That is there so th
 
 ## Connecting and disconnecting centrals
 
+When a remote central connects or disconnects, the following callbacks are called:
 
+```java
+@Override
+public void onCentralConnected(@NotNull BluetoothCentral central) {
+    // Do something, e.g. initialization of characteristics
+}
 
+@Override
+public void onCentralDisconnected(@NotNull BluetoothCentral central) {
+    if (noCentralsConnected()) {
+        stopNotifying();
+    }
+}
+```
+
+Typically, when a central disconnects, you stop notifying and clean up. 
+
+## Long reads and writes
+
+The BluetoothPeripheralManager class supports long reads and writes. It will take care of splitting up characteristic byte arrays in smaller chunks and re-assembling them. Hence, nothing special is needed and they function the same way as normal read and writes.
 
 
