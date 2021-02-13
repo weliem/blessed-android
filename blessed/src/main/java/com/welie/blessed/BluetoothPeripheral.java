@@ -51,6 +51,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
@@ -417,6 +418,22 @@ public class BluetoothPeripheral {
                 }
             });
             completedCommand();
+        }
+
+        /**
+         * This callback is only called from Android 8 (Oreo) or higher
+         */
+        public void onConnectionUpdated(BluetoothGatt gatt, final int interval, final int latency, final int timeout, final int status) {
+            final GattStatus gattStatus = GattStatus.fromValue(status);
+            String msg = String.format(Locale.ENGLISH,"connection parameters interval=%.1fms latency=%d timeout=%ds", interval * 1.25f, latency, timeout / 100);
+            Timber.d(msg);
+
+            callbackHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    peripheralCallback.onConnectionUpdated(interval, latency, timeout, gattStatus);
+                }
+            });
         }
     };
 

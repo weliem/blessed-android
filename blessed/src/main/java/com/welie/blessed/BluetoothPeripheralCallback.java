@@ -151,5 +151,24 @@ public abstract class BluetoothPeripheralCallback {
      */
     public void onPhyUpdate(@NotNull PhyType txPhy, @NotNull PhyType rxPhy, @NotNull GattStatus status) {}
 
+    /**
+     * Callback invoked when the connection parameters are updated.
+     *
+     * This can happen as a result of requestConnectionPriority() or when the stack/peripheral decides to change the connection parameters.
+     * This callback is only called for Android 8 (Oreo) or newer.
+     *
+     * @param interval Connection interval used on this connection, 1.25ms unit.
+     *                 Valid range is from 6 (7.5ms) to 3200 (4000ms).
+     * @param latency  Slave latency for the connection in number of connection events.
+     *                 Valid range is from 0 to 499.
+     * @param timeout  Supervision timeout for this connection, in 10ms unit.
+     *                 Valid range is from 10 (0.1s) to 3200 (32s).
+     * @param status GATT status code
+     */
+    public void onConnectionUpdated(final int interval, final int latency, final int timeout, @NotNull GattStatus status) {}
+
+    /**
+     * NULL class to maintain deal with nullability
+     */
     static class NULL extends BluetoothPeripheralCallback { }
 }
