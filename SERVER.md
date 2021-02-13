@@ -81,9 +81,38 @@ When a write request happens, you get a callback on `onCharacteristicWrite`. If 
 
 Read or write request for descriptors work in the same way as for characteristics. The only exception is when the descriptor happens to be the CCC descriptor, which is used to turn on/off notifications
 
-## Enabling or disabling notifications
+## Enabling or disabling of notifications
 
-...
+If you have a characteristic with PROPERTY_INDICATE or PROPERTY_NOTIFY and a CCC descriptor added, then a remote central may 'enable notifications'. Blessed will doublecheck if the the correct descriptor values are written, and if correct it will call either `onNotifyingEnabled` or `onNotifyingDisabled`. It is then your responsibility to actually follow up and do the notifications.
+
+
+```java
+@Override
+public void onNotifyingEnabled(@NotNull BluetoothCentral central, @NotNull BluetoothGattCharacteristic characteristic) {
+    if (characteristic.getUuid().equals(CURRENT_TIME_CHARACTERISTIC_UUID)) {
+        notifyCurrentTime();
+    }
+}
+
+@Override
+public void onNotifyingDisabled(@NotNull BluetoothCentral central, @NotNull BluetoothGattCharacteristic characteristic) {
+    if (characteristic.getUuid().equals(CURRENT_TIME_CHARACTERISTIC_UUID)) {
+        stopNotifying();
+    }
+}
+```
+
+## Sending notifications
+
+Once notifications have been enabled, you can send notifactions by calling:
+
+```java
+peripheralManager.notifyCharacteristicChanged(value, characteristic);
+```
+
+Note that you have to pass the value for the characteristic. That is there so that you can do high speed notifications as each call to notifyCharacteristicChanged() will be queued up. So you can call this function in a loop and then each command is executed the value of the characteristic will be updated and sent to the remote central.
+
+## Connecting and disconnecting centrals
 
 
 
