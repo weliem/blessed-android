@@ -355,7 +355,7 @@ public class BluetoothPeripheral {
         public void onReadRemoteRssi(BluetoothGatt gatt, final int rssi, final int status) {
             final GattStatus gattStatus = GattStatus.fromValue(status);
             if (gattStatus != GattStatus.SUCCESS) {
-                Timber.e("reading RSSI failed, status '%s'", GattStatus.fromValue(status));
+                Timber.e("reading RSSI failed, status '%s'", gattStatus);
             }
 
             callbackHandler.post(new Runnable() {
@@ -371,7 +371,7 @@ public class BluetoothPeripheral {
         public void onMtuChanged(BluetoothGatt gatt, final int mtu, final int status) {
             final GattStatus gattStatus = GattStatus.fromValue(status);
             if (gattStatus != GattStatus.SUCCESS) {
-                Timber.e("change MTU failed, status '%s'", GattStatus.fromValue(status));
+                Timber.e("change MTU failed, status '%s'", gattStatus);
             }
 
             currentMtu = mtu;
@@ -388,7 +388,7 @@ public class BluetoothPeripheral {
         public void onPhyRead(BluetoothGatt gatt, final int txPhy, final int rxPhy, final int status) {
             final GattStatus gattStatus = GattStatus.fromValue(status);
             if (gattStatus != GattStatus.SUCCESS) {
-                Timber.e("read Phy failed, status '%s'", GattStatus.fromValue(status));
+                Timber.e("read Phy failed, status '%s'", gattStatus);
             } else {
                 Timber.i("updated Phy: tx = %s, rx = %s", PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy));
             }
@@ -406,7 +406,7 @@ public class BluetoothPeripheral {
         public void onPhyUpdate(BluetoothGatt gatt, final int txPhy, final int rxPhy, final int status) {
             final GattStatus gattStatus = GattStatus.fromValue(status);
             if (gattStatus != GattStatus.SUCCESS) {
-                Timber.e("update Phy failed, status '%s'", GattStatus.fromValue(status));
+                Timber.e("update Phy failed, status '%s'", gattStatus);
             } else {
                 Timber.i("updated Phy: tx = %s, rx = %s", PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy));
             }
@@ -425,8 +425,12 @@ public class BluetoothPeripheral {
          */
         public void onConnectionUpdated(BluetoothGatt gatt, final int interval, final int latency, final int timeout, final int status) {
             final GattStatus gattStatus = GattStatus.fromValue(status);
-            String msg = String.format(Locale.ENGLISH,"connection parameters interval=%.1fms latency=%d timeout=%ds", interval * 1.25f, latency, timeout / 100);
-            Timber.d(msg);
+            if (gattStatus == GattStatus.SUCCESS) {
+                String msg = String.format(Locale.ENGLISH, "connection parameters: interval=%.1fms latency=%d timeout=%ds", interval * 1.25f, latency, timeout / 100);
+                Timber.d(msg);
+            } else {
+                Timber.e("connection parameters update failed with status '%s'", gattStatus);
+            }
 
             callbackHandler.post(new Runnable() {
                 @Override
