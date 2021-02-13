@@ -30,22 +30,22 @@ import org.jetbrains.annotations.NotNull;
  */
 public enum ConnectionState {
     /**
-     * The peripheral is in disconnected
+     * The peripheral is disconnected
      */
     DISCONNECTED(0),
 
     /**
-     * The peripheral is in connecting
+     * The peripheral is connecting
      */
     CONNECTING(1),
 
     /**
-     * The peripheral is in connected
+     * The peripheral is connected
      */
     CONNECTED(2),
 
     /**
-     * The peripheral is in disconnecting
+     * The peripheral is disconnecting
      */
     DISCONNECTING(3);
 
