@@ -75,17 +75,77 @@ public void onCharacteristicRead(@NotNull BluetoothCentral central, @NotNull Blu
 }
 ```
 
-When a write request happens, you get a callback on `onCharacteristicWrite`. If you want to validate the value before it is assigned to the characteristic you can do that by overriding this method. If you consider the value valid, you must return GattStatus.SUCCESS and otherwise you return some other GattStatus value that represents the error. After you return GattStatus.SUCCESS, the value is assigned to the characteristic. Otherwise the characteristics's value will remain unchanged and the remote central will receive an error.
+When a write request happens, you get a callback on `onCharacteristicWrite`. If you want to validate the value before it is assigned to the characteristic you can do that by overriding this method. If you consider the value valid, you must return GattStatus.SUCCESS and otherwise you return some other GattStatus value that represents the error. After you return GattStatus.SUCCESS, the value is assigned to the characteristic. Otherwise the characteristics's value will remain unchanged and the remote central will receive an error. For example:
+
+```java
+@Override
+public GattStatus onCharacteristicWrite(@NotNull BluetoothCentral central, @NotNull BluetoothGattCharacteristic characteristic, @NotNull byte[] value) {
+    if (isValid(value, characteristic)) {
+        return GattStatus.SUCCESS;
+    } else {
+        // Return an error, typical INVALID_ATTRIBUTE_VALUE_LENGTH or VALUE_NOT_ALLOWED
+        return GattStatus.VALUE_NOT_ALLOWED;
+    }
+}
+```
 
 ## Implementing descriptor read or write requests
 
 Read or write request for descriptors work in the same way as for characteristics. The only exception is when the descriptor happens to be the CCC descriptor, which is used to turn on/off notifications
 
-## Enabling or disabling notifications
+## Enabling or disabling of notifications
 
-...
+If you have a characteristic with PROPERTY_INDICATE or PROPERTY_NOTIFY and a CCC descriptor added, then a remote central may 'enable notifications'. Blessed will doublecheck if the the correct descriptor values are written, and if correct it will call either `onNotifyingEnabled` or `onNotifyingDisabled`. It is then your responsibility to actually follow up and do the notifications.
 
 
+```java
+@Override
+public void onNotifyingEnabled(@NotNull BluetoothCentral central, @NotNull BluetoothGattCharacteristic characteristic) {
+    if (characteristic.getUuid().equals(CURRENT_TIME_CHARACTERISTIC_UUID)) {
+        notifyCurrentTime();
+    }
+}
 
+@Override
+public void onNotifyingDisabled(@NotNull BluetoothCentral central, @NotNull BluetoothGattCharacteristic characteristic) {
+    if (characteristic.getUuid().equals(CURRENT_TIME_CHARACTERISTIC_UUID)) {
+        stopNotifying();
+    }
+}
+```
+
+## Sending notifications
+
+Once notifications have been enabled, you can send notifactions by calling:
+
+```java
+peripheralManager.notifyCharacteristicChanged(value, characteristic);
+```
+
+Note that you have to pass the value for the characteristic. That is there so that you can do high speed notifications as each call to notifyCharacteristicChanged() will be queued up. So you can call this function in a loop and then each command is executed the value of the characteristic will be updated and sent to the remote central.
+
+## Connecting and disconnecting centrals
+
+When a remote central connects or disconnects, the following callbacks are called:
+
+```java
+@Override
+public void onCentralConnected(@NotNull BluetoothCentral central) {
+    // Do something, e.g. initialization of characteristics
+}
+
+@Override
+public void onCentralDisconnected(@NotNull BluetoothCentral central) {
+    if (noCentralsConnected()) {
+        stopNotifying();
+    }
+}
+```
+
+Typically, when a central disconnects, you stop notifying and clean up. 
+
+## Long reads and writes
+
+The BluetoothPeripheralManager class supports long reads and writes. It will take care of splitting up characteristic byte arrays in smaller chunks and re-assembling them. Hence, nothing special is needed and they function the same way as normal read and writes.
 
 
