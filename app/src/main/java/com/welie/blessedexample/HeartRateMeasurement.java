@@ -12,7 +12,7 @@ import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT8;
 
 public class HeartRateMeasurement implements Serializable {
 
-    public Integer pulse;
+    public final Integer pulse;
 
     public HeartRateMeasurement(byte[] value) {
         BluetoothBytesParser parser = new BluetoothBytesParser(value);

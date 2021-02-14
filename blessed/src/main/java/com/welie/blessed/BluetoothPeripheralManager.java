@@ -99,7 +99,7 @@ public class BluetoothPeripheralManager {
 
     protected final BluetoothGattServerCallback bluetoothGattServerCallback = new BluetoothGattServerCallback() {
         @Override
-        public void onConnectionStateChange(final BluetoothDevice device, int status, int newState) {
+        public void onConnectionStateChange(final BluetoothDevice device, final int status, final int newState) {
 
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
@@ -295,7 +295,7 @@ public class BluetoothPeripheralManager {
         }
 
         // Check value to see if it is valid and if matches the characteristic properties
-        private GattStatus checkCccDescriptorValue(@NotNull byte[] safeValue, @NotNull BluetoothGattCharacteristic characteristic) {
+        private GattStatus checkCccDescriptorValue(@NotNull final byte[] safeValue, @NotNull final BluetoothGattCharacteristic characteristic) {
             GattStatus status = GattStatus.SUCCESS;
 
             if (safeValue.length != 2) {
@@ -355,7 +355,7 @@ public class BluetoothPeripheralManager {
         }
 
         @Override
-        public void onNotificationSent(@NotNull BluetoothDevice device, final int status) {
+        public void onNotificationSent(@NotNull final BluetoothDevice device, final int status) {
             final BluetoothCentral bluetoothCentral = getCentral(device);
             final @NotNull BluetoothGattCharacteristic characteristic = Objects.requireNonNull(currentNotifyCharacteristic);
             final @NotNull byte[] value = Objects.requireNonNull(currentNotifyValue);
@@ -370,19 +370,19 @@ public class BluetoothPeripheralManager {
         }
 
         @Override
-        public void onMtuChanged(@NotNull BluetoothDevice device, int mtu) {
+        public void onMtuChanged(@NotNull final BluetoothDevice device, final int mtu) {
             Timber.i("new MTU: %d", mtu);
             BluetoothCentral bluetoothCentral = getCentral(device);
             bluetoothCentral.setCurrentMtu(mtu);
         }
 
         @Override
-        public void onPhyUpdate(@NotNull BluetoothDevice device, int txPhy, int rxPhy, int status) {
+        public void onPhyUpdate(@NotNull final BluetoothDevice device, final int txPhy, final int rxPhy, final int status) {
             super.onPhyUpdate(device, txPhy, rxPhy, status);
         }
 
         @Override
-        public void onPhyRead(@NotNull BluetoothDevice device, int txPhy, int rxPhy, int status) {
+        public void onPhyRead(@NotNull final BluetoothDevice device, final int txPhy, final int rxPhy, final int status) {
             super.onPhyRead(device, txPhy, rxPhy, status);
         }
     };
@@ -400,7 +400,7 @@ public class BluetoothPeripheralManager {
         }
 
         @Override
-        public void onStartFailure(int errorCode) {
+        public void onStartFailure(final int errorCode) {
             final AdvertiseError advertiseError = AdvertiseError.fromValue(errorCode);
             Timber.e("advertising failed with error '%s'", advertiseError);
             mainHandler.post(new Runnable() {
@@ -429,7 +429,7 @@ public class BluetoothPeripheralManager {
      * @param bluetoothManager a valid BluetoothManager
      * @param callback an instance of BluetoothPeripheralManagerCallback where the callbacks will be handled
      */
-    public BluetoothPeripheralManager(@NotNull Context context, @NotNull BluetoothManager bluetoothManager, @NotNull BluetoothPeripheralManagerCallback callback) {
+    public BluetoothPeripheralManager(@NotNull final Context context, @NotNull final BluetoothManager bluetoothManager, @NotNull final BluetoothPeripheralManagerCallback callback) {
         this.context = Objects.requireNonNull(context, CONTEXT_IS_NULL);
         this.callback = Objects.requireNonNull(callback, "Callback is null");
         this.bluetoothManager = Objects.requireNonNull(bluetoothManager, BLUETOOTH_MANAGER_IS_NULL);
@@ -465,7 +465,7 @@ public class BluetoothPeripheralManager {
      * @param advertiseData the AdvertiseData
      * @param scanResponse the ScanResponse
      */
-    public void startAdvertising(AdvertiseSettings settings, AdvertiseData advertiseData, AdvertiseData scanResponse) {
+    public void startAdvertising(@NotNull final AdvertiseSettings settings, @NotNull final AdvertiseData advertiseData, @NotNull final AdvertiseData scanResponse) {
         if (!bluetoothAdapter.isMultipleAdvertisementSupported()) {
             Timber.e("device does not support advertising");
         } else {
@@ -522,7 +522,7 @@ public class BluetoothPeripheralManager {
      * @param service the service to remove
      * @return true if the service was removed, otherwise false
      */
-    public boolean remove(@NotNull BluetoothGattService service) {
+    public boolean remove(@NotNull final BluetoothGattService service) {
         Objects.requireNonNull(service, SERVICE_IS_NULL);
 
         return bluetoothGattServer.removeService(service);
@@ -605,12 +605,12 @@ public class BluetoothPeripheralManager {
      *
      * @param bluetoothCentral the Central
      */
-    public void cancelConnection(@NotNull BluetoothCentral bluetoothCentral) {
+    public void cancelConnection(@NotNull final BluetoothCentral bluetoothCentral) {
         Objects.requireNonNull(bluetoothCentral, CENTRAL_IS_NULL);
         cancelConnection(bluetoothAdapter.getRemoteDevice(bluetoothCentral.getAddress()));
     }
 
-    private void cancelConnection(@NotNull BluetoothDevice bluetoothDevice) {
+    private void cancelConnection(@NotNull final BluetoothDevice bluetoothDevice) {
         Objects.requireNonNull(bluetoothDevice, DEVICE_IS_NULL);
 
         Timber.i("cancelConnection with '%s' (%s)", bluetoothDevice.getName(), bluetoothDevice.getAddress());
@@ -670,13 +670,13 @@ public class BluetoothPeripheralManager {
     }
 
     @Nullable
-    public BluetoothCentral getCentral(@NotNull String address) {
+    public BluetoothCentral getCentral(@NotNull final String address) {
         Objects.requireNonNull(address, ADDRESS_IS_NULL);
         return connectedCentrals.get(address);
     }
 
     @NotNull
-    private BluetoothCentral getCentral(@NotNull BluetoothDevice device) {
+    private BluetoothCentral getCentral(@NotNull final BluetoothDevice device) {
         Objects.requireNonNull(device, DEVICE_IS_NULL);
 
         BluetoothCentral result = connectedCentrals.get(device.getAddress());
@@ -686,7 +686,7 @@ public class BluetoothPeripheralManager {
         return result;
     }
 
-    private void removeCentral(@NotNull BluetoothDevice device) {
+    private void removeCentral(@NotNull final BluetoothDevice device) {
         Objects.requireNonNull(device, DEVICE_IS_NULL);
 
         connectedCentrals.remove(device.getAddress());
@@ -706,7 +706,7 @@ public class BluetoothPeripheralManager {
         }
     };
 
-    private void handleAdapterState(int state) {
+    private void handleAdapterState(final int state) {
         switch (state) {
             case BluetoothAdapter.STATE_OFF:
                 Timber.d("bluetooth turned off");
@@ -732,7 +732,7 @@ public class BluetoothPeripheralManager {
         onAdvertisingStopped();
     }
 
-    private @NotNull byte[] copyOf(@NotNull byte[] source, int offset, int maxSize) {
+    private @NotNull byte[] copyOf(@NotNull final byte[] source, final int offset, final int maxSize) {
         if (source.length > maxSize) {
             final int chunkSize = Math.min(source.length - offset, maxSize);
             final byte[] result = new byte[chunkSize];
@@ -749,7 +749,7 @@ public class BluetoothPeripheralManager {
      * @return non-null copy of the source byte array or an empty array if source was null
      */
     @NotNull
-    byte[] copyOf(@Nullable byte[] source) {
+    byte[] copyOf(@Nullable final byte[] source) {
         return (source == null) ? new byte[0] : Arrays.copyOf(source, source.length);
     }
 
@@ -760,19 +760,19 @@ public class BluetoothPeripheralManager {
      * @return the source byte array or an empty array if source was null
      */
     @NotNull
-    private byte[] nonnullOf(@Nullable byte[] source) {
+    private byte[] nonnullOf(@Nullable final byte[] source) {
         return (source == null) ? new byte[0] : source;
     }
 
-    private boolean supportsNotify(@NotNull BluetoothGattCharacteristic characteristic) {
+    private boolean supportsNotify(@NotNull final BluetoothGattCharacteristic characteristic) {
         return (characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0;
     }
 
-    private boolean supportsIndicate(@NotNull BluetoothGattCharacteristic characteristic) {
+    private boolean supportsIndicate(@NotNull final BluetoothGattCharacteristic characteristic) {
         return (characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_INDICATE) > 0;
     }
 
-    private boolean doesNotSupportNotifying(@NotNull BluetoothGattCharacteristic characteristic) {
+    private boolean doesNotSupportNotifying(@NotNull final BluetoothGattCharacteristic characteristic) {
         return !(supportsIndicate(characteristic) || supportsNotify(characteristic));
     }
 }

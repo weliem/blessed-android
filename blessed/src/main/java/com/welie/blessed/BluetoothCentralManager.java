@@ -100,9 +100,9 @@ public class BluetoothCentralManager {
 
     private final ScanCallback scanByNameCallback = new ScanCallback() {
         @Override
-        public void onScanResult(int callbackType, final ScanResult result) {
+        public void onScanResult(final int callbackType, final ScanResult result) {
             synchronized (this) {
-                String deviceName = result.getDevice().getName();
+                final String deviceName = result.getDevice().getName();
                 if (deviceName == null) return;
 
                 for (String name : scanPeripheralNames) {
@@ -138,7 +138,7 @@ public class BluetoothCentralManager {
 
     private final ScanCallback defaultScanCallback = new ScanCallback() {
         @Override
-        public void onScanResult(int callbackType, final ScanResult result) {
+        public void onScanResult(final int callbackType, final ScanResult result) {
             synchronized (this) {
                 callBackHandler.post(new Runnable() {
                     @Override
@@ -168,7 +168,7 @@ public class BluetoothCentralManager {
 
     private final ScanCallback autoConnectScanCallback = new ScanCallback() {
         @Override
-        public void onScanResult(int callbackType, ScanResult result) {
+        public void onScanResult(final int callbackType, final ScanResult result) {
             synchronized (this) {
                 if (!isAutoScanning()) return;
 
@@ -210,7 +210,7 @@ public class BluetoothCentralManager {
     private final BluetoothPeripheral.InternalCallback internalCallback = new BluetoothPeripheral.InternalCallback() {
 
         @Override
-        public void connected(final @NotNull BluetoothPeripheral peripheral) {
+        public void connected(@NotNull final BluetoothPeripheral peripheral) {
             connectionRetries.remove(peripheral.getAddress());
             unconnectedPeripherals.remove(peripheral.getAddress());
             scannedPeripherals.remove((peripheral.getAddress()));
@@ -229,7 +229,7 @@ public class BluetoothCentralManager {
         }
 
         @Override
-        public void connectFailed(final @NotNull BluetoothPeripheral peripheral, final HciStatus status) {
+        public void connectFailed(@NotNull final BluetoothPeripheral peripheral, @NotNull final HciStatus status) {
             unconnectedPeripherals.remove(peripheral.getAddress());
             scannedPeripherals.remove((peripheral.getAddress()));
 
@@ -260,7 +260,7 @@ public class BluetoothCentralManager {
         }
 
         @Override
-        public void disconnected(final @NotNull BluetoothPeripheral peripheral, final HciStatus status) {
+        public void disconnected(@NotNull final BluetoothPeripheral peripheral, @NotNull final HciStatus status) {
             if (expectingBluetoothOffDisconnects) {
                 cancelDisconnectionTimer();
                 expectingBluetoothOffDisconnects = false;
@@ -280,7 +280,7 @@ public class BluetoothCentralManager {
         }
 
         @Override
-        public @Nullable String getPincode(@NotNull BluetoothPeripheral device) {
+        public @Nullable String getPincode(@NotNull final BluetoothPeripheral device) {
             return pinCodes.get(device.getAddress());
         }
     };
@@ -294,7 +294,7 @@ public class BluetoothCentralManager {
      * @param bluetoothCentralManagerCallback the callback to call for updates
      * @param handler                  Handler to use for callbacks.
      */
-    public BluetoothCentralManager(@NotNull Context context, @NotNull BluetoothCentralManagerCallback bluetoothCentralManagerCallback, @NotNull Handler handler) {
+    public BluetoothCentralManager(@NotNull final Context context, @NotNull final BluetoothCentralManagerCallback bluetoothCentralManagerCallback, @NotNull final Handler handler) {
         this.context = Objects.requireNonNull(context, "no valid context provided");
         this.bluetoothCentralManagerCallback = Objects.requireNonNull(bluetoothCentralManagerCallback, "no valid bluetoothCallback provided");
         this.callBackHandler = Objects.requireNonNull(handler, "no valid handler provided");
@@ -332,7 +332,7 @@ public class BluetoothCentralManager {
         context.unregisterReceiver(adapterStateReceiver);
     }
 
-    private ScanSettings getScanSettings(int scanMode) {
+    private ScanSettings getScanSettings(final int scanMode) {
         if (scanMode == ScanSettings.SCAN_MODE_LOW_POWER ||
                 scanMode == ScanSettings.SCAN_MODE_LOW_LATENCY ||
                 scanMode == ScanSettings.SCAN_MODE_BALANCED ||
@@ -364,11 +364,11 @@ public class BluetoothCentralManager {
      *
      * @param scanMode the scanMode to set
      */
-    public void setScanMode(int scanMode) {
+    public void setScanMode(final int scanMode) {
         scanSettings = getScanSettings(scanMode);
     }
 
-    private void startScan(@Nullable List<ScanFilter> filters, @NotNull ScanSettings scanSettings, @NotNull ScanCallback scanCallback) {
+    private void startScan(@Nullable final List<ScanFilter> filters, @NotNull final ScanSettings scanSettings, @NotNull final ScanCallback scanCallback) {
         // Check is BLE is available, enabled and all permission granted
         if (!isBleReady()) return;
 
@@ -409,7 +409,7 @@ public class BluetoothCentralManager {
             throw new IllegalArgumentException("at least one service UUID  must be supplied");
         }
 
-        List<ScanFilter> filters = new ArrayList<>();
+        final List<ScanFilter> filters = new ArrayList<>();
         for (UUID serviceUUID : serviceUUIDs) {
             ScanFilter filter = new ScanFilter.Builder()
                     .setServiceUuid(new ParcelUuid(serviceUUID))
@@ -453,7 +453,7 @@ public class BluetoothCentralManager {
             throw new IllegalArgumentException("at least one peripheral address must be supplied");
         }
 
-        List<ScanFilter> filters = new ArrayList<>();
+        final List<ScanFilter> filters = new ArrayList<>();
         for (String address : peripheralAddresses) {
             if (BluetoothAdapter.checkBluetoothAddress(address)) {
                 ScanFilter filter = new ScanFilter.Builder()
@@ -473,7 +473,7 @@ public class BluetoothCentralManager {
      *
      * @param filters A list of ScanFilters
      */
-    public void scanForPeripheralsUsingFilters(@NotNull List<ScanFilter> filters) {
+    public void scanForPeripheralsUsingFilters(@NotNull final List<ScanFilter> filters) {
         Objects.requireNonNull(filters, "no filters supplied");
 
         // Make sure there is at least 1 filter in the list
@@ -506,7 +506,7 @@ public class BluetoothCentralManager {
         // Start the scanner
         autoConnectScanner = bluetoothAdapter.getBluetoothLeScanner();
         if (autoConnectScanner != null) {
-            List<ScanFilter> filters = new ArrayList<>();
+            final List<ScanFilter> filters = new ArrayList<>();
             for (String address : reconnectPeripheralAddresses) {
                 ScanFilter filter = new ScanFilter.Builder()
                         .setDeviceAddress(address)
@@ -672,7 +672,7 @@ public class BluetoothCentralManager {
         Objects.requireNonNull(peripheral, NO_VALID_PERIPHERAL_PROVIDED);
 
         // First check if we are doing a reconnection scan for this peripheral
-        String peripheralAddress = peripheral.getAddress();
+        final String peripheralAddress = peripheral.getAddress();
         if (reconnectPeripheralAddresses.contains(peripheralAddress)) {
             reconnectPeripheralAddresses.remove(peripheralAddress);
             reconnectCallbacks.remove(peripheralAddress);
@@ -732,7 +732,7 @@ public class BluetoothCentralManager {
         // Add uncached peripherals to list of peripherals to scan for
         if (!uncachedPeripherals.isEmpty()) {
             for (BluetoothPeripheral peripheral : uncachedPeripherals.keySet()) {
-                String peripheralAddress = peripheral.getAddress();
+                final String peripheralAddress = peripheral.getAddress();
 
                 // Check if this peripheral is already on the list or not
                 if (reconnectPeripheralAddresses.contains(peripheralAddress)) {
@@ -815,7 +815,7 @@ public class BluetoothCentralManager {
     }
 
     private boolean permissionsGranted() {
-        int targetSdkVersion = context.getApplicationInfo().targetSdkVersion;
+        final int targetSdkVersion = context.getApplicationInfo().targetSdkVersion;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && targetSdkVersion >= Build.VERSION_CODES.Q) {
             if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 Timber.e("no ACCESS_FINE_LOCATION permission, cannot scan");
@@ -950,7 +950,7 @@ public class BluetoothCentralManager {
         Objects.requireNonNull(peripheralAddress, NO_PERIPHERAL_ADDRESS_PROVIDED);
 
         // Get the set of bonded devices
-        Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices();
+        final Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices();
 
         // See if the device is bonded
         BluetoothDevice peripheralToUnBond = null;

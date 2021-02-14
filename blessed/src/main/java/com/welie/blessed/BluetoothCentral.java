@@ -54,7 +54,7 @@ public class BluetoothCentral {
         return name;
     }
 
-    protected void setCurrentMtu(int currentMtu) {
+    protected void setCurrentMtu(final int currentMtu) {
         this.currentMtu = currentMtu;
     }
 
@@ -67,7 +67,9 @@ public class BluetoothCentral {
      *
      * This value is derived from the current negotiated MTU or the maximum characteristic length (512)
      */
-    public int getMaximumWriteValueLength(WriteType writeType) {
+    public int getMaximumWriteValueLength(@NotNull final WriteType writeType) {
+        Objects.requireNonNull(writeType, "writetype is null");
+
         switch (writeType) {
             case WITH_RESPONSE:
                 return 512;
