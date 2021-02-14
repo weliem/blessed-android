@@ -41,8 +41,8 @@ public class BluetoothCentral {
 
     private int currentMtu = 23;
 
-    public BluetoothCentral(@NotNull String address, @Nullable String name) {
-        this.address = Objects.requireNonNull(address, "Address is null");
+    BluetoothCentral(@NotNull String address, @Nullable String name) {
+        this.address = Objects.requireNonNull(address, "address is null");
         this.name = name;
     }
 
