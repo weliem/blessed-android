@@ -203,7 +203,7 @@ public class BluetoothPeripheralManager {
                         if (offset == 0) {
                             writeLongCharacteristicTemporaryBytes.put(characteristic, safeValue);
                         } else {
-                            byte[] temporaryBytes = writeLongCharacteristicTemporaryBytes.get(characteristic);
+                            final byte[] temporaryBytes = writeLongCharacteristicTemporaryBytes.get(characteristic);
                             if (temporaryBytes != null && offset == temporaryBytes.length) {
                                 writeLongCharacteristicTemporaryBytes.put(characteristic, mergeArrays(temporaryBytes, safeValue));
                             } else {
@@ -262,7 +262,7 @@ public class BluetoothPeripheralManager {
                             if (offset == 0) {
                                 writeLongDescriptorTemporaryBytes.put(descriptor, safeValue);
                             } else {
-                                byte[] temporaryBytes = writeLongDescriptorTemporaryBytes.get(descriptor);
+                                final byte[] temporaryBytes = writeLongDescriptorTemporaryBytes.get(descriptor);
                                 if (temporaryBytes != null && offset == temporaryBytes.length) {
                                     writeLongDescriptorTemporaryBytes.put(descriptor, mergeArrays(temporaryBytes, safeValue));
                                 } else {
@@ -321,7 +321,7 @@ public class BluetoothPeripheralManager {
                     public void run() {
                         GattStatus status = GattStatus.SUCCESS;
                         if (!writeLongCharacteristicTemporaryBytes.isEmpty()) {
-                            BluetoothGattCharacteristic characteristic = writeLongCharacteristicTemporaryBytes.keySet().iterator().next();
+                            final BluetoothGattCharacteristic characteristic = writeLongCharacteristicTemporaryBytes.keySet().iterator().next();
                             if (characteristic != null) {
                                 // Ask callback if value is ok or not
                                 status = callback.onCharacteristicWrite(bluetoothCentral, characteristic, writeLongCharacteristicTemporaryBytes.get(characteristic));
@@ -332,7 +332,7 @@ public class BluetoothPeripheralManager {
                                 }
                             }
                         } else if (!writeLongDescriptorTemporaryBytes.isEmpty()) {
-                            BluetoothGattDescriptor descriptor = writeLongDescriptorTemporaryBytes.keySet().iterator().next();
+                            final BluetoothGattDescriptor descriptor = writeLongDescriptorTemporaryBytes.keySet().iterator().next();
                             if (descriptor != null) {
                                 // Ask callback if value is ok or not
                                 status = callback.onDescriptorWrite(bluetoothCentral, descriptor, writeLongDescriptorTemporaryBytes.get(descriptor));
@@ -438,7 +438,7 @@ public class BluetoothPeripheralManager {
         this.bluetoothGattServer = bluetoothManager.openGattServer(context, bluetoothGattServerCallback);
 
         // Register for broadcasts on BluetoothAdapter state change
-        IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+        final IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
         context.registerReceiver(adapterStateReceiver, filter);
     }
 
@@ -498,7 +498,7 @@ public class BluetoothPeripheralManager {
     public boolean add(@NotNull final BluetoothGattService service) {
         Objects.requireNonNull(service, SERVICE_IS_NULL);
 
-        boolean result = commandQueue.add(new Runnable() {
+        final boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
                 if (!bluetoothGattServer.addService(service)) {
@@ -579,7 +579,7 @@ public class BluetoothPeripheralManager {
         if (doesNotSupportNotifying(characteristic)) return false;
 
         final boolean confirm = supportsIndicate(characteristic);
-        boolean result = commandQueue.add(new Runnable() {
+        final boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
                 currentNotifyValue = value;
@@ -725,7 +725,7 @@ public class BluetoothPeripheralManager {
     }
 
     private void cancelAllConnectionsWhenBluetoothOff() {
-        Set<BluetoothCentral> bluetoothCentrals = getConnectedCentrals();
+        final Set<BluetoothCentral> bluetoothCentrals = getConnectedCentrals();
         for (BluetoothCentral bluetoothCentral : bluetoothCentrals) {
             bluetoothGattServerCallback.onConnectionStateChange(bluetoothAdapter.getRemoteDevice(bluetoothCentral.getAddress()), 0, BluetoothProfile.STATE_DISCONNECTED);
         }
@@ -735,9 +735,7 @@ public class BluetoothPeripheralManager {
     private @NotNull byte[] copyOf(@NotNull final byte[] source, final int offset, final int maxSize) {
         if (source.length > maxSize) {
             final int chunkSize = Math.min(source.length - offset, maxSize);
-            final byte[] result = new byte[chunkSize];
-            System.arraycopy(source, offset, result, 0, chunkSize);
-            return result;
+            return Arrays.copyOfRange(source, offset, offset + chunkSize);
         }
         return Arrays.copyOf(source, source.length);
     }
