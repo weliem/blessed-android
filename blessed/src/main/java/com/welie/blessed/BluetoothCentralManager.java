@@ -567,7 +567,7 @@ public class BluetoothCentralManager {
      *
      * @param peripheral BLE peripheral to connect with
      */
-    public void connectPeripheral(@NotNull BluetoothPeripheral peripheral, @NotNull BluetoothPeripheralCallback peripheralCallback) {
+    public void connectPeripheral(@NotNull final BluetoothPeripheral peripheral, @NotNull final BluetoothPeripheralCallback peripheralCallback) {
         synchronized (connectLock) {
             Objects.requireNonNull(peripheral, NO_VALID_PERIPHERAL_PROVIDED);
             Objects.requireNonNull(peripheralCallback, NO_VALID_PERIPHERAL_CALLBACK_SPECIFIED);
@@ -606,7 +606,7 @@ public class BluetoothCentralManager {
      *
      * @param peripheral the peripheral
      */
-    public void autoConnectPeripheral(@NotNull BluetoothPeripheral peripheral, @NotNull BluetoothPeripheralCallback peripheralCallback) {
+    public void autoConnectPeripheral(@NotNull final BluetoothPeripheral peripheral, @NotNull final BluetoothPeripheralCallback peripheralCallback) {
         synchronized (connectLock) {
             Objects.requireNonNull(peripheral, NO_VALID_PERIPHERAL_PROVIDED);
             Objects.requireNonNull(peripheralCallback, NO_VALID_PERIPHERAL_CALLBACK_SPECIFIED);
@@ -624,7 +624,7 @@ public class BluetoothCentralManager {
             }
 
             // Check if the peripheral is cached or not
-            PeripheralType peripheralType = peripheral.getType();
+            final PeripheralType peripheralType = peripheral.getType();
             if (peripheralType == PeripheralType.UNKNOWN) {
                 // The peripheral is not cached so we cannot autoconnect
                 Timber.d("peripheral with address '%s' not in Bluetooth cache, autoconnecting by scanning", peripheral.getAddress());
@@ -709,11 +709,11 @@ public class BluetoothCentralManager {
      *
      * @param batch the map of peripherals and their callbacks to autoconnect to
      */
-    public void autoConnectPeripheralsBatch(@NotNull Map<BluetoothPeripheral, BluetoothPeripheralCallback> batch) {
+    public void autoConnectPeripheralsBatch(@NotNull final Map<BluetoothPeripheral, BluetoothPeripheralCallback> batch) {
         Objects.requireNonNull(batch, "no valid batch provided");
 
-        Map<BluetoothPeripheral, BluetoothPeripheralCallback> uncachedPeripherals = new HashMap<>();
-        Map<BluetoothPeripheral, BluetoothPeripheralCallback> cachedPeripherals = new HashMap<>();
+        final Map<BluetoothPeripheral, BluetoothPeripheralCallback> uncachedPeripherals = new HashMap<>();
+        final Map<BluetoothPeripheral, BluetoothPeripheralCallback> cachedPeripherals = new HashMap<>();
 
         // Split the list in cached and uncached peripherals
         for (BluetoothPeripheral peripheral : batch.keySet()) {
@@ -753,7 +753,7 @@ public class BluetoothCentralManager {
      * @param peripheralAddress mac address
      * @return a BluetoothPeripheral object matching the specified mac address or null if it was not found
      */
-    public @NotNull BluetoothPeripheral getPeripheral(@NotNull String peripheralAddress) {
+    public @NotNull BluetoothPeripheral getPeripheral(@NotNull final String peripheralAddress) {
         Objects.requireNonNull(peripheralAddress, NO_PERIPHERAL_ADDRESS_PROVIDED);
 
         if (!BluetoothAdapter.checkBluetoothAddress(peripheralAddress)) {
@@ -768,7 +768,7 @@ public class BluetoothCentralManager {
         } else if (scannedPeripherals.containsKey(peripheralAddress)) {
             return Objects.requireNonNull(scannedPeripherals.get(peripheralAddress));
         } else {
-            BluetoothPeripheral peripheral = new BluetoothPeripheral(context, bluetoothAdapter.getRemoteDevice(peripheralAddress), internalCallback, null, callBackHandler);
+            final BluetoothPeripheral peripheral = new BluetoothPeripheral(context, bluetoothAdapter.getRemoteDevice(peripheralAddress), internalCallback, null, callBackHandler);
             scannedPeripherals.put(peripheralAddress, peripheral);
             return peripheral;
         }
@@ -922,7 +922,7 @@ public class BluetoothCentralManager {
      * @param pin               the 6 digit PIN code as a string, e.g. "123456"
      * @return true if the pin code and peripheral address are valid and stored internally
      */
-    public boolean setPinCodeForPeripheral(@NotNull String peripheralAddress, @NotNull String pin) {
+    public boolean setPinCodeForPeripheral(@NotNull final String peripheralAddress, @NotNull final String pin) {
         Objects.requireNonNull(peripheralAddress, NO_PERIPHERAL_ADDRESS_PROVIDED);
         Objects.requireNonNull(pin, "no pin provided");
 
@@ -946,7 +946,7 @@ public class BluetoothCentralManager {
      * @param peripheralAddress the address of the peripheral
      * @return true if the peripheral was succesfully unpaired or it wasn't paired, false if it was paired and removing it failed
      */
-    public boolean removeBond(@NotNull String peripheralAddress) {
+    public boolean removeBond(@NotNull final String peripheralAddress) {
         Objects.requireNonNull(peripheralAddress, NO_PERIPHERAL_ADDRESS_PROVIDED);
 
         // Get the set of bonded devices
@@ -990,7 +990,7 @@ public class BluetoothCentralManager {
      */
     public void startPairingPopupHack() {
         // Check if we are on a Samsung device because those don't need the hack
-        String manufacturer = Build.MANUFACTURER;
+        final String manufacturer = Build.MANUFACTURER;
         if (!manufacturer.equals("samsung")) {
             bluetoothAdapter.startDiscovery();
 
@@ -1073,7 +1073,7 @@ public class BluetoothCentralManager {
         }
     };
 
-    private void handleAdapterState(int state) {
+    private void handleAdapterState(final int state) {
         switch (state) {
             case BluetoothAdapter.STATE_OFF:
                 // Check if there are any connected peripherals or connections in progress
