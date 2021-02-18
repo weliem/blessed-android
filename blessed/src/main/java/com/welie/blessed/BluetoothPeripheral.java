@@ -442,8 +442,8 @@ public class BluetoothPeripheral {
     };
 
     private void successfullyConnected() {
-        BondState bondstate = getBondState();
-        long timePassed = SystemClock.elapsedRealtime() - connectTimestamp;
+        final BondState bondstate = getBondState();
+        final long timePassed = SystemClock.elapsedRealtime() - connectTimestamp;
         Timber.i("connected to '%s' (%s) in %.1fs", getName(), bondstate, timePassed / 1000.0f);
 
         if (bondstate == BondState.NONE || bondstate == BondState.BONDED) {
@@ -506,12 +506,12 @@ public class BluetoothPeripheral {
 
     private void connectionStateChangeUnsuccessful(HciStatus status, int previousState, int newState) {
         cancelPendingServiceDiscovery();
-        boolean servicesDiscovered = !getServices().isEmpty();
+        final boolean servicesDiscovered = !getServices().isEmpty();
 
         // See if the initial connection failed
         if (previousState == BluetoothProfile.STATE_CONNECTING) {
-            long timePassed = SystemClock.elapsedRealtime() - connectTimestamp;
-            boolean isTimeout = timePassed > getTimoutThreshold();
+            final long timePassed = SystemClock.elapsedRealtime() - connectTimestamp;
+            final boolean isTimeout = timePassed > getTimoutThreshold();
             final HciStatus adjustedStatus = (status == HciStatus.ERROR && isTimeout) ? HciStatus.CONNECTION_FAILED_ESTABLISHMENT : status;
             Timber.i("connection failed with status '%s'", adjustedStatus);
             completeDisconnect(false, adjustedStatus);
@@ -750,7 +750,7 @@ public class BluetoothPeripheral {
         }
 
         // Enqueue the bond command because a connection has been issued or we are already connected
-        boolean result = commandQueue.add(new Runnable() {
+        final boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
                 manuallyBonding = true;
@@ -780,7 +780,7 @@ public class BluetoothPeripheral {
         Timber.d("bonding using TRANSPORT_LE");
         boolean result = false;
         try {
-            Method bondMethod = device.getClass().getMethod("createBond", int.class);
+            final Method bondMethod = device.getClass().getMethod("createBond", int.class);
             if (bondMethod != null) {
                 result = (boolean) bondMethod.invoke(device, transport);
             }
@@ -903,7 +903,7 @@ public class BluetoothPeripheral {
      */
     @Nullable
     public String getName() {
-        String name = device.getName();
+        final String name = device.getName();
         if (name != null) {
             // Cache the name so that we even know it when bluetooth is switched off
             cachedName = name;
@@ -944,7 +944,7 @@ public class BluetoothPeripheral {
      * @return the BluetoothGattService object for the service UUID or null if the peripheral does not have a service with the specified UUID
      */
     @Nullable
-    public BluetoothGattService getService(@NotNull UUID serviceUUID) {
+    public BluetoothGattService getService(@NotNull final UUID serviceUUID) {
         Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
 
         if (bluetoothGatt != null) {
@@ -962,11 +962,11 @@ public class BluetoothPeripheral {
      * @return the BluetoothGattCharacteristic object for the characteristic UUID or null if the peripheral does not have a characteristic with the specified UUID
      */
     @Nullable
-    public BluetoothGattCharacteristic getCharacteristic(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID) {
+    public BluetoothGattCharacteristic getCharacteristic(@NotNull final UUID serviceUUID, @NotNull final UUID characteristicUUID) {
         Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
         Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
 
-        BluetoothGattService service = getService(serviceUUID);
+        final BluetoothGattService service = getService(serviceUUID);
         if (service != null) {
             return service.getCharacteristic(characteristicUUID);
         } else {
@@ -1018,7 +1018,7 @@ public class BluetoothPeripheral {
      * @param characteristic the characteristic to check
      * @return true if the characteristic is notifying or indicating, false if it is not
      */
-    public boolean isNotifying(@NotNull BluetoothGattCharacteristic characteristic) {
+    public boolean isNotifying(@NotNull final BluetoothGattCharacteristic characteristic) {
         Objects.requireNonNull(characteristic, NO_VALID_CHARACTERISTIC_PROVIDED);
         return notifyingCharacteristics.contains(characteristic.getUuid());
     }
@@ -1040,7 +1040,7 @@ public class BluetoothPeripheral {
      * @param characteristicUUID the characteristic's UUID
      * @return true if the operation was enqueued, false if the characteristic does not support reading or the characteristic was not found
      */
-    public boolean readCharacteristic(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID) {
+    public boolean readCharacteristic(@NotNull final UUID serviceUUID, @NotNull final UUID characteristicUUID) {
         Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
         Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
 
@@ -1081,7 +1081,7 @@ public class BluetoothPeripheral {
             return false;
         }
 
-        boolean result = commandQueue.add(new Runnable() {
+        final boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1106,7 +1106,7 @@ public class BluetoothPeripheral {
         return result;
     }
 
-    private boolean doesNotSupportReading(@NotNull BluetoothGattCharacteristic characteristic) {
+    private boolean doesNotSupportReading(@NotNull final BluetoothGattCharacteristic characteristic) {
         return (characteristic.getProperties() & PROPERTY_READ) == 0;
     }
 
@@ -1122,7 +1122,7 @@ public class BluetoothPeripheral {
      * @param writeType          the write type to use when writing. Must be WRITE_TYPE_DEFAULT, WRITE_TYPE_NO_RESPONSE or WRITE_TYPE_SIGNED
      * @return true if the operation was enqueued, false if the characteristic does not support reading or the characteristic was not found
      */
-    public boolean writeCharacteristic(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID, @NotNull final byte[] value, @NotNull final WriteType writeType) {
+    public boolean writeCharacteristic(@NotNull final UUID serviceUUID, @NotNull final UUID characteristicUUID, @NotNull final byte[] value, @NotNull final WriteType writeType) {
         Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
         Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
         Objects.requireNonNull(value, NO_VALID_VALUE_PROVIDED);
@@ -1180,7 +1180,7 @@ public class BluetoothPeripheral {
         // Copy the value to avoid race conditions
         final byte[] bytesToWrite = copyOf(value);
 
-        boolean result = commandQueue.add(new Runnable() {
+        final boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1218,11 +1218,11 @@ public class BluetoothPeripheral {
         return result;
     }
 
-    private boolean willCauseLongWrite(@NotNull byte[] value, @NotNull WriteType writeType) {
+    private boolean willCauseLongWrite(@NotNull final byte[] value, @NotNull final WriteType writeType) {
         return value.length > currentMtu - 3 && writeType == WriteType.WITH_RESPONSE;
     }
 
-    private boolean doesNotSupportWriteType(@NotNull BluetoothGattCharacteristic characteristic, @NotNull WriteType writeType) {
+    private boolean doesNotSupportWriteType(@NotNull final BluetoothGattCharacteristic characteristic, @NotNull final WriteType writeType) {
         return (characteristic.getProperties() & writeType.property) == 0;
     }
 
@@ -1240,7 +1240,7 @@ public class BluetoothPeripheral {
             return false;
         }
 
-        boolean result = commandQueue.add(new Runnable() {
+        final boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1294,7 +1294,7 @@ public class BluetoothPeripheral {
         // Copy the value to avoid race conditions
         final byte[] bytesToWrite = copyOf(value);
 
-        boolean result = commandQueue.add(new Runnable() {
+        final boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1330,7 +1330,7 @@ public class BluetoothPeripheral {
      * @param enable             true for setting notification on, false for turning it off
      * @return true if the operation was enqueued, false the characteristic could not be found or does not support notifications
      */
-    public boolean setNotify(@NotNull UUID serviceUUID, @NotNull UUID characteristicUUID, boolean enable) {
+    public boolean setNotify(@NotNull final UUID serviceUUID, @NotNull final UUID characteristicUUID, final boolean enable) {
         Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
         Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
 
@@ -1339,7 +1339,7 @@ public class BluetoothPeripheral {
             return false;
         }
 
-        BluetoothGattCharacteristic characteristic = getCharacteristic(serviceUUID, characteristicUUID);
+        final BluetoothGattCharacteristic characteristic = getCharacteristic(serviceUUID, characteristicUUID);
         if (characteristic != null) {
             return setNotify(characteristic, enable);
         }
@@ -1371,8 +1371,8 @@ public class BluetoothPeripheral {
         }
 
         // Check if characteristic has NOTIFY or INDICATE properties and set the correct byte value to be written
-        byte[] value;
-        int properties = characteristic.getProperties();
+        final byte[] value;
+        final int properties = characteristic.getProperties();
         if ((properties & PROPERTY_NOTIFY) > 0) {
             value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE;
         } else if ((properties & PROPERTY_INDICATE) > 0) {
@@ -1383,7 +1383,7 @@ public class BluetoothPeripheral {
         }
         final byte[] finalValue = enable ? value : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
 
-        boolean result = commandQueue.add(new Runnable() {
+        final boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
                 if (notConnected()) {
@@ -1417,7 +1417,7 @@ public class BluetoothPeripheral {
         return result;
     }
 
-    private void adjustWriteTypeIfNeeded(BluetoothGattDescriptor descriptor) {
+    private void adjustWriteTypeIfNeeded(@NotNull final BluetoothGattDescriptor descriptor) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
             // Up to Android 6 there is a bug where Android takes the writeType of the parent characteristic instead of always WRITE_TYPE_DEFAULT
             // See: https://android.googlesource.com/platform/frameworks/base/+/942aebc95924ab1e7ea1e92aaf4e7fc45f695a6c%5E%21/#F0
@@ -1439,7 +1439,7 @@ public class BluetoothPeripheral {
             return false;
         }
 
-        boolean result = commandQueue.add(new Runnable() {
+        final boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1483,7 +1483,7 @@ public class BluetoothPeripheral {
             return false;
         }
 
-        boolean result = commandQueue.add(new Runnable() {
+        final boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1522,7 +1522,7 @@ public class BluetoothPeripheral {
             return false;
         }
 
-        boolean result = commandQueue.add(new Runnable() {
+        final boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1571,7 +1571,7 @@ public class BluetoothPeripheral {
             return false;
         }
 
-        boolean result = commandQueue.add(new Runnable() {
+        final boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1610,7 +1610,7 @@ public class BluetoothPeripheral {
             return false;
         }
 
-        boolean result = commandQueue.add(new Runnable() {
+        final boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1669,7 +1669,7 @@ public class BluetoothPeripheral {
      */
     private void retryCommand() {
         commandQueueBusy = false;
-        Runnable currentCommand = commandQueue.peek();
+        final Runnable currentCommand = commandQueue.peek();
         if (currentCommand != null) {
             if (nrTries >= MAX_TRIES) {
                 // Max retries reached, give up on this one and proceed
@@ -1908,7 +1908,7 @@ public class BluetoothPeripheral {
         autoConnectField.setBoolean(bluetoothGatt, autoConnect);
     }
 
-    private void startConnectionTimer(final BluetoothPeripheral peripheral) {
+    private void startConnectionTimer(@NotNull final BluetoothPeripheral peripheral) {
         cancelConnectionTimer();
         timeoutRunnable = new Runnable() {
             @Override
@@ -1953,7 +1953,7 @@ public class BluetoothPeripheral {
      * @return non-null copy of the source byte array or an empty array if source was null
      */
     @NotNull
-    byte[] copyOf(@Nullable byte[] source) {
+    byte[] copyOf(@Nullable final byte[] source) {
         return (source == null) ? new byte[0] : Arrays.copyOf(source, source.length);
     }
 
@@ -1964,7 +1964,7 @@ public class BluetoothPeripheral {
      * @return the source byte array or an empty array if source was null
      */
     @NotNull
-    byte[] nonnullOf(@Nullable byte[] source) {
+    byte[] nonnullOf(@Nullable final byte[] source) {
         return (source == null) ? new byte[0] : source;
     }
 }
