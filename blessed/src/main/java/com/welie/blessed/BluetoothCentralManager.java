@@ -370,7 +370,7 @@ public class BluetoothCentralManager {
 
     private void startScan(@Nullable final List<ScanFilter> filters, @NotNull final ScanSettings scanSettings, @NotNull final ScanCallback scanCallback) {
         // Check is BLE is available, enabled and all permission granted
-        if (!isBleReady()) return;
+        if (bleNotReady()) return;
 
         // Make sure we are not already scanning, we only want one scan at the time
         if (isScanning()) {
@@ -496,7 +496,7 @@ public class BluetoothCentralManager {
      */
     private void scanForAutoConnectPeripherals() {
         // Check is BLE is available, enabled and all permission granted
-        if (!isBleReady()) return;
+        if (bleNotReady()) return;
 
         // Stop previous autoconnect scans if any
         if (autoConnectScanner != null) {
@@ -542,8 +542,10 @@ public class BluetoothCentralManager {
     public void stopScan() {
         cancelTimeoutTimer();
         if (isScanning()) {
-            bluetoothScanner.stopScan(currentCallback);
-            Timber.i("scan stopped");
+            if(bluetoothScanner != null) {
+                bluetoothScanner.stopScan(currentCallback);
+                Timber.i("scan stopped");
+            }
         } else {
             Timber.i("no scan to stop because no scan is running");
         }
@@ -783,13 +785,13 @@ public class BluetoothCentralManager {
         return new ArrayList<>(connectedPeripherals.values());
     }
 
-    private boolean isBleReady() {
+    private boolean bleNotReady() {
         if (isBleSupported()) {
             if (isBluetoothEnabled()) {
-                return permissionsGranted();
+                return !permissionsGranted();
             }
         }
-        return false;
+        return true;
     }
 
     private boolean isBleSupported() {
