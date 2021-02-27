@@ -127,6 +127,8 @@ public class BluetoothCentralManager {
         public void onScanFailed(final int errorCode) {
             final ScanFailure scanFailure = ScanFailure.fromValue(errorCode);
             Timber.e("scan failed with error code %d (%s)", errorCode, scanFailure);
+            currentCallback = null;
+            currentFilters = null;
             callBackHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -157,6 +159,8 @@ public class BluetoothCentralManager {
         public void onScanFailed(final int errorCode) {
             final ScanFailure scanFailure = ScanFailure.fromValue(errorCode);
             Timber.e("scan failed with error code %d (%s)", errorCode, scanFailure);
+            currentCallback = null;
+            currentFilters = null;
             callBackHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -198,6 +202,7 @@ public class BluetoothCentralManager {
         public void onScanFailed(final int errorCode) {
             final ScanFailure scanFailure = ScanFailure.fromValue(errorCode);
             Timber.e("scan failed with error code %d (%s)", errorCode, scanFailure);
+            autoConnectScanner = null;
             callBackHandler.post(new Runnable() {
                 @Override
                 public void run() {
