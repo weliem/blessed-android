@@ -92,7 +92,7 @@ public class BluetoothPeripheralManager {
     protected @NotNull final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
     private @NotNull final HashMap<BluetoothGattCharacteristic, byte[]> writeLongCharacteristicTemporaryBytes = new HashMap<>();
     private @NotNull final HashMap<BluetoothGattDescriptor, byte[]> writeLongDescriptorTemporaryBytes = new HashMap<>();
-    private @NotNull final Map<String, BluetoothCentral> connectedCentrals = new ConcurrentHashMap<>();
+    private @NotNull final Map<String, BluetoothCentral> connectedCentralsMap = new ConcurrentHashMap<>();
     private @Nullable BluetoothGattCharacteristic currentNotifyCharacteristic = null;
     private @NotNull byte[] currentNotifyValue = new byte[0];
     private volatile boolean commandQueueBusy = false;
@@ -107,7 +107,7 @@ public class BluetoothPeripheralManager {
                     // It basically tells Android we will really use this connection
                     // If we don't do this, then cancelConnection won't work
                     // See https://issuetracker.google.com/issues/37127644
-                    if (connectedCentrals.containsKey(device.getAddress())) {
+                    if (connectedCentralsMap.containsKey(device.getAddress())) {
                         return;
                     } else {
                         // This will lead to onConnectionStateChange be called again
@@ -117,7 +117,7 @@ public class BluetoothPeripheralManager {
                     handleDeviceConnected(device);
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                     // Deal is double disconnect messages
-                    if (!connectedCentrals.containsKey(device.getAddress())) return;
+                    if (!connectedCentralsMap.containsKey(device.getAddress())) return;
 
                     handleDeviceDisconnected(device);
                 }
@@ -130,7 +130,7 @@ public class BluetoothPeripheralManager {
         private void handleDeviceConnected(@NotNull final BluetoothDevice device) {
             Timber.i("Central '%s' (%s) connected", device.getName(), device.getAddress());
             final BluetoothCentral bluetoothCentral = new BluetoothCentral(device.getAddress(), device.getName());
-            connectedCentrals.put(bluetoothCentral.getAddress(), bluetoothCentral);
+            connectedCentralsMap.put(bluetoothCentral.getAddress(), bluetoothCentral);
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -627,7 +627,7 @@ public class BluetoothPeripheralManager {
      * @return a set with zero or more connected Centrals
      */
     public @NotNull Set<BluetoothCentral> getConnectedCentrals() {
-        Set<BluetoothCentral> bluetoothCentrals = new HashSet<>(connectedCentrals.values());
+        Set<BluetoothCentral> bluetoothCentrals = new HashSet<>(connectedCentralsMap.values());
         return Collections.unmodifiableSet(bluetoothCentrals);
     }
 
@@ -672,14 +672,14 @@ public class BluetoothPeripheralManager {
     @Nullable
     public BluetoothCentral getCentral(@NotNull final String address) {
         Objects.requireNonNull(address, ADDRESS_IS_NULL);
-        return connectedCentrals.get(address);
+        return connectedCentralsMap.get(address);
     }
 
     @NotNull
     private BluetoothCentral getCentral(@NotNull final BluetoothDevice device) {
         Objects.requireNonNull(device, DEVICE_IS_NULL);
 
-        BluetoothCentral result = connectedCentrals.get(device.getAddress());
+        BluetoothCentral result = connectedCentralsMap.get(device.getAddress());
         if (result == null) {
             result = new BluetoothCentral(device.getAddress(), device.getName());
         }
@@ -689,7 +689,7 @@ public class BluetoothPeripheralManager {
     private void removeCentral(@NotNull final BluetoothDevice device) {
         Objects.requireNonNull(device, DEVICE_IS_NULL);
 
-        connectedCentrals.remove(device.getAddress());
+        connectedCentralsMap.remove(device.getAddress());
     }
 
     private final BroadcastReceiver adapterStateReceiver = new BroadcastReceiver() {
