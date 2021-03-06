@@ -1023,6 +1023,15 @@ public class BluetoothPeripheral {
         return notifyingCharacteristics.contains(characteristic);
     }
 
+    /**
+     * Get all notifying/indicating characteristics
+     *
+     * @return Set of characteristics or empty set
+     */
+    public @NotNull Set<BluetoothGattCharacteristic> getNotifyingCharacteristics() {
+        return Collections.unmodifiableSet(notifyingCharacteristics);
+    }
+
     private boolean isConnected() {
         return bluetoothGatt != null && state == BluetoothProfile.STATE_CONNECTED;
     }
