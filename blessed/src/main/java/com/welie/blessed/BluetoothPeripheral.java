@@ -141,8 +141,8 @@ public class BluetoothPeripheral {
     @Nullable
     private volatile BluetoothGatt bluetoothGatt;
 
-    @Nullable
-    private String cachedName;
+    @NotNull
+    private String cachedName = "";
 
     @Nullable
     private byte[] currentWriteBytes;
@@ -899,7 +899,7 @@ public class BluetoothPeripheral {
      *
      * @return name of the bluetooth peripheral
      */
-    @Nullable
+    @NotNull
     public String getName() {
         final String name = device.getName();
         if (name != null) {

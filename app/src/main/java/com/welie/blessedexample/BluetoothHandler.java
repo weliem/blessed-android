@@ -131,7 +131,7 @@ class BluetoothHandler {
                 if ((currentTimeCharacteristic.getProperties() & PROPERTY_WRITE) > 0) {
                     // Write the current time unless it is an Omron device
                     final String name = peripheral.getName();
-                    if (name != null && !(name.contains("BLEsmart_"))) {
+                    if (!(name.contains("BLEsmart_"))) {
                         BluetoothBytesParser parser = new BluetoothBytesParser();
                         parser.setCurrentTime(Calendar.getInstance());
                         peripheral.writeCharacteristic(currentTimeCharacteristic, parser.getValue(), WriteType.WITH_RESPONSE);
@@ -234,7 +234,7 @@ class BluetoothHandler {
 
                 // Deal with Omron devices where we can only write currentTime under specific conditions
                 final String name = peripheral.getName();
-                if (name != null &&  name.contains("BLEsmart_")) {
+                if (name.contains("BLEsmart_")) {
                     BluetoothGattCharacteristic bloodpressureMeasurement = peripheral.getCharacteristic(BLP_SERVICE_UUID, BLOOD_PRESSURE_MEASUREMENT_CHARACTERISTIC_UUID);
                     if (bloodpressureMeasurement == null) return;
 

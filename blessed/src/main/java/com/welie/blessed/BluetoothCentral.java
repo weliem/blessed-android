@@ -50,8 +50,8 @@ public class BluetoothCentral {
         return address;
     }
 
-    public @Nullable String getName() {
-        return name;
+    public @NotNull String getName() {
+        return name == null ? "" : name;
     }
 
     protected void setCurrentMtu(final int currentMtu) {
