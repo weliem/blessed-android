@@ -206,6 +206,7 @@ public class BluetoothPeripheralTest {
         characteristic.addDescriptor(descriptor);
 
         when(gatt.getServices()).thenReturn(Arrays.asList(service));
+        when(gatt.setCharacteristicNotification(characteristic, true)).thenReturn(true);
         callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
 
         peripheral.setNotify(characteristic, true);
@@ -230,12 +231,13 @@ public class BluetoothPeripheralTest {
         characteristic.addDescriptor(descriptor);
 
         when(gatt.getServices()).thenReturn(Arrays.asList(service));
+        when(gatt.setCharacteristicNotification(characteristic, true)).thenReturn(true);
 
         peripheral.setNotify(characteristic, true);
-        verify(gatt).setCharacteristicNotification(characteristic, true);
+        verify(gatt, timeout(1000)).setCharacteristicNotification(characteristic, true);
         assertEquals(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE[0], descriptor.getValue()[0]);
         assertEquals(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE[1], descriptor.getValue()[1]);
-        verify(gatt).writeDescriptor(descriptor);
+        verify(gatt, timeout(1000)).writeDescriptor(descriptor);
 
         callback.onDescriptorWrite(gatt, descriptor, 0);
         verify(peripheralCallback).onNotificationStateUpdate(peripheral, characteristic, GattStatus.SUCCESS);
@@ -253,12 +255,13 @@ public class BluetoothPeripheralTest {
         characteristic.addDescriptor(descriptor);
 
         when(gatt.getServices()).thenReturn(Arrays.asList(service));
+        when(gatt.setCharacteristicNotification(characteristic, false)).thenReturn(true);
 
         peripheral.setNotify(characteristic, false);
-        verify(gatt).setCharacteristicNotification(characteristic, false);
+        verify(gatt, timeout(1000)).setCharacteristicNotification(characteristic, false);
         assertEquals(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE[0], descriptor.getValue()[0]);
         assertEquals(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE[1], descriptor.getValue()[1]);
-        verify(gatt).writeDescriptor(descriptor);
+        verify(gatt, timeout(1000)).writeDescriptor(descriptor);
 
         callback.onDescriptorWrite(gatt, descriptor, 0);
 
