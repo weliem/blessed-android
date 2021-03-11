@@ -1952,7 +1952,7 @@ public class BluetoothPeripheral {
 
     private int getTimoutThreshold() {
         String manufacturer = Build.MANUFACTURER;
-        if (manufacturer.equals("samsung")) {
+        if (manufacturer.equalsIgnoreCase("samsung")) {
             return TIMEOUT_THRESHOLD_SAMSUNG;
         } else {
             return TIMEOUT_THRESHOLD_DEFAULT;

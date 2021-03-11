@@ -223,10 +223,8 @@ public class BluetoothCentralManager {
 
             // Get the number of retries for this peripheral
             int nrRetries = 0;
-            if (connectionRetries.get(peripheral.getAddress()) != null) {
-                Integer retries = connectionRetries.get(peripheral.getAddress());
-                if (retries != null) nrRetries = retries;
-            }
+            Integer retries = connectionRetries.get(peripheral.getAddress());
+            if (retries != null) nrRetries = retries;
 
             // Retry connection or conclude the connection has failed
             if (nrRetries < MAX_CONNECTION_RETRIES && status != HciStatus.CONNECTION_FAILED_ESTABLISHMENT) {
@@ -308,6 +306,8 @@ public class BluetoothCentralManager {
     }
 
     private ScanSettings getScanSettings(@NotNull final ScanMode scanMode) {
+        Objects.requireNonNull(scanMode, "scanMode is null");
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             return new ScanSettings.Builder()
                     .setScanMode(scanMode.value)
@@ -389,7 +389,7 @@ public class BluetoothCentralManager {
      * @param peripheralNames array of partial peripheral names
      */
     public void scanForPeripheralsWithNames(@NotNull final String[] peripheralNames) {
-        Objects.requireNonNull(peripheralNames, "No peripheral names supplied");
+        Objects.requireNonNull(peripheralNames, "no peripheral names supplied");
 
         if (peripheralNames.length == 0) {
             throw new IllegalArgumentException("at least one peripheral name must be supplied");
@@ -406,7 +406,7 @@ public class BluetoothCentralManager {
      * @param peripheralAddresses array of peripheral mac addresses to scan for
      */
     public void scanForPeripheralsWithAddresses(@NotNull final String[] peripheralAddresses) {
-        Objects.requireNonNull(peripheralAddresses, "No peripheral addresses supplied");
+        Objects.requireNonNull(peripheralAddresses, "no peripheral addresses supplied");
 
         if (peripheralAddresses.length == 0) {
             throw new IllegalArgumentException("at least one peripheral address must be supplied");
