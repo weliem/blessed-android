@@ -65,7 +65,6 @@ public class BluetoothCentralManager {
     private static final long SCAN_TIMEOUT = 180_000L;
     private static final int SCAN_RESTART_DELAY = 1000;
     private static final int MAX_CONNECTION_RETRIES = 1;
-    private static final int MAX_CONNECTED_PERIPHERALS = 7;
 
     private static final String NO_PERIPHERAL_ADDRESS_PROVIDED = "no peripheral address provided";
     private static final String NO_VALID_PERIPHERAL_PROVIDED = "no valid peripheral provided";
@@ -116,9 +115,21 @@ public class BluetoothCentralManager {
 
         @Override
         public void onScanFailed(final int errorCode) {
-            final ScanFailure scanFailure = ScanFailure.fromValue(errorCode);
-            Timber.e("scan failed with error code %d (%s)", errorCode, scanFailure);
-            sendScanFailed(scanFailure);
+            sendScanFailed(ScanFailure.fromValue(errorCode));
+        }
+    };
+
+    private final ScanCallback defaultScanCallback = new ScanCallback() {
+        @Override
+        public void onScanResult(final int callbackType, final ScanResult result) {
+            synchronized (this) {
+                sendScanResult(result);
+            }
+        }
+
+        @Override
+        public void onScanFailed(final int errorCode) {
+            sendScanFailed(ScanFailure.fromValue(errorCode));
         }
     };
 
@@ -141,26 +152,11 @@ public class BluetoothCentralManager {
         callBackHandler.post(new Runnable() {
             @Override
             public void run() {
+                Timber.e("scan failed with error code %d (%s)", scanFailure.value, scanFailure);
                 bluetoothCentralManagerCallback.onScanFailed(scanFailure);
             }
         });
     }
-
-    private final ScanCallback defaultScanCallback = new ScanCallback() {
-        @Override
-        public void onScanResult(final int callbackType, final ScanResult result) {
-            synchronized (this) {
-                sendScanResult(result);
-            }
-        }
-
-        @Override
-        public void onScanFailed(final int errorCode) {
-            final ScanFailure scanFailure = ScanFailure.fromValue(errorCode);
-            Timber.e("scan failed with error code %d (%s)", errorCode, scanFailure);
-            sendScanFailed(scanFailure);
-        }
-    };
 
     private final ScanCallback autoConnectScanCallback = new ScanCallback() {
         @Override
@@ -193,7 +189,7 @@ public class BluetoothCentralManager {
         @Override
         public void onScanFailed(final int errorCode) {
             final ScanFailure scanFailure = ScanFailure.fromValue(errorCode);
-            Timber.e("scan failed with error code %d (%s)", errorCode, scanFailure);
+            Timber.e("autoConnect scan failed with error code %d (%s)", errorCode, scanFailure);
             autoConnectScanner = null;
             callBackHandler.post(new Runnable() {
                 @Override
@@ -205,17 +201,12 @@ public class BluetoothCentralManager {
     };
 
     private final BluetoothPeripheral.InternalCallback internalCallback = new BluetoothPeripheral.InternalCallback() {
-
         @Override
         public void connected(@NotNull final BluetoothPeripheral peripheral) {
             connectionRetries.remove(peripheral.getAddress());
             unconnectedPeripherals.remove(peripheral.getAddress());
             scannedPeripherals.remove((peripheral.getAddress()));
             connectedPeripherals.put(peripheral.getAddress(), peripheral);
-
-            if (connectedPeripherals.size() == MAX_CONNECTED_PERIPHERALS) {
-                Timber.w("maximum amount (%d) of connected peripherals reached", MAX_CONNECTED_PERIPHERALS);
-            }
 
             callBackHandler.post(new Runnable() {
                 @Override
@@ -296,21 +287,8 @@ public class BluetoothCentralManager {
         this.bluetoothCentralManagerCallback = Objects.requireNonNull(bluetoothCentralManagerCallback, "no valid bluetoothCallback provided");
         this.callBackHandler = Objects.requireNonNull(handler, "no valid handler provided");
         this.bluetoothAdapter = Objects.requireNonNull(BluetoothAdapter.getDefaultAdapter(), "no bluetooth adapter found");
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            this.autoConnectScanSettings = new ScanSettings.Builder()
-                    .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
-                    .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
-                    .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
-                    .setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
-                    .setReportDelay(0L)
-                    .build();
-        } else {
-            this.autoConnectScanSettings = new ScanSettings.Builder()
-                    .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
-                    .setReportDelay(0L)
-                    .build();
-        }
-        this.scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_LATENCY);
+        this.autoConnectScanSettings = getScanSettings(ScanMode.LOW_POWER);
+        this.scanSettings = getScanSettings(ScanMode.LOW_LATENCY);
 
         // Register for broadcasts on BluetoothAdapter state change
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
@@ -329,39 +307,31 @@ public class BluetoothCentralManager {
         context.unregisterReceiver(adapterStateReceiver);
     }
 
-    private ScanSettings getScanSettings(final int scanMode) {
-        if (scanMode == ScanSettings.SCAN_MODE_LOW_POWER ||
-                scanMode == ScanSettings.SCAN_MODE_LOW_LATENCY ||
-                scanMode == ScanSettings.SCAN_MODE_BALANCED ||
-                scanMode == ScanSettings.SCAN_MODE_OPPORTUNISTIC) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                return new ScanSettings.Builder()
-                        .setScanMode(scanMode)
-                        .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
-                        .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
-                        .setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
-                        .setReportDelay(0L)
-                        .build();
-            } else {
-                return new ScanSettings.Builder()
-                        .setScanMode(scanMode)
-                        .setReportDelay(0L)
-                        .build();
-            }
+    private ScanSettings getScanSettings(@NotNull final ScanMode scanMode) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return new ScanSettings.Builder()
+                    .setScanMode(scanMode.value)
+                    .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
+                    .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
+                    .setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
+                    .setReportDelay(0L)
+                    .build();
         } else {
-            throw new IllegalArgumentException("invalid scan mode");
+            return new ScanSettings.Builder()
+                    .setScanMode(scanMode.value)
+                    .setReportDelay(0L)
+                    .build();
         }
     }
 
     /**
      * Set the default scanMode.
      *
-     * <p>Must be ScanSettings.SCAN_MODE_LOW_POWER, ScanSettings.SCAN_MODE_LOW_LATENCY, ScanSettings.SCAN_MODE_BALANCED or ScanSettings.SCAN_MODE_OPPORTUNISTIC.
-     * The default value is SCAN_MODE_LOW_LATENCY.
-     *
      * @param scanMode the scanMode to set
      */
-    public void setScanMode(final int scanMode) {
+    public void setScanMode(@NotNull final ScanMode scanMode) {
+        Objects.requireNonNull(scanMode);
+
         scanSettings = getScanSettings(scanMode);
     }
 
