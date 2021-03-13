@@ -3,7 +3,6 @@ package com.welie.blessed;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattServer;
@@ -18,15 +17,16 @@ import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.content.Context;
 import android.os.ParcelUuid;
 
+import androidx.test.core.app.ApplicationProvider;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.verification.Timeout;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowLooper;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -34,30 +34,19 @@ import static android.bluetooth.BluetoothGattService.SERVICE_TYPE_PRIMARY;
 import static com.welie.blessed.BluetoothPeripheralManager.CCC_DESCRIPTOR_UUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 import static android.os.Build.VERSION_CODES.M;
-import static org.robolectric.RuntimeEnvironment.application;
-import static org.robolectric.RuntimeEnvironment.getCompileTimeResourceTable;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = {M})
+@Config(manifest=Config.NONE, sdk = {M})
 public class BluetoothPeripheralManagerTest {
 
     private static final UUID DIS_SERVICE_UUID = UUID.fromString("0000180A-0000-1000-8000-00805f9b34fb");
-    private static final UUID MANUFACTURER_NAME_CHARACTERISTIC_UUID = UUID.fromString("00002A29-0000-1000-8000-00805f9b34fb");
-    private static final int VERIFY_MARGIN = 100;
 
     private BluetoothPeripheralManager peripheralManager;
 
@@ -85,13 +74,13 @@ public class BluetoothPeripheralManagerTest {
     @Mock
     BluetoothGattDescriptor descriptor;
 
-    @Mock
-    BluetoothCentral central;
+//    @Mock
+//    BluetoothCentral central;
 
     @Before
-    public void setUp() throws Exception {
-        initMocks(this);
-        Context context = application.getApplicationContext();
+    public void setUp() {
+        openMocks(this);
+        Context context = ApplicationProvider.getApplicationContext();
         when(device.getAddress()).thenReturn("12:23:34:98:76:54");
         when(bluetoothManager.getAdapter()).thenReturn(bluetoothAdapter);
         when(bluetoothAdapter.getBluetoothLeAdvertiser()).thenReturn(bluetoothLeAdvertiser);
@@ -105,12 +94,16 @@ public class BluetoothPeripheralManagerTest {
         when(server.addService(any(BluetoothGattService.class))).thenReturn(true);
         peripheralManager.add(service);
 
-        verify(server, timeout(VERIFY_MARGIN)).addService(service);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        verify(server).addService(service);
         assertEquals(1, peripheralManager.commandQueue.size());
 
         peripheralManager.bluetoothGattServerCallback.onServiceAdded(GattStatus.SUCCESS.value, service);
 
-        verify(peripheralManagerCallback, timeout(VERIFY_MARGIN)).onServiceAdded(GattStatus.SUCCESS, service);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        verify(peripheralManagerCallback).onServiceAdded(GattStatus.SUCCESS, service);
         assertEquals(0, peripheralManager.commandQueue.size());
     }
 
@@ -146,6 +139,7 @@ public class BluetoothPeripheralManagerTest {
     public void When_close_is_called_then_advertising_is_stopped_and_the_server_is_closed() {
         // When
         peripheralManager.close();
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
         verify(bluetoothLeAdvertiser).stopAdvertising(any(AdvertiseCallback.class));
@@ -185,8 +179,10 @@ public class BluetoothPeripheralManagerTest {
         // When
         peripheralManager.bluetoothGattServerCallback.onCharacteristicReadRequest(device, 1, 0, characteristic);
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
         // Then
-        verify(peripheralManagerCallback, timeout(VERIFY_MARGIN)).onCharacteristicRead(any(BluetoothCentral.class), any(BluetoothGattCharacteristic.class));
+        verify(peripheralManagerCallback).onCharacteristicRead(any(BluetoothCentral.class), any(BluetoothGattCharacteristic.class));
     }
 
     @Test
@@ -198,8 +194,10 @@ public class BluetoothPeripheralManagerTest {
         // When
         peripheralManager.bluetoothGattServerCallback.onCharacteristicReadRequest(device, 1, 0, characteristic);
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
         // Then
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, value);
+        verify(server).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, value);
     }
 
     @Test
@@ -212,24 +210,27 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onCharacteristicReadRequest(device, 1, 0, characteristic);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, firstChunk);
+        verify(server).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, firstChunk);
 
         // When
         peripheralManager.bluetoothGattServerCallback.onCharacteristicReadRequest(device, 2, 22, characteristic);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 2, GattStatus.SUCCESS.value, 22, secondChunk);
+        verify(server).sendResponse(device, 2, GattStatus.SUCCESS.value, 22, secondChunk);
     }
 
     @Test
     public void When_a_read_descriptor_request_is_received_then_onDescriptorRead_is_called() {
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorReadRequest(device, 1, 0, descriptor);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(peripheralManagerCallback, timeout(VERIFY_MARGIN)).onDescriptorRead(any(BluetoothCentral.class), any(BluetoothGattDescriptor.class));
+        verify(peripheralManagerCallback).onDescriptorRead(any(BluetoothCentral.class), any(BluetoothGattDescriptor.class));
     }
 
     @Test
@@ -240,9 +241,10 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorReadRequest(device, 1, 0, descriptor);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, value);
+        verify(server).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, value);
     }
 
     @Test
@@ -255,15 +257,17 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorReadRequest(device, 1, 0, descriptor);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, firstChunk);
+        verify(server).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, firstChunk);
 
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorReadRequest(device, 2, 22, descriptor);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 2, GattStatus.SUCCESS.value, 22, secondChunk);
+        verify(server).sendResponse(device, 2, GattStatus.SUCCESS.value, 22, secondChunk);
     }
 
     @Test
@@ -274,9 +278,10 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onCharacteristicWriteRequest(device, 1, characteristic, false, true, 0, value);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(peripheralManagerCallback, timeout(VERIFY_MARGIN)).onCharacteristicWrite(any(BluetoothCentral.class), any(BluetoothGattCharacteristic.class), any(byte[].class));
+        verify(peripheralManagerCallback).onCharacteristicWrite(any(BluetoothCentral.class), any(BluetoothGattCharacteristic.class), any(byte[].class));
     }
 
     @Test
@@ -288,10 +293,11 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onCharacteristicWriteRequest(device, 1, characteristic, false, true, 0, value);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(characteristic, timeout(VERIFY_MARGIN)).setValue(value);
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, value);
+        verify(characteristic).setValue(value);
+        verify(server).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, value);
     }
 
     @Test
@@ -303,10 +309,11 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onCharacteristicWriteRequest(device, 1, characteristic, false, true, 0, value);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
         verify(characteristic, never()).setValue(value);
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.VALUE_NOT_ALLOWED.value, 0, value);
+        verify(server).sendResponse(device, 1, GattStatus.VALUE_NOT_ALLOWED.value, 0, value);
     }
 
     @Test
@@ -320,23 +327,26 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onCharacteristicWriteRequest(device, 1, characteristic, true, true, 0, firstChunk);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, firstChunk);
+        verify(server).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, firstChunk);
 
         // When
         peripheralManager.bluetoothGattServerCallback.onCharacteristicWriteRequest(device, 2, characteristic, true, true, 18, secondChunk);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 2, GattStatus.SUCCESS.value, 18, secondChunk);
+        verify(server).sendResponse(device, 2, GattStatus.SUCCESS.value, 18, secondChunk);
 
         // When
         peripheralManager.bluetoothGattServerCallback.onExecuteWrite(device, 3, true);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(peripheralManagerCallback, timeout(VERIFY_MARGIN)).onCharacteristicWrite(any(BluetoothCentral.class), any(BluetoothGattCharacteristic.class), any(byte[].class));
-        verify(characteristic, timeout(VERIFY_MARGIN)).setValue(value);
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 3, GattStatus.SUCCESS.value, 0, null);
+        verify(peripheralManagerCallback).onCharacteristicWrite(any(BluetoothCentral.class), any(BluetoothGattCharacteristic.class), any(byte[].class));
+        verify(characteristic).setValue(value);
+        verify(server).sendResponse(device, 3, GattStatus.SUCCESS.value, 0, null);
     }
 
     @Test
@@ -350,15 +360,17 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onCharacteristicWriteRequest(device, 1, characteristic, true, true, 0, firstChunk);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, firstChunk);
+        verify(server).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, firstChunk);
 
         // When
         peripheralManager.bluetoothGattServerCallback.onCharacteristicWriteRequest(device, 2, characteristic, true, true, 19, secondChunk);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 2, GattStatus.INVALID_OFFSET.value, 19, secondChunk);
+        verify(server).sendResponse(device, 2, GattStatus.INVALID_OFFSET.value, 19, secondChunk);
     }
 
     @Test
@@ -371,9 +383,10 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, false, true, 0, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(descriptor, timeout(VERIFY_MARGIN)).setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+        verify(descriptor).setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
         verify(peripheralManagerCallback).onNotifyingEnabled(any(BluetoothCentral.class), any(BluetoothGattCharacteristic.class));
     }
 
@@ -387,9 +400,10 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, false, true, 0, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(descriptor, timeout(VERIFY_MARGIN)).setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+        verify(descriptor).setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
         verify(peripheralManagerCallback).onNotifyingEnabled(any(BluetoothCentral.class), any(BluetoothGattCharacteristic.class));
     }
 
@@ -403,9 +417,10 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, false, true, 0, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(descriptor, timeout(VERIFY_MARGIN)).setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+        verify(descriptor).setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
         verify(peripheralManagerCallback).onNotifyingDisabled(any(BluetoothCentral.class), any(BluetoothGattCharacteristic.class));
     }
 
@@ -419,9 +434,10 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, false, true, 0, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.REQUEST_NOT_SUPPORTED.value, 0, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+        verify(server).sendResponse(device, 1, GattStatus.REQUEST_NOT_SUPPORTED.value, 0, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
     }
 
     @Test
@@ -434,9 +450,10 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, false, true, 0, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.REQUEST_NOT_SUPPORTED.value, 0, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+        verify(server).sendResponse(device, 1, GattStatus.REQUEST_NOT_SUPPORTED.value, 0, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
     }
 
     @Test
@@ -450,9 +467,10 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, false, true, 0, value);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.INVALID_ATTRIBUTE_VALUE_LENGTH.value, 0, value);
+        verify(server).sendResponse(device, 1, GattStatus.INVALID_ATTRIBUTE_VALUE_LENGTH.value, 0, value);
     }
 
     @Test
@@ -466,9 +484,10 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, false, true, 0, value);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.VALUE_NOT_ALLOWED.value, 0, value);
+        verify(server).sendResponse(device, 1, GattStatus.VALUE_NOT_ALLOWED.value, 0, value);
     }
 
     @Test
@@ -484,23 +503,26 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, true, true, 0, firstChunk);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, firstChunk);
+        verify(server).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, firstChunk);
 
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 2, descriptor, true, true, 18, secondChunk);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 2, GattStatus.SUCCESS.value, 18, secondChunk);
+        verify(server).sendResponse(device, 2, GattStatus.SUCCESS.value, 18, secondChunk);
 
         // When
         peripheralManager.bluetoothGattServerCallback.onExecuteWrite(device, 3, true);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(peripheralManagerCallback, timeout(VERIFY_MARGIN)).onDescriptorWrite(any(BluetoothCentral.class), any(BluetoothGattDescriptor.class), any(byte[].class));
-        verify(descriptor, timeout(VERIFY_MARGIN)).setValue(value);
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 3, GattStatus.SUCCESS.value, 0, null);
+        verify(peripheralManagerCallback).onDescriptorWrite(any(BluetoothCentral.class), any(BluetoothGattDescriptor.class), any(byte[].class));
+        verify(descriptor).setValue(value);
+        verify(server).sendResponse(device, 3, GattStatus.SUCCESS.value, 0, null);
     }
 
     @Test
@@ -516,15 +538,17 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, true, true, 0, firstChunk);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, firstChunk);
+        verify(server).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, firstChunk);
 
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 2, descriptor, true, true, 19, secondChunk);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 2, GattStatus.INVALID_OFFSET.value, 19, secondChunk);
+        verify(server).sendResponse(device, 2, GattStatus.INVALID_OFFSET.value, 19, secondChunk);
     }
 
     @Test
@@ -538,10 +562,11 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, false, true, 0, value);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(descriptor, timeout(VERIFY_MARGIN)).setValue(value);
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, value);
+        verify(descriptor).setValue(value);
+        verify(server).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, value);
     }
 
     @Test
@@ -549,7 +574,6 @@ public class BluetoothPeripheralManagerTest {
         // Given
         byte[] value = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
         byte[] firstChunk = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18};
-        byte[] secondChunk = new byte[]{19, 20, 21, 22, 23, 24};
         when(descriptor.getCharacteristic()).thenReturn(characteristic);
         when(descriptor.getValue()).thenReturn(value);
         when(descriptor.getUuid()).thenReturn(UUID.fromString("00002901-0000-1000-8000-00805f9b34fb"));
@@ -557,17 +581,19 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device, 1, descriptor, true, true, 0, firstChunk);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, firstChunk);
+        verify(server).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, firstChunk);
 
         // When
         peripheralManager.bluetoothGattServerCallback.onExecuteWrite(device, 3, false);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
         verify(peripheralManagerCallback, never()).onDescriptorWrite(any(BluetoothCentral.class), any(BluetoothGattDescriptor.class), any(byte[].class));
         verify(descriptor, never()).setValue(value);
-        verify(server, timeout(VERIFY_MARGIN)).sendResponse(device, 3, GattStatus.SUCCESS.value, 0, null);
+        verify(server).sendResponse(device, 3, GattStatus.SUCCESS.value, 0, null);
     }
 
     @Test
@@ -594,6 +620,7 @@ public class BluetoothPeripheralManagerTest {
         peripheralManager.bluetoothGattServerCallback.onConnectionStateChange(device, GattStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTED);
         when(bluetoothManager.getConnectedDevices(BluetoothGattServer.GATT)).thenReturn(Collections.singletonList(device));
         boolean result = peripheralManager.notifyCharacteristicChanged(value, characteristic);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
         assertTrue(result);
@@ -614,13 +641,14 @@ public class BluetoothPeripheralManagerTest {
         peripheralManager.bluetoothGattServerCallback.onConnectionStateChange(device, GattStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTED);
         when(bluetoothManager.getConnectedDevices(BluetoothGattServer.GATT)).thenReturn(Collections.singletonList(device));
         boolean result = peripheralManager.notifyCharacteristicChanged(value, characteristic);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
         assertTrue(result);
         verify(characteristic).setValue(value);
 
         when(characteristic.getValue()).thenReturn(value);
-        verify(server, timeout(VERIFY_MARGIN)).notifyCharacteristicChanged(device, characteristic, true);
+        verify(server).notifyCharacteristicChanged(device, characteristic, true);
     }
 
     @Test
@@ -634,10 +662,14 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.notifyCharacteristicChanged(value, characteristic);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        // Then
         verify(server).notifyCharacteristicChanged(device, characteristic, true);
 
         peripheralManager.bluetoothGattServerCallback.onNotificationSent(device, GattStatus.SUCCESS.value);
-        verify(peripheralManagerCallback, timeout(VERIFY_MARGIN)).onNotificationSent(any(BluetoothCentral.class), any(byte[].class), any(BluetoothGattCharacteristic.class), any(GattStatus.class));
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+        verify(peripheralManagerCallback).onNotificationSent(any(BluetoothCentral.class), any(byte[].class), any(BluetoothGattCharacteristic.class), any(GattStatus.class));
     }
 
     @Test
@@ -645,9 +677,10 @@ public class BluetoothPeripheralManagerTest {
         // When
         peripheralManager.bluetoothGattServerCallback.onConnectionStateChange(device, GattStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTED);
         when(bluetoothManager.getConnectedDevices(BluetoothGattServer.GATT)).thenReturn(Collections.singletonList(device));
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(peripheralManagerCallback, timeout(VERIFY_MARGIN)).onCentralConnected(any(BluetoothCentral.class));
+        verify(peripheralManagerCallback).onCentralConnected(any(BluetoothCentral.class));
     }
 
     @Test
@@ -656,18 +689,20 @@ public class BluetoothPeripheralManagerTest {
         when(bluetoothAdapter.getRemoteDevice(device.getAddress())).thenReturn(device);
         peripheralManager.bluetoothGattServerCallback.onConnectionStateChange(device, GattStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTED);
         when(bluetoothManager.getConnectedDevices(BluetoothGattServer.GATT)).thenReturn(Collections.singletonList(device));
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
         BluetoothCentral central = peripheralManager.getCentral(device.getAddress());
 
         // When
         peripheralManager.cancelConnection(central);
 
         // Then
-        verify(server, timeout(VERIFY_MARGIN)).cancelConnection(device);
+        verify(server).cancelConnection(device);
 
         // When
         peripheralManager.bluetoothGattServerCallback.onConnectionStateChange(device, 0, GattStatus.SUCCESS.value);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(peripheralManagerCallback, timeout(VERIFY_MARGIN)).onCentralDisconnected(central);
+        verify(peripheralManagerCallback).onCentralDisconnected(central);
     }
 }

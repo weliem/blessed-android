@@ -1,9 +1,8 @@
-
-
 package com.welie.blessed;
 
 import android.Manifest;
 
+import android.app.Application;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
@@ -17,14 +16,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadow.api.Shadow;
 import org.robolectric.shadows.ShadowApplication;
+import org.robolectric.shadows.ShadowLooper;
 import org.robolectric.shadows.ShadowPackageManager;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -33,27 +34,26 @@ import static android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES;
 import static android.os.Build.VERSION_CODES.M;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNull;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 import static org.robolectric.Shadows.shadowOf;
 
 import android.content.Context;
 import android.os.ParcelUuid;
 
+import androidx.test.core.app.ApplicationProvider;
+
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = { M }, shadows={ShadowBluetoothLEAdapter.class} )
+@Config(manifest=Config.NONE, sdk = { M }, shadows={ShadowBluetoothLEAdapter.class} )
 public class BluetoothCentralManagerTest {
     private BluetoothCentralManager central;
     private ShadowApplication application;
     private ShadowBluetoothLEAdapter bluetoothAdapter;
-    private Context context;
 
     @Mock
     private BluetoothLeScanner scanner;
@@ -64,19 +64,22 @@ public class BluetoothCentralManagerTest {
     @Mock
     private BluetoothPeripheralCallback peripheralCallback;
 
-    private Handler handler = new Handler();
+    @Captor
+    ArgumentCaptor<List<ScanFilter>> scanFiltersCaptor;
+
+    private final Handler handler = new Handler();
 
     @Before
-    public void setUp() throws Exception {
-        initMocks(this);
+    public void setUp() {
+        openMocks(this);
 
-        application = ShadowApplication.getInstance();
+        application = shadowOf((Application) ApplicationProvider.getApplicationContext());
 
         bluetoothAdapter = Shadow.extract(ShadowBluetoothLEAdapter.getDefaultAdapter());
         bluetoothAdapter.setEnabled(true);
         bluetoothAdapter.setBluetoothLeScanner(scanner);
 
-        context = application.getApplicationContext();
+        Context context = ApplicationProvider.getApplicationContext();
 
         // Setup hardware features
         PackageManager packageManager = context.getPackageManager();
@@ -87,15 +90,10 @@ public class BluetoothCentralManagerTest {
     }
 
     @Test
-    public void scanForPeripheralsTest()  throws Exception {
+    public void scanForPeripheralsTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         central.scanForPeripherals();
-        verify(scanner).startScan(anyList(), any(ScanSettings.class), any(ScanCallback.class));
-
-        // Grab the scan callback that is used
-        Field field = BluetoothCentralManager.class.getDeclaredField("defaultScanCallback");
-        field.setAccessible(true);
-        ScanCallback scanCallback = (ScanCallback) field.get(central);
+        verify(scanner).startScan(ArgumentMatchers.<ScanFilter>anyList(), any(ScanSettings.class), any(ScanCallback.class));
 
         // Fake scan result
         ScanResult scanResult = mock(ScanResult.class);
@@ -103,7 +101,9 @@ public class BluetoothCentralManagerTest {
         when(device.getAddress()).thenReturn("12:23:34:98:76:54");
         when(scanResult.getDevice()).thenReturn(device);
         bluetoothAdapter.addDevice(device);
-        scanCallback.onScanResult(CALLBACK_TYPE_ALL_MATCHES, scanResult);
+        central.defaultScanCallback.onScanResult(CALLBACK_TYPE_ALL_MATCHES, scanResult);
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // See if we get it back
         ArgumentCaptor<BluetoothPeripheral> bluetoothPeripheralCaptor = ArgumentCaptor.forClass(BluetoothPeripheral.class);
@@ -114,14 +114,14 @@ public class BluetoothCentralManagerTest {
         assertEquals(bluetoothPeripheralCaptor.getValue().getAddress(), "12:23:34:98:76:54");
     }
 
+
     @Test
-    public void scanForPeripheralsWithServicesTest() throws Exception {
+    public void scanForPeripheralsWithServicesTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         UUID BLP_SERVICE_UUID = UUID.fromString("00001810-0000-1000-8000-00805f9b34fb");
         central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID});
 
         // Make sure startScan is called
-        ArgumentCaptor<List> scanFiltersCaptor = ArgumentCaptor.forClass(List.class);
         ArgumentCaptor<ScanSettings> scanSettingsCaptor = ArgumentCaptor.forClass(ScanSettings.class);
         ArgumentCaptor<ScanCallback> scanCallbackCaptor = ArgumentCaptor.forClass(ScanCallback.class);
         verify(scanner).startScan(scanFiltersCaptor.capture(), scanSettingsCaptor.capture(), scanCallbackCaptor.capture());
@@ -136,18 +136,15 @@ public class BluetoothCentralManagerTest {
         UUID uuid = parcelUuid.getUuid();
         assertEquals(BLP_SERVICE_UUID.toString(), uuid.toString());
 
-        // Grab the scan callback that is used
-        Field field = BluetoothCentralManager.class.getDeclaredField("defaultScanCallback");
-        field.setAccessible(true);
-        ScanCallback scanCallback = (ScanCallback) field.get(central);
-
         // Fake scan result
         ScanResult scanResult = mock(ScanResult.class);
         BluetoothDevice device = mock(BluetoothDevice.class);
         when(device.getAddress()).thenReturn("12:23:34:98:76:54");
         when(scanResult.getDevice()).thenReturn(device);
         bluetoothAdapter.addDevice(device);
-        scanCallback.onScanResult(CALLBACK_TYPE_ALL_MATCHES, scanResult);
+        central.defaultScanCallback.onScanResult(CALLBACK_TYPE_ALL_MATCHES, scanResult);
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // See if we get it back
         ArgumentCaptor<BluetoothPeripheral> bluetoothPeripheralCaptor = ArgumentCaptor.forClass(BluetoothPeripheral.class);
@@ -159,13 +156,12 @@ public class BluetoothCentralManagerTest {
     }
 
     @Test
-    public void scanForPeripheralsWithAddressesTest() throws Exception {
+    public void scanForPeripheralsWithAddressesTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         String myAddress = "12:23:34:98:76:54";
         central.scanForPeripheralsWithAddresses(new String[]{myAddress});
 
         // Make sure startScan is called
-        ArgumentCaptor<List> scanFiltersCaptor = ArgumentCaptor.forClass(List.class);
         ArgumentCaptor<ScanSettings> scanSettingsCaptor = ArgumentCaptor.forClass(ScanSettings.class);
         ArgumentCaptor<ScanCallback> scanCallbackCaptor = ArgumentCaptor.forClass(ScanCallback.class);
         verify(scanner).startScan(scanFiltersCaptor.capture(), scanSettingsCaptor.capture(), scanCallbackCaptor.capture());
@@ -179,18 +175,15 @@ public class BluetoothCentralManagerTest {
         String address = addressFilter.getDeviceAddress();
         assertEquals(myAddress, address);
 
-        // Grab the scan callback that is used
-        Field field = BluetoothCentralManager.class.getDeclaredField("defaultScanCallback");
-        field.setAccessible(true);
-        ScanCallback scanCallback = (ScanCallback) field.get(central);
-
         // Fake scan result
         ScanResult scanResult = mock(ScanResult.class);
         BluetoothDevice device = mock(BluetoothDevice.class);
         when(device.getAddress()).thenReturn(myAddress);
         when(scanResult.getDevice()).thenReturn(device);
         bluetoothAdapter.addDevice(device);
-        scanCallback.onScanResult(CALLBACK_TYPE_ALL_MATCHES, scanResult);
+        central.defaultScanCallback.onScanResult(CALLBACK_TYPE_ALL_MATCHES, scanResult);
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // See if we get it back
         ArgumentCaptor<BluetoothPeripheral> bluetoothPeripheralCaptor = ArgumentCaptor.forClass(BluetoothPeripheral.class);
@@ -202,7 +195,7 @@ public class BluetoothCentralManagerTest {
     }
 
     @Test
-    public void scanForPeripheralsWithBadAddressesTest() throws Exception {
+    public void scanForPeripheralsWithBadAddressesTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         String validAddress = "12:23:34:98:76:54";
         String invalidAddress = "23:34:98:76:XX";
@@ -210,7 +203,6 @@ public class BluetoothCentralManagerTest {
         central.scanForPeripheralsWithAddresses(new String[]{validAddress, invalidAddress});
 
         // Make sure startScan is called
-        ArgumentCaptor<List> scanFiltersCaptor = ArgumentCaptor.forClass(List.class);
         ArgumentCaptor<ScanSettings> scanSettingsCaptor = ArgumentCaptor.forClass(ScanSettings.class);
         ArgumentCaptor<ScanCallback> scanCallbackCaptor = ArgumentCaptor.forClass(ScanCallback.class);
         verify(scanner).startScan(scanFiltersCaptor.capture(), scanSettingsCaptor.capture(), scanCallbackCaptor.capture());
@@ -228,26 +220,20 @@ public class BluetoothCentralManagerTest {
     }
 
     @Test
-    public void scanForPeripheralsWithNamesTest() throws Exception {
+    public void scanForPeripheralsWithNamesTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         String myAddress = "12:23:34:98:76:54";
         String myName = "Polar";
         central.scanForPeripheralsWithNames(new String[]{myName});
 
         // Make sure startScan is called
-        ArgumentCaptor<List> scanFiltersCaptor = ArgumentCaptor.forClass(List.class);
         ArgumentCaptor<ScanSettings> scanSettingsCaptor = ArgumentCaptor.forClass(ScanSettings.class);
         ArgumentCaptor<ScanCallback> scanCallbackCaptor = ArgumentCaptor.forClass(ScanCallback.class);
         verify(scanner).startScan(scanFiltersCaptor.capture(), scanSettingsCaptor.capture(), scanCallbackCaptor.capture());
 
         // Verify there is no filter set
         List<ScanFilter> filters = scanFiltersCaptor.getValue();
-        assertNull(filters);
-
-        // Grab the scan callback that is used
-        Field field = BluetoothCentralManager.class.getDeclaredField("scanByNameCallback");
-        field.setAccessible(true);
-        ScanCallback scanCallback = (ScanCallback) field.get(central);
+        assertEquals(0, filters.size());
 
         // Fake scan result
         ScanResult scanResult = mock(ScanResult.class);
@@ -256,7 +242,9 @@ public class BluetoothCentralManagerTest {
         when(device.getName()).thenReturn("Polar H7");
         when(scanResult.getDevice()).thenReturn(device);
         bluetoothAdapter.addDevice(device);
-        scanCallback.onScanResult(CALLBACK_TYPE_ALL_MATCHES, scanResult);
+        central.scanByNameCallback.onScanResult(CALLBACK_TYPE_ALL_MATCHES, scanResult);
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // See if we get it back
         ArgumentCaptor<BluetoothPeripheral> bluetoothPeripheralCaptor = ArgumentCaptor.forClass(BluetoothPeripheral.class);
@@ -268,7 +256,7 @@ public class BluetoothCentralManagerTest {
     }
 
     @Test
-    public void scanForPeripheralsUsingFiltersTest() throws Exception {
+    public void scanForPeripheralsUsingFiltersTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         String myAddress = "12:23:34:98:76:54";
         List<ScanFilter> myfilters = new ArrayList<>();
@@ -279,7 +267,6 @@ public class BluetoothCentralManagerTest {
         central.scanForPeripheralsUsingFilters(myfilters);
 
         // Make sure startScan is called
-        ArgumentCaptor<List> scanFiltersCaptor = ArgumentCaptor.forClass(List.class);
         ArgumentCaptor<ScanSettings> scanSettingsCaptor = ArgumentCaptor.forClass(ScanSettings.class);
         ArgumentCaptor<ScanCallback> scanCallbackCaptor = ArgumentCaptor.forClass(ScanCallback.class);
         verify(scanner).startScan(scanFiltersCaptor.capture(), scanSettingsCaptor.capture(), scanCallbackCaptor.capture());
@@ -294,8 +281,7 @@ public class BluetoothCentralManagerTest {
         assertEquals(myAddress, address);
     }
 
-
-        @Test (expected = NullPointerException.class)
+    @Test (expected = NullPointerException.class)
     public void scanForPeripheralsWithServicesTestNullTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         central.scanForPeripheralsWithServices(null);
@@ -344,65 +330,51 @@ public class BluetoothCentralManagerTest {
     }
 
     @Test
-    public void scanFailedTest() throws Exception {
+    public void scanFailedTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         central.scanForPeripherals();
-        verify(scanner).startScan(anyList(), any(ScanSettings.class), any(ScanCallback.class));
+        verify(scanner).startScan(ArgumentMatchers.<ScanFilter>anyList(), any(ScanSettings.class), any(ScanCallback.class));
 
-        // Grab the scan callback that is used
-        Field field = BluetoothCentralManager.class.getDeclaredField("defaultScanCallback");
-        field.setAccessible(true);
-        ScanCallback scanCallback = (ScanCallback) field.get(central);
+        central.defaultScanCallback.onScanFailed(ScanFailure.OUT_OF_HARDWARE_RESOURCES.value);
 
-        scanCallback.onScanFailed(ScanFailure.OUT_OF_HARDWARE_RESOURCES.value);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         verify(callback).onScanFailed(ScanFailure.OUT_OF_HARDWARE_RESOURCES);
     }
 
     @Test
-    public void scanFailedAutoconnectTest() throws Exception {
-        // Grab the scan callback that is used
-        Field field = BluetoothCentralManager.class.getDeclaredField("autoConnectScanCallback");
-        field.setAccessible(true);
-        ScanCallback scanCallback = (ScanCallback) field.get(central);
+    public void scanFailedAutoconnectTest() {
+        central.autoConnectScanCallback.onScanFailed(ScanFailure.OUT_OF_HARDWARE_RESOURCES.value);
 
-        scanCallback.onScanFailed(ScanFailure.OUT_OF_HARDWARE_RESOURCES.value);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         verify(callback).onScanFailed(ScanFailure.OUT_OF_HARDWARE_RESOURCES);
     }
 
     @Test
-    public void scanForNamesFailedTest() throws Exception {
+    public void scanForNamesFailedTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         String myName = "Polar";
         central.scanForPeripheralsWithNames(new String[]{myName});
 
-        // Grab the scan callback that is used
-        Field field = BluetoothCentralManager.class.getDeclaredField("scanByNameCallback");
-        field.setAccessible(true);
-        ScanCallback scanCallback = (ScanCallback) field.get(central);
+        central.scanByNameCallback.onScanFailed(ScanFailure.OUT_OF_HARDWARE_RESOURCES.value);
 
-        scanCallback.onScanFailed(ScanFailure.OUT_OF_HARDWARE_RESOURCES.value);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         verify(callback).onScanFailed(ScanFailure.OUT_OF_HARDWARE_RESOURCES);
     }
 
     @Test
-    public void stopScanTest() throws Exception {
+    public void stopScanTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         central.scanForPeripherals();
-        verify(scanner).startScan(anyList(), any(ScanSettings.class), any(ScanCallback.class));
-
-        // Grab the scan callback that is used
-        Field field = BluetoothCentralManager.class.getDeclaredField("defaultScanCallback");
-        field.setAccessible(true);
-        ScanCallback scanCallback = (ScanCallback) field.get(central);
+        verify(scanner).startScan(ArgumentMatchers.<ScanFilter>anyList(), any(ScanSettings.class), any(ScanCallback.class));
 
         // Stop scan
         central.stopScan();
 
         // Check if scan is correctly stopped
-        verify(scanner).stopScan(scanCallback);
+        verify(scanner).stopScan(central.defaultScanCallback);
 
         // Stop scan again
         central.stopScan();
@@ -412,7 +384,7 @@ public class BluetoothCentralManagerTest {
     }
 
     @Test
-    public void connectPeripheralTest() throws Exception {
+    public void connectPeripheralTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
@@ -422,19 +394,16 @@ public class BluetoothCentralManagerTest {
 
         verify(peripheral).connect();
 
-        // Grab the scan callback that is used
-        Field field = BluetoothCentralManager.class.getDeclaredField("internalCallback");
-        field.setAccessible(true);
-        BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
-
         // Give connected event and see if we get callback
-        internalCallback.connected(peripheral);
+        central.internalCallback.connected(peripheral);
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         verify(callback).onConnectedPeripheral(peripheral);
     }
 
     @Test
-    public void connectPeripheralAlreadyConnectedTest() throws Exception {
+    public void connectPeripheralAlreadyConnectedTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
@@ -444,13 +413,10 @@ public class BluetoothCentralManagerTest {
 
         verify(peripheral).connect();
 
-        // Grab the scan callback that is used
-        Field field = BluetoothCentralManager.class.getDeclaredField("internalCallback");
-        field.setAccessible(true);
-        BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
-
         // Give connected event and see if we get callback
-        internalCallback.connected(peripheral);
+        central.internalCallback.connected(peripheral);
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         verify(callback).onConnectedPeripheral(peripheral);
 
@@ -460,7 +426,7 @@ public class BluetoothCentralManagerTest {
     }
 
     @Test
-    public void connectPeripheralConnectingTest() throws Exception {
+    public void connectPeripheralConnectingTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
@@ -476,7 +442,7 @@ public class BluetoothCentralManagerTest {
     }
 
     @Test
-    public void connectionFailedRetryTest() throws Exception {
+    public void connectionFailedRetryTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
 
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
@@ -487,13 +453,8 @@ public class BluetoothCentralManagerTest {
 
         verify(peripheral).connect();
 
-        // Grab the scan callback that is used
-        Field field = BluetoothCentralManager.class.getDeclaredField("internalCallback");
-        field.setAccessible(true);
-        BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
-
         // Give connected event and see if we get callback
-        internalCallback.connectFailed(peripheral, HciStatus.ERROR);
+        central.internalCallback.connectFailed(peripheral, HciStatus.ERROR);
 
         // We should not get a connection failed but a retry with autoconnect instead
         verify(callback, never()).onConnectionFailed(peripheral, HciStatus.ERROR);
@@ -501,7 +462,7 @@ public class BluetoothCentralManagerTest {
     }
 
     @Test
-    public void connectionFailedAfterRetryTest() throws Exception {
+    public void connectionFailedAfterRetryTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
 
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
@@ -512,21 +473,18 @@ public class BluetoothCentralManagerTest {
 
         verify(peripheral).connect();
 
-        // Grab the scan callback that is used
-        Field field = BluetoothCentralManager.class.getDeclaredField("internalCallback");
-        field.setAccessible(true);
-        BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
-
         // Give connected event and see if we get callback
-        internalCallback.connectFailed(peripheral, HciStatus.ERROR);
-        internalCallback.connectFailed(peripheral, HciStatus.ERROR);
+        central.internalCallback.connectFailed(peripheral, HciStatus.ERROR);
+        central.internalCallback.connectFailed(peripheral, HciStatus.ERROR);
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // We should not get a connection failed after 2 failed attempts
         verify(callback).onConnectionFailed(peripheral, HciStatus.ERROR);
     }
 
     @Test
-    public void getConnectedPeripheralsTest() throws Exception {
+    public void getConnectedPeripheralsTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
@@ -536,13 +494,10 @@ public class BluetoothCentralManagerTest {
 
         verify(peripheral).connect();
 
-        // Grab the scan callback that is used
-        Field field = BluetoothCentralManager.class.getDeclaredField("internalCallback");
-        field.setAccessible(true);
-        BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
-
         // Give connected event and see if we get callback
-        internalCallback.connected(peripheral);
+        central.internalCallback.connected(peripheral);
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         verify(callback).onConnectedPeripheral(peripheral);
 
@@ -553,7 +508,9 @@ public class BluetoothCentralManagerTest {
 
         peripheral.cancelConnection();
 
-        internalCallback.disconnected(peripheral, HciStatus.SUCCESS);
+        central.internalCallback.disconnected(peripheral, HciStatus.SUCCESS);
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         List<BluetoothPeripheral> peripherals2 = central.getConnectedPeripherals();
         assertNotNull(peripherals2);
@@ -567,9 +524,8 @@ public class BluetoothCentralManagerTest {
         assertEquals(0, peripherals.size());
     }
 
-
     @Test
-    public void cancelConnectionPeripheralTest() throws Exception {
+    public void cancelConnectionPeripheralTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
 
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
@@ -580,13 +536,10 @@ public class BluetoothCentralManagerTest {
 
         verify(peripheral).connect();
 
-        // Grab the scan callback that is used
-        Field field = BluetoothCentralManager.class.getDeclaredField("internalCallback");
-        field.setAccessible(true);
-        BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
-
         // Give connected event and see if we get callback
-        internalCallback.connected(peripheral);
+        central.internalCallback.connected(peripheral);
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         verify(callback).onConnectedPeripheral(peripheral);
 
@@ -594,13 +547,15 @@ public class BluetoothCentralManagerTest {
 
         verify(peripheral).cancelConnection();
 
-        internalCallback.disconnected(peripheral, HciStatus.SUCCESS);
+        central.internalCallback.disconnected(peripheral, HciStatus.SUCCESS);
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         verify(callback).onDisconnectedPeripheral(peripheral, HciStatus.SUCCESS);
     }
 
     @Test
-    public void cancelConnectionUnconnectedPeripheralTest() throws Exception {
+    public void cancelConnectionUnconnectedPeripheralTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
 
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
@@ -615,18 +570,15 @@ public class BluetoothCentralManagerTest {
 
         verify(peripheral).cancelConnection();
 
-        // Grab the scan callback that is used
-        Field field = BluetoothCentralManager.class.getDeclaredField("internalCallback");
-        field.setAccessible(true);
-        BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
+        central.internalCallback.disconnected(peripheral, HciStatus.SUCCESS);
 
-        internalCallback.disconnected(peripheral, HciStatus.SUCCESS);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         verify(callback).onDisconnectedPeripheral(peripheral, HciStatus.SUCCESS);
     }
 
     @Test
-    public void cancelConnectionReconnectingPeripheralTest() throws Exception {
+    public void cancelConnectionReconnectingPeripheralTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
 
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
@@ -637,11 +589,13 @@ public class BluetoothCentralManagerTest {
 
         central.cancelConnection(peripheral);
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
         verify(callback).onDisconnectedPeripheral(peripheral, HciStatus.SUCCESS);
     }
 
     @Test
-    public void autoconnectTestCached() throws Exception {
+    public void autoconnectTestCached() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
 
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
@@ -652,19 +606,16 @@ public class BluetoothCentralManagerTest {
 
         verify(peripheral).autoConnect();
 
-        // Grab the scan callback that is used
-        Field field = BluetoothCentralManager.class.getDeclaredField("internalCallback");
-        field.setAccessible(true);
-        BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
-
         // Give connected event and see if we get callback
-        internalCallback.connected(peripheral);
+        central.internalCallback.connected(peripheral);
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         verify(callback).onConnectedPeripheral(peripheral);
     }
 
     @Test
-    public void autoconnectTestUnCached() throws Exception {
+    public void autoconnectTestUnCached() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
 
         BluetoothDevice device = mock(BluetoothDevice.class);
@@ -678,24 +629,19 @@ public class BluetoothCentralManagerTest {
         central.autoConnectPeripheral(peripheral, peripheralCallback);
 
         verify(peripheral, never()).autoConnect();
-        verify(scanner).startScan(anyList(), any(ScanSettings.class), any(ScanCallback.class));
-
-        // Grab the scan callback that is used
-        Field field = BluetoothCentralManager.class.getDeclaredField("autoConnectScanCallback");
-        field.setAccessible(true);
-        ScanCallback scanCallback = (ScanCallback) field.get(central);
+        verify(scanner).startScan(ArgumentMatchers.<ScanFilter>anyList(), any(ScanSettings.class), any(ScanCallback.class));
 
         // Fake scan result
         ScanResult scanResult = mock(ScanResult.class);
         when(scanResult.getDevice()).thenReturn(device);
-        scanCallback.onScanResult(CALLBACK_TYPE_ALL_MATCHES, scanResult);
+        central.autoConnectScanCallback.onScanResult(CALLBACK_TYPE_ALL_MATCHES, scanResult);
 
         verify(peripheral).connect();
     }
 
 
     @Test
-    public void autoconnectPeripheralConnectedTest() throws Exception {
+    public void autoconnectPeripheralConnectedTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
@@ -705,13 +651,10 @@ public class BluetoothCentralManagerTest {
 
         verify(peripheral).connect();
 
-        // Grab the scan callback that is used
-        Field field = BluetoothCentralManager.class.getDeclaredField("internalCallback");
-        field.setAccessible(true);
-        BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
-
         // Give connected event and see if we get callback
-        internalCallback.connected(peripheral);
+        central.internalCallback.connected(peripheral);
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         verify(callback).onConnectedPeripheral(peripheral);
 
@@ -721,7 +664,7 @@ public class BluetoothCentralManagerTest {
     }
 
     @Test
-    public void autoconnectTwice() throws Exception {
+    public void autoconnectTwice() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
 
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
@@ -730,7 +673,7 @@ public class BluetoothCentralManagerTest {
         central.autoConnectPeripheral(peripheral, peripheralCallback);
 
         verify(peripheral, never()).autoConnect();
-        verify(scanner).startScan(anyList(), any(ScanSettings.class), any(ScanCallback.class));
+        verify(scanner).startScan(ArgumentMatchers.<ScanFilter>anyList(), any(ScanSettings.class), any(ScanCallback.class));
 
         central.autoConnectPeripheral(peripheral, peripheralCallback);
 
@@ -740,7 +683,7 @@ public class BluetoothCentralManagerTest {
     @Test(expected = IllegalArgumentException.class)
     public void getPeripheralWrongMacAddressTest() {
         // Get peripheral and supply lowercase mac address, which is not allowed
-        BluetoothPeripheral peripheral = central.getPeripheral("ac:de:ef:12:34:56");
+        central.getPeripheral("ac:de:ef:12:34:56");
     }
 
     @Test
@@ -756,7 +699,7 @@ public class BluetoothCentralManagerTest {
     }
 
     @Test
-    public void getPeripheralConnectedTest() throws Exception {
+    public void getPeripheralConnectedTest() {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
@@ -766,13 +709,10 @@ public class BluetoothCentralManagerTest {
 
         verify(peripheral).connect();
 
-        // Grab the scan callback that is used
-        Field field = BluetoothCentralManager.class.getDeclaredField("internalCallback");
-        field.setAccessible(true);
-        BluetoothPeripheral.InternalCallback internalCallback = (BluetoothPeripheral.InternalCallback) field.get(central);
-
         // Give connected event and see if we get callback
-        internalCallback.connected(peripheral);
+        central.internalCallback.connected(peripheral);
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         verify(callback).onConnectedPeripheral(peripheral);
 
@@ -786,12 +726,12 @@ public class BluetoothCentralManagerTest {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         bluetoothAdapter.setEnabled(false);
         central.scanForPeripherals();
-        verify(scanner, never()).startScan(anyList(), any(ScanSettings.class), any(ScanCallback.class));
+        verify(scanner, never()).startScan(ArgumentMatchers.<ScanFilter>anyList(), any(ScanSettings.class), any(ScanCallback.class));
     }
 
     @Test
     public void noPermissionTest() {
         central.scanForPeripherals();
-        verify(scanner, never()).startScan(anyList(), any(ScanSettings.class), any(ScanCallback.class));
+        verify(scanner, never()).startScan(ArgumentMatchers.<ScanFilter>anyList(), any(ScanSettings.class), any(ScanCallback.class));
     }
 }

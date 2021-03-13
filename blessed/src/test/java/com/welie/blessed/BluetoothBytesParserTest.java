@@ -1,14 +1,11 @@
 package com.welie.blessed;
 
-import junit.framework.Assert;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -22,19 +19,17 @@ import static com.welie.blessed.BluetoothBytesParser.FORMAT_SINT8;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT16;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT32;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT8;
-import static com.welie.blessed.BluetoothBytesParser.bytes2String;
 import static java.nio.ByteOrder.BIG_ENDIAN;
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.assertNull;
 
 import static android.os.Build.VERSION_CODES.M;
 import static org.junit.Assert.assertArrayEquals;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = { M }, shadows={ShadowBluetoothLEAdapter.class} )
+@Config(manifest=Config.NONE, sdk = { M }, shadows={ShadowBluetoothLEAdapter.class} )
 public class BluetoothBytesParserTest {
 
     @Before
@@ -154,7 +149,6 @@ public class BluetoothBytesParserTest {
     @Test
     public void parseSINT16_LittleEndianTest() {
         BluetoothBytesParser parser = new BluetoothBytesParser(new byte[]{1, -2, 3, -4});
-        String bytesString = bytes2String(parser.getValue());
 
         // Read using offsets
         assertEquals(-511, (int) parser.getIntValue(FORMAT_SINT16, 0, LITTLE_ENDIAN));

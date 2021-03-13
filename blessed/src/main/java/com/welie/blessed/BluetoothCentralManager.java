@@ -46,6 +46,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,7 +98,7 @@ public class BluetoothCentralManager {
 
     //region Callbacks
 
-    private final ScanCallback scanByNameCallback = new ScanCallback() {
+    protected final ScanCallback scanByNameCallback = new ScanCallback() {
         @Override
         public void onScanResult(final int callbackType, final ScanResult result) {
             synchronized (this) {
@@ -119,7 +120,7 @@ public class BluetoothCentralManager {
         }
     };
 
-    private final ScanCallback defaultScanCallback = new ScanCallback() {
+    protected final ScanCallback defaultScanCallback = new ScanCallback() {
         @Override
         public void onScanResult(final int callbackType, final ScanResult result) {
             synchronized (this) {
@@ -158,7 +159,7 @@ public class BluetoothCentralManager {
         });
     }
 
-    private final ScanCallback autoConnectScanCallback = new ScanCallback() {
+    protected final ScanCallback autoConnectScanCallback = new ScanCallback() {
         @Override
         public void onScanResult(final int callbackType, final ScanResult result) {
             synchronized (this) {
@@ -200,7 +201,7 @@ public class BluetoothCentralManager {
         }
     };
 
-    private final BluetoothPeripheral.InternalCallback internalCallback = new BluetoothPeripheral.InternalCallback() {
+    protected final BluetoothPeripheral.InternalCallback internalCallback = new BluetoothPeripheral.InternalCallback() {
         @Override
         public void connected(@NotNull final BluetoothPeripheral peripheral) {
             connectionRetries.remove(peripheral.getAddress());
@@ -335,7 +336,7 @@ public class BluetoothCentralManager {
         scanSettings = getScanSettings(scanMode);
     }
 
-    private void startScan(@Nullable final List<ScanFilter> filters, @NotNull final ScanSettings scanSettings, @NotNull final ScanCallback scanCallback) {
+    private void startScan(@NotNull final List<ScanFilter> filters, @NotNull final ScanSettings scanSettings, @NotNull final ScanCallback scanCallback) {
         if (bleNotReady()) return;
 
         if (isScanning()) {
@@ -397,7 +398,7 @@ public class BluetoothCentralManager {
 
         // Start the scanner with no filter because we'll do the filtering ourselves
         scanPeripheralNames = peripheralNames;
-        startScan(null, scanSettings, scanByNameCallback);
+        startScan(Collections.<ScanFilter>emptyList(), scanSettings, scanByNameCallback);
     }
 
     /**
@@ -446,7 +447,7 @@ public class BluetoothCentralManager {
      * Scan for any peripheral that is advertising.
      */
     public void scanForPeripherals() {
-        startScan(null, scanSettings, defaultScanCallback);
+        startScan(Collections.<ScanFilter>emptyList(), scanSettings, defaultScanCallback);
     }
 
     /**
