@@ -43,12 +43,15 @@ import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPON
 import static android.bluetooth.BluetoothProfile.STATE_CONNECTED;
 import static android.bluetooth.BluetoothProfile.STATE_DISCONNECTED;
 import static android.os.Build.VERSION_CODES.M;
+import static android.os.Build.VERSION_CODES.O_MR1;
 import static com.welie.blessed.ConnectionState.CONNECTED;
 import static com.welie.blessed.ConnectionState.DISCONNECTED;
 import static com.welie.blessed.ConnectionState.DISCONNECTING;
 import static junit.framework.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -202,6 +205,102 @@ public class BluetoothPeripheralTest {
     }
 
     @Test
+    public void Given_a_connected_peripheral_when_the_name_is_null_then_an_empty_string_is_returned() {
+        // Given
+        when(device.getName()).thenReturn(null);
+        connectAndGetCallback();
+
+        // When
+        String name = peripheral.getName();
+
+        // Then
+        assertNotNull(name);
+        assertEquals("", name);
+    }
+
+    @Test
+    public void Given_a_connected_peripheral_when_the_name_becomes_null_after_having_a_name_then_first_name_is_returned() {
+        // Given
+        when(device.getName()).thenReturn("first");
+        connectAndGetCallback();
+
+        // When
+        String name = peripheral.getName();
+
+        // Then
+        assertNotNull(name);
+        assertEquals("first", name);
+
+        // When
+        when(device.getName()).thenReturn(null);
+
+        // Then
+        assertEquals("first", peripheral.getName());
+    }
+
+    @Test
+    public void Given_a_connected_peripheral_and_services_discovered_when_getService_is_called_the_right_service_is_returned() {
+        // Given
+        BluetoothGattService service = new BluetoothGattService(SERVICE_UUID, 0);
+        when(gatt.getService(SERVICE_UUID)).thenReturn(service);
+        connectAndGetCallback();
+
+        // When
+        BluetoothGattService receivedService = peripheral.getService(SERVICE_UUID);
+
+        // Then
+        assertNotNull(receivedService);
+        assertEquals(service,receivedService);
+    }
+
+    @Test
+    public void Given_a_connected_peripheral_and_services_discovered_when_getService_for_unknown_service_is_called_then_null_is_returned() {
+        // Given
+        BluetoothGattService service = new BluetoothGattService(SERVICE_UUID, 0);
+        when(gatt.getService(SERVICE_UUID)).thenReturn(service);
+        connectAndGetCallback();
+
+        // When
+        BluetoothGattService receivedService = peripheral.getService(UUID.fromString("00001000-0000-1000-8000-00805f9b34fb"));
+
+        // Then
+        assertNull(receivedService);
+    }
+
+    @Test
+    public void Given_a_connected_peripheral_and_services_discovered_when_getCharacteristic_is_called_the_right_characteristic_is_returned() {
+        // Given
+        BluetoothGattService service = new BluetoothGattService(SERVICE_UUID, 0);
+        BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"),PROPERTY_INDICATE,0);
+        service.addCharacteristic(characteristic);
+        when(gatt.getService(SERVICE_UUID)).thenReturn(service);
+        connectAndGetCallback();
+
+        // When
+        BluetoothGattCharacteristic receivedCharacteristic = peripheral.getCharacteristic(SERVICE_UUID, UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"));
+
+        // Then
+        assertNotNull(receivedCharacteristic);
+        assertEquals(characteristic,receivedCharacteristic);
+    }
+
+    @Test
+    public void Given_a_connected_peripheral_and_services_discovered_when_getCharacteristic_with_unknownUUID_is_called_then_null_is_returned() {
+        // Given
+        BluetoothGattService service = new BluetoothGattService(SERVICE_UUID, 0);
+        BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"),PROPERTY_INDICATE,0);
+        service.addCharacteristic(characteristic);
+        when(gatt.getService(SERVICE_UUID)).thenReturn(service);
+        connectAndGetCallback();
+
+        // When
+        BluetoothGattCharacteristic receivedCharacteristic = peripheral.getCharacteristic(SERVICE_UUID, UUID.fromString("00002AAA-0000-1000-8000-00805f9b34fb"));
+
+        // Then
+        assertNull(receivedCharacteristic);
+    }
+
+    @Test
     public void Given_a_connected_peripheral_with_a_characteristic_supporting_indications_when_setNotify_with_true_is_called_then_the_indication_is_enabled() {
         // Given
         BluetoothGattService service = new BluetoothGattService(SERVICE_UUID, 0);
@@ -228,6 +327,8 @@ public class BluetoothPeripheralTest {
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         verify(peripheralCallback).onNotificationStateUpdate(peripheral, characteristic, GattStatus.SUCCESS);
+        assertTrue(peripheral.isNotifying(characteristic));
+        assertEquals(1, peripheral.getNotifyingCharacteristics().size());
     }
 
     @Test
@@ -257,6 +358,8 @@ public class BluetoothPeripheralTest {
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         verify(peripheralCallback).onNotificationStateUpdate(peripheral, characteristic, GattStatus.SUCCESS);
+        assertTrue(peripheral.isNotifying(characteristic));
+        assertEquals(1, peripheral.getNotifyingCharacteristics().size());
     }
 
     @Test
@@ -286,6 +389,8 @@ public class BluetoothPeripheralTest {
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         verify(peripheralCallback).onNotificationStateUpdate(peripheral, characteristic, GattStatus.SUCCESS);
+        assertFalse(peripheral.isNotifying(characteristic));
+        assertEquals(0, peripheral.getNotifyingCharacteristics().size());
     }
 
     @Test
@@ -299,6 +404,39 @@ public class BluetoothPeripheralTest {
 
         // When
         peripheral.readCharacteristic(characteristic);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        // Then
+        verify(gatt).readCharacteristic(characteristic);
+
+        byte[] value = new byte[]{0x01};
+        characteristic.setValue(value);
+        callback.onCharacteristicRead(gatt, characteristic, 0);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        verify(peripheralCallback).onCharacteristicUpdate(captorPeripheral.capture(), captorValue.capture(), captorCharacteristic.capture(), captorGattStatus.capture());
+
+        byte[] receivedValue = captorValue.getValue();
+        assertEquals(0x01, receivedValue[0]);
+        assertEquals(peripheral, captorPeripheral.getValue());
+        assertEquals(characteristic, captorCharacteristic.getValue());
+        assertEquals(GattStatus.SUCCESS, captorGattStatus.getValue() );
+    }
+
+    @Test
+    public void Given_a_connected_peripheral_when_readCharacteristic_using_UUID_is_called_then_the_received_value_is_returned()  {
+        // Given
+        BluetoothGattCallback callback = connectAndGetCallback();
+
+        BluetoothGattService service = new BluetoothGattService(SERVICE_UUID, 0);
+        BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"), PROPERTY_READ,0);
+        service.addCharacteristic(characteristic);
+        characteristic.setValue(new byte[]{0x00});
+        when(gatt.getService(SERVICE_UUID)).thenReturn(service);
+        when(gatt.readCharacteristic(characteristic)).thenReturn(true);
+
+        // When
+        peripheral.readCharacteristic(SERVICE_UUID, UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"));
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
@@ -355,6 +493,42 @@ public class BluetoothPeripheralTest {
 
         // When
         peripheral.writeCharacteristic(characteristic, new byte[]{5}, WriteType.WITH_RESPONSE);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        // Then
+        verify(gatt).writeCharacteristic(characteristic);
+        assertEquals(5, characteristic.getValue()[0]);
+        assertEquals(WRITE_TYPE_DEFAULT, characteristic.getWriteType());
+
+        // When
+        byte[] valueAfterWrite = new byte[]{0x01};
+        characteristic.setValue(valueAfterWrite);
+        callback.onCharacteristicWrite(gatt, characteristic, 0);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        // Then
+        verify(peripheralCallback).onCharacteristicWrite(captorPeripheral.capture(), captorValue.capture(), captorCharacteristic.capture(), captorGattStatus.capture());
+
+        byte[] value = captorValue.getValue();
+        assertEquals(5, value[0]);  // Check if original value is returned and not the one in the characteristic
+        assertEquals(peripheral, captorPeripheral.getValue());
+        assertEquals(characteristic, captorCharacteristic.getValue());
+        assertEquals(GattStatus.SUCCESS, (GattStatus) captorGattStatus.getValue() );
+    }
+
+    @Test
+    public void Given_a_connected_peripheral_when_writeCharacteristic_WithResponse_usingUUID_is_called_then_the_value_is_written_and_a_correct_response_is_received() {
+        // Given
+        BluetoothGattCallback callback = connectAndGetCallback();
+
+        BluetoothGattService service = new BluetoothGattService(SERVICE_UUID, 0);
+        BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"), PROPERTY_WRITE,0);
+        service.addCharacteristic(characteristic);
+        when(gatt.writeCharacteristic(characteristic)).thenReturn(true);
+        when(gatt.getService(SERVICE_UUID)).thenReturn(service);
+
+        // When
+        peripheral.writeCharacteristic(SERVICE_UUID, UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"), new byte[]{5}, WriteType.WITH_RESPONSE);
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
@@ -899,6 +1073,48 @@ public class BluetoothPeripheralTest {
 
         // Then
         verify(gatt).disconnect();
+    }
+
+    @Test
+    @Config( manifest=Config.NONE, sdk = { O_MR1 })
+    public void Given_a_connected_peripheral_when_requestPhy_is_called_the_Phy_is_requested() {
+        // Given
+        BluetoothGattCallback callback = connectAndGetCallback();
+
+        // When
+        peripheral.setPreferredPhy(PhyType.LE_2M, PhyType.LE_2M, PhyOptions.NO_PREFERRED);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        // Then
+        verify(gatt).setPreferredPhy(PhyType.LE_2M.value, PhyType.LE_2M.value, PhyOptions.NO_PREFERRED.value);
+
+        // When
+        callback.onPhyUpdate(gatt, PhyType.LE_2M.value, PhyType.LE_2M.value, GATT_SUCCESS);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        // Then
+        verify(peripheralCallback).onPhyUpdate(peripheral,PhyType.LE_2M, PhyType.LE_2M, GattStatus.SUCCESS );
+    }
+
+    @Test
+    @Config( manifest=Config.NONE, sdk = { O_MR1 })
+    public void Given_a_connected_peripheral_when_readPhy_is_called_the_Phy_is_read() {
+        // Given
+        BluetoothGattCallback callback = connectAndGetCallback();
+
+        // When
+        peripheral.readPhy();
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        // Then
+        verify(gatt).readPhy();
+
+        // When
+        callback.onPhyRead(gatt, PhyType.LE_2M.value, PhyType.LE_2M.value, GATT_SUCCESS);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        // Then
+        verify(peripheralCallback).onPhyUpdate(peripheral,PhyType.LE_2M, PhyType.LE_2M, GattStatus.SUCCESS );
     }
 
     @Test
