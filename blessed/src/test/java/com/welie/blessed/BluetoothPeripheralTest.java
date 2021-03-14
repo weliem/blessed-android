@@ -1076,7 +1076,7 @@ public class BluetoothPeripheralTest {
     }
 
     @Test
-    @Config( manifest=Config.NONE, sdk = { O_MR1 })
+    @Config( sdk = { O_MR1 })
     public void Given_a_connected_peripheral_when_requestPhy_is_called_the_Phy_is_requested() {
         // Given
         BluetoothGattCallback callback = connectAndGetCallback();
@@ -1097,7 +1097,7 @@ public class BluetoothPeripheralTest {
     }
 
     @Test
-    @Config( manifest=Config.NONE, sdk = { O_MR1 })
+    @Config( sdk = { O_MR1 })
     public void Given_a_connected_peripheral_when_readPhy_is_called_the_Phy_is_read() {
         // Given
         BluetoothGattCallback callback = connectAndGetCallback();
