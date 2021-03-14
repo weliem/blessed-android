@@ -712,45 +712,28 @@ public class BluetoothBytesParserTest {
     public void setDateTimeTest() {
         BluetoothBytesParser parser = new BluetoothBytesParser();
         Calendar calendar = Calendar.getInstance();
-        calendar.setTimeZone(TimeZone.getTimeZone("Europe/Amsterdam"));
-        long timestamp = 1578310812218L;
+        long timestamp = 1578310812000L;
         calendar.setTimeInMillis(timestamp);
 
         parser.setDateTime(calendar);
         parser.setOffset(0);
         Date parsedDateTime = parser.getDateTime();
-        assertEquals(7, parser.getValue().length);
-        calendar.setTime(parsedDateTime);
-        assertEquals(2020, calendar.get(GregorianCalendar.YEAR));
-        assertEquals(1, calendar.get(GregorianCalendar.MONTH) + 1);
-        assertEquals(6, calendar.get(GregorianCalendar.DAY_OF_MONTH));
-        assertEquals(12, calendar.get(GregorianCalendar.HOUR_OF_DAY));
-        assertEquals(40, calendar.get(GregorianCalendar.MINUTE));
-        assertEquals(12, calendar.get(GregorianCalendar.SECOND));
+        assertEquals(timestamp, parsedDateTime.getTime());
     }
 
     @Test
     public void setCurrentTimeTest() {
         BluetoothBytesParser parser = new BluetoothBytesParser();
         Calendar calendar = Calendar.getInstance();
-        calendar.setTimeZone(TimeZone.getTimeZone("Europe/Amsterdam"));
-        long timestamp = 1578310812218L;
+        long timestamp = 1578310812000L;
         calendar.setTimeInMillis(timestamp);
 
         parser.setCurrentTime(calendar);
         parser.setOffset(0);
         Date parsedDateTime = parser.getDateTime();
+        assertEquals(timestamp, parsedDateTime.getTime());
         assertEquals(10, parser.getValue().length);
         calendar.setTime(parsedDateTime);
-        assertEquals(2020, calendar.get(GregorianCalendar.YEAR));
-        assertEquals(1, calendar.get(GregorianCalendar.MONTH) + 1);
-        assertEquals(6, calendar.get(GregorianCalendar.DAY_OF_MONTH));
-        assertEquals(12, calendar.get(GregorianCalendar.HOUR_OF_DAY));
-        assertEquals(40, calendar.get(GregorianCalendar.MINUTE));
-        assertEquals(12, calendar.get(GregorianCalendar.SECOND));
-        assertEquals(1, (int) parser.getIntValue(FORMAT_UINT8)); // Day of the week
-        assertEquals(55, (int) parser.getIntValue(FORMAT_UINT8)); // Miliseconds
-        assertEquals(1, (int) parser.getIntValue(FORMAT_UINT8)); // Reason
     }
 
     @Test
