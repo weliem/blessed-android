@@ -106,9 +106,6 @@ public class BluetoothPeripheral {
     // When a bond is lost, the bluetooth stack needs some time to update its internal state
     private static final long DELAY_AFTER_BOND_LOST = 1000L;
 
-    // The maximum number of enabled notifications Android supports (BTA_GATTC_NOTIF_REG_MAX)
-    private static final int MAX_NOTIFYING_CHARACTERISTICS = 15;
-
     private static final String NO_VALID_SERVICE_UUID_PROVIDED = "no valid service UUID provided";
     private static final String NO_VALID_CHARACTERISTIC_UUID_PROVIDED = "no valid characteristic UUID provided";
     private static final String NO_VALID_CHARACTERISTIC_PROVIDED = "no valid characteristic provided";
@@ -133,7 +130,7 @@ public class BluetoothPeripheral {
     private final InternalCallback listener;
 
     @NotNull
-    protected BluetoothPeripheralCallback peripheralCallback = new BluetoothPeripheralCallback.NULL();
+    protected BluetoothPeripheralCallback peripheralCallback;
 
     @NotNull
     private final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
@@ -144,8 +141,8 @@ public class BluetoothPeripheral {
     @NotNull
     private String cachedName = "";
 
-    @Nullable
-    private byte[] currentWriteBytes;
+    @NotNull
+    private byte[] currentWriteBytes = new byte[0];
 
     @NotNull
     private final Set<BluetoothGattCharacteristic> notifyingCharacteristics = new HashSet<>();
@@ -242,9 +239,6 @@ public class BluetoothPeripheral {
                     if (Arrays.equals(value, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) ||
                             Arrays.equals(value, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)) {
                         notifyingCharacteristics.add(parentCharacteristic);
-                        if (notifyingCharacteristics.size() > MAX_NOTIFYING_CHARACTERISTICS) {
-                            Timber.e("too many (%d) notifying characteristics. The maximum Android can handle is %d", notifyingCharacteristics.size(), MAX_NOTIFYING_CHARACTERISTICS);
-                        }
                     } else if (Arrays.equals(value, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)) {
                         notifyingCharacteristics.remove(parentCharacteristic);
                     }
@@ -322,8 +316,8 @@ public class BluetoothPeripheral {
                 if (failureThatShouldTriggerBonding(gattStatus)) return;
             }
 
-            final byte[] value = nonnullOf(currentWriteBytes);
-            currentWriteBytes = null;
+            final byte[] value = currentWriteBytes;
+            currentWriteBytes = new byte[0];
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -659,14 +653,12 @@ public class BluetoothPeripheral {
      * @param device   Wrapped Android bluetooth device.
      * @param listener Callback to {@link BluetoothCentralManager}.
      */
-    BluetoothPeripheral(@NotNull final Context context, @NotNull final BluetoothDevice device, @NotNull final InternalCallback listener, @Nullable final BluetoothPeripheralCallback peripheralCallback, @Nullable final Handler callbackHandler) {
+    BluetoothPeripheral(@NotNull final Context context, @NotNull final BluetoothDevice device, @NotNull final InternalCallback listener, @NotNull final BluetoothPeripheralCallback peripheralCallback, @NotNull final Handler callbackHandler) {
         this.context = Objects.requireNonNull(context, "no valid context provided");
         this.device = Objects.requireNonNull(device, "no valid device provided");
         this.listener = Objects.requireNonNull(listener, "no valid listener provided");
-        if (peripheralCallback != null) {
-            this.peripheralCallback = peripheralCallback;
-        }
-        this.callbackHandler = (callbackHandler != null) ? callbackHandler : new Handler(Looper.getMainLooper());
+        this.peripheralCallback = Objects.requireNonNull(peripheralCallback, "no valid peripheral callback provided");
+        this.callbackHandler = Objects.requireNonNull(callbackHandler, "no valid callback handler provided");
     }
 
     void setPeripheralCallback(@NotNull final BluetoothPeripheralCallback peripheralCallback) {

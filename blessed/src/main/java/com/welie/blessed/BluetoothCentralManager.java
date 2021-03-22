@@ -696,7 +696,7 @@ public class BluetoothCentralManager {
         } else if (scannedPeripherals.containsKey(peripheralAddress)) {
             return Objects.requireNonNull(scannedPeripherals.get(peripheralAddress));
         } else {
-            final BluetoothPeripheral peripheral = new BluetoothPeripheral(context, bluetoothAdapter.getRemoteDevice(peripheralAddress), internalCallback, null, callBackHandler);
+            final BluetoothPeripheral peripheral = new BluetoothPeripheral(context, bluetoothAdapter.getRemoteDevice(peripheralAddress), internalCallback, new BluetoothPeripheralCallback.NULL(), callBackHandler);
             scannedPeripherals.put(peripheralAddress, peripheral);
             return peripheral;
         }
