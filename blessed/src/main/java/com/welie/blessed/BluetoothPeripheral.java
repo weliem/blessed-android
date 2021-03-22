@@ -763,24 +763,6 @@ public class BluetoothPeripheral {
     }
 
     /**
-     * Version of createBond with transport parameter.
-     * May use in the future if needed as I never encountered an issue
-     */
-    private boolean createBond(final int transport) {
-        Timber.d("bonding using TRANSPORT_LE");
-        boolean result = false;
-        try {
-            final Method bondMethod = device.getClass().getMethod("createBond", int.class);
-            if (bondMethod != null) {
-                result = (boolean) bondMethod.invoke(device, transport);
-            }
-        } catch (Exception e) {
-            Timber.e("could not invoke createBond method");
-        }
-        return result;
-    }
-
-    /**
      * Cancel an active or pending connection.
      * <p>
      * This operation is asynchronous and you will receive a callback on onDisconnectedPeripheral.
