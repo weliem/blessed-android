@@ -3,12 +3,15 @@ package com.welie.blessed;
 import android.Manifest;
 
 import android.app.Application;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.BroadcastReceiver;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 
@@ -26,14 +29,20 @@ import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowLooper;
 import org.robolectric.shadows.ShadowPackageManager;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import static android.bluetooth.BluetoothDevice.BOND_BONDED;
 import static android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES;
 import static android.os.Build.VERSION_CODES.M;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -54,6 +63,8 @@ public class BluetoothCentralManagerTest {
     private BluetoothCentralManager central;
     private ShadowApplication application;
     private ShadowBluetoothLEAdapter bluetoothAdapter;
+
+    private Context context;
 
     @Mock
     private BluetoothLeScanner scanner;
@@ -79,7 +90,7 @@ public class BluetoothCentralManagerTest {
         bluetoothAdapter.setEnabled(true);
         bluetoothAdapter.setBluetoothLeScanner(scanner);
 
-        Context context = ApplicationProvider.getApplicationContext();
+        context = ApplicationProvider.getApplicationContext();
 
         // Setup hardware features
         PackageManager packageManager = context.getPackageManager();
@@ -680,6 +691,32 @@ public class BluetoothCentralManagerTest {
         verify(peripheral, never()).autoConnect();
     }
 
+    @Test
+    public void autoConnectBatchTest() {
+        // Given
+        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+
+        BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
+        when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
+        when(peripheral.getType()).thenReturn(PeripheralType.UNKNOWN);
+
+        BluetoothPeripheral peripheral2 = mock(BluetoothPeripheral.class);
+        when(peripheral2.getAddress()).thenReturn("22:23:34:98:76:54");
+        when(peripheral2.getType()).thenReturn(PeripheralType.LE);
+
+        Map<BluetoothPeripheral, BluetoothPeripheralCallback> batch = new HashMap<>();
+        batch.put(peripheral, peripheralCallback);
+        batch.put(peripheral2, peripheralCallback);
+
+        // When
+        central.autoConnectPeripheralsBatch(batch);
+
+        // Then
+        verify(peripheral, never()).autoConnect();
+        verify(peripheral2).autoConnect();
+        verify(scanner).startScan(ArgumentMatchers.<ScanFilter>anyList(), any(ScanSettings.class), any(ScanCallback.class));
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void getPeripheralWrongMacAddressTest() {
         // Get peripheral and supply lowercase mac address, which is not allowed
@@ -720,6 +757,76 @@ public class BluetoothCentralManagerTest {
         assertEquals(peripheral, peripheral2);
     }
 
+    @Test
+    public void setPinCode_correct_Test() {
+        // When
+        boolean result = central.setPinCodeForPeripheral("12:23:34:98:76:54", "123456");
+
+        assertTrue(result);
+    }
+
+    @Test
+    public void setPinCode_invalid_address_Test() {
+        // When
+        boolean result = central.setPinCodeForPeripheral("2:23:34:98:76:54", "123456");
+
+        assertFalse(result);
+    }
+
+    @Test
+    public void setPinCode_invalid_pincode_Test() {
+        // When
+        boolean result = central.setPinCodeForPeripheral("12:23:34:98:76:54", "123");
+
+        assertFalse(result);
+    }
+
+    @Test
+    public void When_bluetooth_is_turning_off_then_onBluetoothAdapterStateChanged_is_called() {
+        // Given
+        Intent intent = mock(Intent.class);
+        when(intent.getAction()).thenReturn(BluetoothAdapter.ACTION_STATE_CHANGED);
+        when(intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)).thenReturn(BluetoothAdapter.STATE_TURNING_OFF);
+
+        // When
+        central.adapterStateReceiver.onReceive(context, intent);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        // Then
+        verify(callback).onBluetoothAdapterStateChanged(BluetoothAdapter.STATE_TURNING_OFF);
+    }
+
+    @Test
+    public void Given_a_connected_peripheral_when_bluetooth_is_turned_off_then_it_is_disconnected() {
+        // Given
+        Intent intent = mock(Intent.class);
+        when(intent.getAction()).thenReturn(BluetoothAdapter.ACTION_STATE_CHANGED);
+        when(intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)).thenReturn(BluetoothAdapter.STATE_OFF);
+
+        application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
+        BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
+        when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
+        when(peripheral.getType()).thenReturn(PeripheralType.LE);
+
+        central.connectPeripheral(peripheral, peripheralCallback);
+
+        verify(peripheral).connect();
+
+        // Give connected event and see if we get callback
+        central.internalCallback.connected(peripheral);
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        verify(callback).onConnectedPeripheral(peripheral);
+
+        // When
+        central.adapterStateReceiver.onReceive(context, intent);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        // Then
+        verify(callback).onBluetoothAdapterStateChanged(BluetoothAdapter.STATE_OFF);
+        verify(peripheral).disconnectWhenBluetoothOff();
+    }
 
     @Test
     public void bluetoothOffTest() {

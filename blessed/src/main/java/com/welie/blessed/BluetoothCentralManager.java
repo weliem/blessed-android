@@ -981,7 +981,7 @@ public class BluetoothCentralManager {
         }
     }
 
-    private final BroadcastReceiver adapterStateReceiver = new BroadcastReceiver() {
+    protected final BroadcastReceiver adapterStateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();

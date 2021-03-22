@@ -332,6 +332,38 @@ public class BluetoothPeripheralTest {
     }
 
     @Test
+    public void Given_a_connected_peripheral_with_a_characteristic_supporting_indications_when_setNotifyUsingUUID_with_true_is_called_then_the_indication_is_enabled() {
+        // Given
+        BluetoothGattService service = new BluetoothGattService(SERVICE_UUID, 0);
+        BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"),PROPERTY_INDICATE,0);
+        BluetoothGattDescriptor descriptor = new BluetoothGattDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"),0);
+        service.addCharacteristic(characteristic);
+        characteristic.addDescriptor(descriptor);
+
+        when(gatt.getService(SERVICE_UUID)).thenReturn(service);
+        when(gatt.getServices()).thenReturn(Collections.singletonList(service));
+        when(gatt.setCharacteristicNotification(characteristic, true)).thenReturn(true);
+        BluetoothGattCallback callback = connectAndGetCallback();
+
+        // When
+        peripheral.setNotify(SERVICE_UUID,UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb") , true);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        // Then
+        verify(gatt).setCharacteristicNotification(characteristic, true);
+        assertEquals(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE[0], descriptor.getValue()[0]);
+        assertEquals(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE[1], descriptor.getValue()[1]);
+        verify(gatt).writeDescriptor(descriptor);
+
+        callback.onDescriptorWrite(gatt, descriptor, 0);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        verify(peripheralCallback).onNotificationStateUpdate(peripheral, characteristic, GattStatus.SUCCESS);
+        assertTrue(peripheral.isNotifying(characteristic));
+        assertEquals(1, peripheral.getNotifyingCharacteristics().size());
+    }
+
+    @Test
     public void Given_a_connected_peripheral_with_a_characteristic_supporting_notifications_when_setNotify_with_true_is_called_then_the_notification_is_enabled() {
         // Given
         BluetoothGattService service = new BluetoothGattService(SERVICE_UUID, 0);
