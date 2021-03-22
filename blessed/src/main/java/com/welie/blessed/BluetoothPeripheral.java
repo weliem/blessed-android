@@ -409,7 +409,6 @@ public class BluetoothPeripheral {
                     peripheralCallback.onPhyUpdate(BluetoothPeripheral.this, PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy), gattStatus);
                 }
             });
-            completedCommand();
         }
 
         /**
@@ -1565,7 +1564,6 @@ public class BluetoothPeripheral {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         Timber.i("setting preferred Phy: tx = %s, rx = %s, options = %s", txPhy, rxPhy, phyOptions);
                         bluetoothGatt.setPreferredPhy(txPhy.mask, rxPhy.mask, phyOptions.value);
-                        return;
                     }
                 }
 
