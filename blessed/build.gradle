@@ -10,7 +10,6 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-
     }
 
     buildTypes {
@@ -22,8 +21,6 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-
     implementation 'com.jakewharton.timber:timber:4.7.1'
     implementation 'org.jetbrains:annotations:19.0.0'
     testImplementation 'junit:junit:4.13.2'
