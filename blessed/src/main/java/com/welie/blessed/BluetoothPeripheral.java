@@ -1751,14 +1751,14 @@ public class BluetoothPeripheral {
          *
          * @param device {@link BluetoothPeripheral} of which connect failed.
          */
-        void connectFailed(@NotNull BluetoothPeripheral device, final HciStatus status);
+        void connectFailed(@NotNull BluetoothPeripheral device, @NotNull final HciStatus status);
 
         /**
          * {@link BluetoothPeripheral} has disconnected.
          *
          * @param device {@link BluetoothPeripheral} that disconnected.
          */
-        void disconnected(@NotNull BluetoothPeripheral device, final HciStatus status);
+        void disconnected(@NotNull BluetoothPeripheral device, @NotNull final HciStatus status);
 
         String getPincode(@NotNull BluetoothPeripheral device);
 
