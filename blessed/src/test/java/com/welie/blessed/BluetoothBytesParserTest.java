@@ -9,7 +9,6 @@ import org.robolectric.annotation.Config;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.TimeZone;
 
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_FLOAT;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_SFLOAT;
@@ -636,7 +635,7 @@ public class BluetoothBytesParserTest {
     public void setLong_LittleEndianTest() {
         BluetoothBytesParser parser = new BluetoothBytesParser(LITTLE_ENDIAN);
         parser.setLong(1234567890123L);
-        assertEquals(1234567890123L, (long) parser.getLongValue(0, LITTLE_ENDIAN));
+        assertEquals(1234567890123L, parser.getLongValue(0, LITTLE_ENDIAN));
 
         parser = new BluetoothBytesParser(LITTLE_ENDIAN);
         parser.setIntValue(123, FORMAT_UINT8);
@@ -644,14 +643,14 @@ public class BluetoothBytesParserTest {
         assertEquals(9, parser.getValue().length);
         parser.setOffset(0);
         assertEquals(123, (int) parser.getIntValue(FORMAT_UINT8));
-        assertEquals(1234567890123L, (long) parser.getLongValue(LITTLE_ENDIAN));
+        assertEquals(1234567890123L, parser.getLongValue(LITTLE_ENDIAN));
     }
 
     @Test
     public void setLong_BigEndianTest() {
         BluetoothBytesParser parser = new BluetoothBytesParser(BIG_ENDIAN);
         parser.setLong(1234567890123L);
-        assertEquals(1234567890123L, (long) parser.getLongValue(0, BIG_ENDIAN));
+        assertEquals(1234567890123L, parser.getLongValue(0, BIG_ENDIAN));
 
         parser = new BluetoothBytesParser(BIG_ENDIAN);
         parser.setIntValue(123, FORMAT_UINT8);
@@ -659,7 +658,7 @@ public class BluetoothBytesParserTest {
         assertEquals(9, parser.getValue().length);
         parser.setOffset(0);
         assertEquals(123, (int) parser.getIntValue(FORMAT_UINT8));
-        assertEquals(1234567890123L, (long) parser.getLongValue(BIG_ENDIAN));
+        assertEquals(1234567890123L, parser.getLongValue(BIG_ENDIAN));
     }
 
     @Test

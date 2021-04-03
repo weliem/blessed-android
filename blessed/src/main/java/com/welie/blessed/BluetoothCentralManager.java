@@ -60,7 +60,7 @@ import timber.log.Timber;
 /**
  * Central Manager class to scan and connect with bluetooth peripherals.
  */
-@SuppressWarnings({"SpellCheckingInspection", "unused", "WeakerAccess", "UnusedReturnValue"})
+@SuppressWarnings({"SpellCheckingInspection", "WeakerAccess", "UnusedReturnValue"})
 public class BluetoothCentralManager {
 
     private static final long SCAN_TIMEOUT = 180_000L;
@@ -98,7 +98,7 @@ public class BluetoothCentralManager {
 
     //region Callbacks
 
-    protected final ScanCallback scanByNameCallback = new ScanCallback() {
+    private final ScanCallback scanByNameCallback = new ScanCallback() {
         @Override
         public void onScanResult(final int callbackType, final ScanResult result) {
             synchronized (this) {
@@ -120,7 +120,7 @@ public class BluetoothCentralManager {
         }
     };
 
-    protected final ScanCallback defaultScanCallback = new ScanCallback() {
+    private final ScanCallback defaultScanCallback = new ScanCallback() {
         @Override
         public void onScanResult(final int callbackType, final ScanResult result) {
             synchronized (this) {
@@ -159,7 +159,7 @@ public class BluetoothCentralManager {
         });
     }
 
-    protected final ScanCallback autoConnectScanCallback = new ScanCallback() {
+    private final ScanCallback autoConnectScanCallback = new ScanCallback() {
         @Override
         public void onScanResult(final int callbackType, final ScanResult result) {
             synchronized (this) {
@@ -872,7 +872,7 @@ public class BluetoothCentralManager {
      * Remove bond for a peripheral.
      *
      * @param peripheralAddress the address of the peripheral
-     * @return true if the peripheral was succesfully unpaired or it wasn't paired, false if it was paired and removing it failed
+     * @return true if the peripheral was succesfully bonded or it wasn't bonded, false if it was bonded and removing it failed
      */
     public boolean removeBond(@NotNull final String peripheralAddress) {
         Objects.requireNonNull(peripheralAddress, NO_PERIPHERAL_ADDRESS_PROVIDED);
@@ -919,7 +919,7 @@ public class BluetoothCentralManager {
     public void startPairingPopupHack() {
         // Check if we are on a Samsung device because those don't need the hack
         final String manufacturer = Build.MANUFACTURER;
-        if (!manufacturer.equals("samsung")) {
+        if (!manufacturer.equalsIgnoreCase("samsung")) {
             bluetoothAdapter.startDiscovery();
 
             callBackHandler.postDelayed(new Runnable() {

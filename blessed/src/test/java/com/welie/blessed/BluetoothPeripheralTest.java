@@ -545,7 +545,7 @@ public class BluetoothPeripheralTest {
         assertEquals(5, value[0]);  // Check if original value is returned and not the one in the characteristic
         assertEquals(peripheral, captorPeripheral.getValue());
         assertEquals(characteristic, captorCharacteristic.getValue());
-        assertEquals(GattStatus.SUCCESS, (GattStatus) captorGattStatus.getValue() );
+        assertEquals(GattStatus.SUCCESS, captorGattStatus.getValue() );
     }
 
     @Test
@@ -581,7 +581,7 @@ public class BluetoothPeripheralTest {
         assertEquals(5, value[0]);  // Check if original value is returned and not the one in the characteristic
         assertEquals(peripheral, captorPeripheral.getValue());
         assertEquals(characteristic, captorCharacteristic.getValue());
-        assertEquals(GattStatus.SUCCESS, (GattStatus) captorGattStatus.getValue() );
+        assertEquals(GattStatus.SUCCESS, captorGattStatus.getValue());
     }
 
     @Test
@@ -614,7 +614,7 @@ public class BluetoothPeripheralTest {
         assertEquals(0, value[0]);  // Check if original value is returned and not the one in the characteristic
         assertEquals(peripheral, captorPeripheral.getValue());
         assertEquals(characteristic, captorCharacteristic.getValue());
-        assertEquals(GattStatus.SUCCESS, (GattStatus) captorGattStatus.getValue() );
+        assertEquals(GattStatus.SUCCESS, captorGattStatus.getValue() );
     }
 
 
@@ -783,7 +783,7 @@ public class BluetoothPeripheralTest {
         assertEquals(0x01, value[0]);
         assertEquals(peripheral, captorPeripheral.getValue());
         assertEquals(characteristic, captorCharacteristic.getValue());
-        assertEquals(GattStatus.SUCCESS, (GattStatus) captorGattStatus.getValue() );
+        assertEquals(GattStatus.SUCCESS, captorGattStatus.getValue());
     }
 
     @Test
@@ -819,7 +819,7 @@ public class BluetoothPeripheralTest {
         assertEquals(0x01, value[0]);
         assertEquals(peripheral, captorPeripheral.getValue());
         assertEquals(descriptor, captorDescriptor.getValue());
-        assertEquals(GattStatus.SUCCESS, (GattStatus) captorGattStatus.getValue() );
+        assertEquals(GattStatus.SUCCESS, captorGattStatus.getValue());
     }
 
 
@@ -856,7 +856,7 @@ public class BluetoothPeripheralTest {
         assertNotEquals(value, originalByteArray);
         assertEquals(peripheral, captorPeripheral.getValue());
         assertEquals(descriptor, captorDescriptor.getValue());
-        assertEquals(GattStatus.SUCCESS, (GattStatus) captorGattStatus.getValue() );
+        assertEquals(GattStatus.SUCCESS, captorGattStatus.getValue());
     }
 
     @Test

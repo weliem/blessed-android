@@ -74,9 +74,6 @@ public class BluetoothPeripheralManagerTest {
     @Mock
     BluetoothGattDescriptor descriptor;
 
-//    @Mock
-//    BluetoothCentral central;
-
     @Before
     public void setUp() {
         openMocks(this);
