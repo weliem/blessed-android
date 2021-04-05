@@ -1257,7 +1257,6 @@ public class BluetoothPeripheral {
                 if (isConnected()) {
                     currentWriteBytes = bytesToWrite;
                     descriptor.setValue(bytesToWrite);
-                    adjustWriteTypeIfNeeded(descriptor);
                     if (!bluetoothGatt.writeDescriptor(descriptor)) {
                         Timber.e("writeDescriptor failed for descriptor: %s", descriptor.getUuid());
                         completedCommand();
@@ -1356,9 +1355,9 @@ public class BluetoothPeripheral {
                 }
 
                 // Then write to CCC descriptor
+                adjustWriteTypeIfNeeded(characteristic);
                 currentWriteBytes = finalValue;
                 descriptor.setValue(finalValue);
-                adjustWriteTypeIfNeeded(descriptor);
                 if (!bluetoothGatt.writeDescriptor(descriptor)) {
                     Timber.e("writeDescriptor failed for descriptor: %s", descriptor.getUuid());
                     completedCommand();
@@ -1376,12 +1375,11 @@ public class BluetoothPeripheral {
         return result;
     }
 
-    private void adjustWriteTypeIfNeeded(@NotNull final BluetoothGattDescriptor descriptor) {
+    private void adjustWriteTypeIfNeeded(@NotNull final BluetoothGattCharacteristic characteristic) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
             // Up to Android 6 there is a bug where Android takes the writeType of the parent characteristic instead of always WRITE_TYPE_DEFAULT
             // See: https://android.googlesource.com/platform/frameworks/base/+/942aebc95924ab1e7ea1e92aaf4e7fc45f695a6c%5E%21/#F0
-            final BluetoothGattCharacteristic parentCharacteristic = descriptor.getCharacteristic();
-            parentCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+            characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
         }
     }
 
