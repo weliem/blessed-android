@@ -490,7 +490,7 @@ public class BluetoothPeripheralManager {
      * <p>If the local peripheral has already exposed services when this function
      * is called, a service update notification will be sent to all clients.
      *
-     * A callback on {@link BluetoothPeripheralManagerCallback#onServiceAdded)} will be received when this operation has completed
+     * A callback on {@link BluetoothPeripheralManagerCallback#onServiceAdded} will be received when this operation has completed
      *
      * @param service the service to add
      * @return true if the operation was enqueued, false otherwise
