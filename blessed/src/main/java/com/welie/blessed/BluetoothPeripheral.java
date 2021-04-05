@@ -112,49 +112,26 @@ public class BluetoothPeripheral {
     private static final String NO_VALID_WRITE_TYPE_PROVIDED = "no valid writeType provided";
     private static final String NO_VALID_VALUE_PROVIDED = "no valid value provided";
     private static final String NO_VALID_DESCRIPTOR_PROVIDED = "no valid descriptor provided";
-    private static final String PERIPHERAL_NOT_CONNECTED = "peripheral not connectected";
+    private static final String NO_VALID_PERIPHERAL_CALLBACK_PROVIDED = "no valid peripheral callback provided";
+    private static final String NO_VALID_DEVICE_PROVIDED = "no valid device provided";
+    private static final String NO_VALID_PRIORITY_PROVIDED = "no valid priority provided";
+    private static final String PERIPHERAL_NOT_CONNECTED = "peripheral not connected";
     private static final String VALUE_BYTE_ARRAY_IS_EMPTY = "value byte array is empty";
     private static final String VALUE_BYTE_ARRAY_IS_TOO_LONG = "value byte array is too long";
-    private static final String PRIORITY_IS_NULL = "priority is null";
 
-    @NotNull
-    private final Context context;
-
-    @NotNull
-    private final Handler callbackHandler;
-
-    @NotNull
-    private BluetoothDevice device;
-
-    @NotNull
-    private final InternalCallback listener;
-
-    @NotNull
-    protected BluetoothPeripheralCallback peripheralCallback;
-
-    @NotNull
-    private final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
-
-    @Nullable
-    private volatile BluetoothGatt bluetoothGatt;
-
-    @NotNull
-    private String cachedName = "";
-
-    @NotNull
-    private byte[] currentWriteBytes = new byte[0];
-
-    @NotNull
-    private final Set<BluetoothGattCharacteristic> notifyingCharacteristics = new HashSet<>();
-
-    @NotNull
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
-
-    @Nullable
-    private Runnable timeoutRunnable;
-
-    @Nullable
-    private Runnable discoverServicesRunnable;
+    private @NotNull final Context context;
+    private @NotNull final Handler callbackHandler;
+    private @NotNull BluetoothDevice device;
+    private @NotNull final InternalCallback listener;
+    protected @NotNull BluetoothPeripheralCallback peripheralCallback;
+    private @NotNull final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
+    private @Nullable volatile BluetoothGatt bluetoothGatt;
+    private @NotNull String cachedName = "";
+    private @NotNull byte[] currentWriteBytes = new byte[0];
+    private @NotNull final Set<BluetoothGattCharacteristic> notifyingCharacteristics = new HashSet<>();
+    private @NotNull final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private @Nullable Runnable timeoutRunnable;
+    private @Nullable Runnable discoverServicesRunnable;
 
     private volatile boolean commandQueueBusy = false;
     private boolean isRetrying;
@@ -625,11 +602,11 @@ public class BluetoothPeripheral {
     private final BroadcastReceiver pairingRequestBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(final Context context, final Intent intent) {
-            final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-            if (device == null) return;
+            final BluetoothDevice receivedDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+            if (receivedDevice == null) return;
 
             // Skip other devices
-            if (!device.getAddress().equalsIgnoreCase(getAddress())) return;
+            if (!receivedDevice.getAddress().equalsIgnoreCase(getAddress())) return;
 
             final int variant = intent.getIntExtra(BluetoothDevice.EXTRA_PAIRING_VARIANT, BluetoothDevice.ERROR);
             Timber.d("pairing request received: " + pairingVariantToString(variant) + " (" + variant + ")");
@@ -638,7 +615,7 @@ public class BluetoothPeripheral {
                 String pin = listener.getPincode(BluetoothPeripheral.this);
                 if (pin != null) {
                     Timber.d("setting PIN code for this peripheral using '%s'", pin);
-                    device.setPin(pin.getBytes());
+                    receivedDevice.setPin(pin.getBytes());
                     abortBroadcast();
                 }
             }
@@ -654,18 +631,18 @@ public class BluetoothPeripheral {
      */
     BluetoothPeripheral(@NotNull final Context context, @NotNull final BluetoothDevice device, @NotNull final InternalCallback listener, @NotNull final BluetoothPeripheralCallback peripheralCallback, @NotNull final Handler callbackHandler) {
         this.context = Objects.requireNonNull(context, "no valid context provided");
-        this.device = Objects.requireNonNull(device, "no valid device provided");
+        this.device = Objects.requireNonNull(device, NO_VALID_DEVICE_PROVIDED);
         this.listener = Objects.requireNonNull(listener, "no valid listener provided");
-        this.peripheralCallback = Objects.requireNonNull(peripheralCallback, "no valid peripheral callback provided");
+        this.peripheralCallback = Objects.requireNonNull(peripheralCallback, NO_VALID_PERIPHERAL_CALLBACK_PROVIDED);
         this.callbackHandler = Objects.requireNonNull(callbackHandler, "no valid callback handler provided");
     }
 
     void setPeripheralCallback(@NotNull final BluetoothPeripheralCallback peripheralCallback) {
-        this.peripheralCallback = Objects.requireNonNull(peripheralCallback, "no valid peripheral callback provided");
+        this.peripheralCallback = Objects.requireNonNull(peripheralCallback, NO_VALID_PERIPHERAL_CALLBACK_PROVIDED);
     }
 
     void setDevice(@NotNull final BluetoothDevice bluetoothDevice) {
-        this.device = Objects.requireNonNull(bluetoothDevice, "bluetoothdevice is not valid");
+        this.device = Objects.requireNonNull(bluetoothDevice, NO_VALID_DEVICE_PROVIDED);
     }
 
     /**
@@ -1497,7 +1474,7 @@ public class BluetoothPeripheral {
      * @return true if request was enqueued, false if not
      */
     public boolean requestConnectionPriority(@NotNull final ConnectionPriority priority) {
-        Objects.requireNonNull(priority, PRIORITY_IS_NULL);
+        Objects.requireNonNull(priority, NO_VALID_PRIORITY_PROVIDED);
 
         if (notConnected()) {
             Timber.e(PERIPHERAL_NOT_CONNECTED);
@@ -1537,8 +1514,8 @@ public class BluetoothPeripheral {
      * {@link BluetoothPeripheralCallback#onPhyUpdate} will be triggered as a result of this call, even
      * if no PHY change happens. It is also triggered when remote device updates the PHY.
      *
-     * @param txPhy the desired TX PHY
-     * @param rxPhy the desired RX PHY
+     * @param txPhy      the desired TX PHY
+     * @param rxPhy      the desired RX PHY
      * @param phyOptions the desired optional sub-type for PHY_LE_CODED
      * @return true if request was enqueued, false if not
      */
