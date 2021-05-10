@@ -1450,6 +1450,7 @@ public class BluetoothPeripheral {
      * the data sent is truncated to the MTU size. This function may be used
      * to request a larger MTU size to be able to send more data at once.
      *
+     * <p>Note that requesting an MTU should only take place once per connection, according to the Bluetooth standard.</p>
      * <p>{@link BluetoothPeripheralCallback#onMtuChanged(BluetoothPeripheral, int, GattStatus)} will be triggered as a result of this call.
      *
      * @param mtu the desired MTU size
