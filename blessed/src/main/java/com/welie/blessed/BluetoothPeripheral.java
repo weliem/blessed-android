@@ -1510,8 +1510,13 @@ public class BluetoothPeripheral {
             public void run() {
                 if (isConnected()) {
                     if (bluetoothGatt.requestConnectionPriority(priority.value)) {
-                        currentCommand = REQUEST_CONNECTION_PRIORITY_COMMAND;
                         Timber.d("requesting connection priority %s", priority);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            currentCommand = REQUEST_CONNECTION_PRIORITY_COMMAND;
+                        } else {
+                            // For older versions of Android we don't get a callback so complete immediately
+                            completedCommand();
+                        }
                     } else {
                         Timber.e("could not request connection priority");
                         completedCommand();
