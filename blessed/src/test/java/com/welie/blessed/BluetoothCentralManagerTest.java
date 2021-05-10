@@ -361,7 +361,7 @@ public class BluetoothCentralManagerTest {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
-        when(peripheral.getType()).thenReturn(PeripheralType.UNKNOWN);
+        when(peripheral.isUncached()).thenReturn(true);
 
         // When
         central.autoConnectPeripheral(peripheral, peripheralCallback);
@@ -623,7 +623,7 @@ public class BluetoothCentralManagerTest {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
-        when(peripheral.getType()).thenReturn(PeripheralType.UNKNOWN);
+        when(peripheral.isUncached()).thenReturn(true);
         central.autoConnectPeripheral(peripheral, peripheralCallback);
 
         // When
@@ -663,7 +663,7 @@ public class BluetoothCentralManagerTest {
 
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
-        when(peripheral.getType()).thenReturn(PeripheralType.UNKNOWN);
+        when(peripheral.isUncached()).thenReturn(true);
 
         // When
         central.autoConnectPeripheral(peripheral, peripheralCallback);
@@ -707,7 +707,7 @@ public class BluetoothCentralManagerTest {
         application.grantPermissions(Manifest.permission.ACCESS_COARSE_LOCATION);
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
-        when(peripheral.getType()).thenReturn(PeripheralType.UNKNOWN);
+        when(peripheral.isUncached()).thenReturn(true);
 
         // When
         central.autoConnectPeripheral(peripheral, peripheralCallback);
@@ -731,11 +731,11 @@ public class BluetoothCentralManagerTest {
 
         BluetoothPeripheral peripheral = mock(BluetoothPeripheral.class);
         when(peripheral.getAddress()).thenReturn("12:23:34:98:76:54");
-        when(peripheral.getType()).thenReturn(PeripheralType.UNKNOWN);
+        when(peripheral.isUncached()).thenReturn(true);
 
         BluetoothPeripheral peripheral2 = mock(BluetoothPeripheral.class);
         when(peripheral2.getAddress()).thenReturn("22:23:34:98:76:54");
-        when(peripheral2.getType()).thenReturn(PeripheralType.LE);
+        when(peripheral2.isUncached()).thenReturn(false);
 
         Map<BluetoothPeripheral, BluetoothPeripheralCallback> batch = new HashMap<>();
         batch.put(peripheral, peripheralCallback);

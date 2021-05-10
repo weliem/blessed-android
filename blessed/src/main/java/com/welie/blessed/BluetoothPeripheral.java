@@ -991,6 +991,15 @@ public class BluetoothPeripheral {
     }
 
     /**
+     * Check if the peripheral is uncached by the Android BLE stack
+     *
+     * @return true if unchached, otherwise false
+     */
+    public boolean isUncached() {
+        return getType() == PeripheralType.UNKNOWN;
+    }
+
+    /**
      * Read the value of a characteristic.
      *
      * <p>The characteristic must support reading it, otherwise the operation will not be enqueued.

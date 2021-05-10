@@ -541,7 +541,7 @@ public class BluetoothCentralManager {
 
             // Check if the peripheral is cached or not. If not, issue a warning because connection may fail
             // This is because Android will guess the address type and when incorrect it will fail
-            if (peripheral.getType() == PeripheralType.UNKNOWN) {
+            if (peripheral.isUncached()) {
                 Timber.w("peripheral with address '%s' is not in the Bluetooth cache, hence connection may fail", peripheral.getAddress());
             }
 
@@ -573,7 +573,7 @@ public class BluetoothCentralManager {
             }
 
             // Check if the peripheral is uncached and start autoConnectPeripheralByScan
-            if (peripheral.getType() == PeripheralType.UNKNOWN) {
+            if (peripheral.isUncached()) {
                 Timber.d("peripheral with address '%s' not in Bluetooth cache, autoconnecting by scanning", peripheral.getAddress());
                 scannedPeripherals.remove(peripheral.getAddress());
                 unconnectedPeripherals.put(peripheral.getAddress(), peripheral);
@@ -656,7 +656,7 @@ public class BluetoothCentralManager {
         // Find the uncached peripherals and issue autoConnectPeripheral for the cached ones
         final Map<BluetoothPeripheral, BluetoothPeripheralCallback> uncachedPeripherals = new HashMap<>();
         for (BluetoothPeripheral peripheral : batch.keySet()) {
-            if (peripheral.getType() == PeripheralType.UNKNOWN) {
+            if (peripheral.isUncached()) {
                 uncachedPeripherals.put(peripheral, batch.get(peripheral));
             } else {
                 autoConnectPeripheral(peripheral, batch.get(peripheral));
