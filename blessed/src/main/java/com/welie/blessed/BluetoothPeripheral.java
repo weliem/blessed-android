@@ -106,6 +106,9 @@ public class BluetoothPeripheral {
     // When a bond is lost, the bluetooth stack needs some time to update its internal state
     private static final long DELAY_AFTER_BOND_LOST = 1000L;
 
+    // The average time it takes to complete requestConnectionPriority
+    private static final long AVG_REQUEST_CONNECTION_PRIORITY_DURATION = 500;
+
     private static final String NO_VALID_SERVICE_UUID_PROVIDED = "no valid service UUID provided";
     private static final String NO_VALID_CHARACTERISTIC_UUID_PROVIDED = "no valid characteristic UUID provided";
     private static final String NO_VALID_CHARACTERISTIC_PROVIDED = "no valid characteristic provided";
@@ -120,7 +123,8 @@ public class BluetoothPeripheral {
     private static final String VALUE_BYTE_ARRAY_IS_TOO_LONG = "value byte array is too long";
 
     // String constants for commands where the callbacks can also happen because the remote peripheral initiated the command
-    private static final String REQUEST_MTU_COMMAND = "REQUEST_MTU";
+    private static final int IDLE = 0;
+    private static final int REQUEST_MTU_COMMAND = 1;
 
     private @NotNull final Context context;
     private @NotNull final Handler callbackHandler;
@@ -131,7 +135,7 @@ public class BluetoothPeripheral {
     private @Nullable volatile BluetoothGatt bluetoothGatt;
     private @NotNull String cachedName = "";
     private @NotNull byte[] currentWriteBytes = new byte[0];
-    private @NotNull String currentCommand = "";
+    private int currentCommand = IDLE;
     private @NotNull final Set<BluetoothGattCharacteristic> notifyingCharacteristics = new HashSet<>();
     private @NotNull final Handler mainHandler = new Handler(Looper.getMainLooper());
     private @Nullable Runnable timeoutRunnable;
@@ -356,8 +360,8 @@ public class BluetoothPeripheral {
             });
 
             // Only complete the command if we initiated the operation. It can also be initiated by the remote peripheral...
-            if (currentCommand.equals(REQUEST_MTU_COMMAND)) {
-                currentCommand = "";
+            if (currentCommand == REQUEST_MTU_COMMAND) {
+                currentCommand = IDLE;
                 completedCommand();
             }
         }
@@ -1516,7 +1520,7 @@ public class BluetoothPeripheral {
                     public void run() {
                         completedCommand();
                     }
-                }, 500);
+                }, AVG_REQUEST_CONNECTION_PRIORITY_DURATION);
             }
         });
 
