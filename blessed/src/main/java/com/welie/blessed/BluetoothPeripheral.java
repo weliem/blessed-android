@@ -121,7 +121,6 @@ public class BluetoothPeripheral {
 
     // String constants for commands where the callbacks can also happen because the remote peripheral initiated the command
     private static final String REQUEST_MTU_COMMAND = "REQUEST_MTU";
-    private static final String REQUEST_CONNECTION_PRIORITY_COMMAND = "REQUEST_CONNECTION_PRIORITY";
 
     private @NotNull final Context context;
     private @NotNull final Handler callbackHandler;
@@ -399,7 +398,7 @@ public class BluetoothPeripheral {
         }
 
         /**
-         * This callback is only called from Android 8 (Oreo) or higher
+         * This callback is only called from Android 8 (Oreo) or higher. Not all phones seem to call this though...
          */
         public void onConnectionUpdated(@NotNull final BluetoothGatt gatt, final int interval, final int latency, final int timeout, final int status) {
             final GattStatus gattStatus = GattStatus.fromValue(status);
@@ -416,12 +415,6 @@ public class BluetoothPeripheral {
                     peripheralCallback.onConnectionUpdated(BluetoothPeripheral.this, interval, latency, timeout, gattStatus);
                 }
             });
-
-            // Only complete the command if we initiated the operation. It can also be initiated by the remote peripheral...
-            if (currentCommand.equals(REQUEST_CONNECTION_PRIORITY_COMMAND)) {
-                currentCommand = "";
-                completedCommand();
-            }
         }
     };
 
@@ -1512,19 +1505,18 @@ public class BluetoothPeripheral {
                 if (isConnected()) {
                     if (bluetoothGatt.requestConnectionPriority(priority.value)) {
                         Timber.d("requesting connection priority %s", priority);
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            currentCommand = REQUEST_CONNECTION_PRIORITY_COMMAND;
-                        } else {
-                            // For older versions of Android we don't get a callback so complete immediately
-                            completedCommand();
-                        }
                     } else {
                         Timber.e("could not request connection priority");
+                    }
+                }
+
+                // Complete command as there is no reliable callback for this, but allow some time
+                callbackHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
                         completedCommand();
                     }
-                } else {
-                    completedCommand();
-                }
+                }, 500);
             }
         });
 
