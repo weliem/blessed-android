@@ -746,13 +746,11 @@ public class BluetoothCentralManager {
         final int targetSdkVersion = context.getApplicationInfo().targetSdkVersion;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && targetSdkVersion >= Build.VERSION_CODES.Q) {
             if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                Timber.e("no ACCESS_FINE_LOCATION permission, cannot scan");
-                return false;
+                throw new SecurityException("app does not have ACCESS_FINE_LOCATION permission, cannot start scan");
             } else return true;
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                Timber.e("no ACCESS_COARSE_LOCATION permission, cannot scan");
-                return false;
+                throw new SecurityException("app does not have ACCESS_COARSE_LOCATION permission, cannot start scan");
             } else return true;
         } else {
             return true;
