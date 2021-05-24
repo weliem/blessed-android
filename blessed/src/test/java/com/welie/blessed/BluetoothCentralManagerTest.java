@@ -897,7 +897,7 @@ public class BluetoothCentralManagerTest {
         verify(scanner, never()).startScan(ArgumentMatchers.<ScanFilter>anyList(), any(ScanSettings.class), any(ScanCallback.class));
     }
 
-    @Test
+    @Test (expected = SecurityException.class)
     public void When_permission_are_not_correct_then_a_scan_is_not_attempted() {
         central.scanForPeripherals();
         verify(scanner, never()).startScan(ArgumentMatchers.<ScanFilter>anyList(), any(ScanSettings.class), any(ScanCallback.class));
