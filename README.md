@@ -12,7 +12,7 @@ BLESSED is a very compact Bluetooth Low Energy (BLE) library for Android 5 and h
 * *Threadsafe*, so you don't see weird threading related issues anymore
 * *Workarounds for some known Android bugs*, so you don't have to research any workarounds
 * *Higher abstraction methods for convenience*, so that you don't have to do a lot of low-level management to get stuff done
-* *Supporting multiple simultaneousl connections*, so that you can connect to many peripherals 
+* *Supporting multiple simultaneous connections*, so that you can connect to many peripherals 
 
 The library consists of 5 core classes and corresponding callback abstract classes:
 1. `BluetoothCentralManager`, and it companion abstract class `BluetoothCentralManagerCallback`
