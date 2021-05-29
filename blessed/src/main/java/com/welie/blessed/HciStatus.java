@@ -385,6 +385,12 @@ public enum HciStatus {
     ERROR(0x85),
 
     /**
+     * Failure to register client when trying to connect. Probably because the max (30) of clients has been reached.
+     * The most likely fix is to make sure you always call close() after a disconnect happens.
+     */
+    FAILURE_REGISTERING_CLIENT(0x101),
+
+    /**
      * Used when status code is not defined in the class
      */
     UNKNOWN_STATUS_CODE(0xFFFF);

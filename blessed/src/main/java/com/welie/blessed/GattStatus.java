@@ -246,9 +246,10 @@ public enum GattStatus {
     CONNECTION_CANCELLED(0x0100),
 
     /**
-     * Failure to register client when trying to connect
+     * Failure to register client when trying to connect. Probably because the max (30) of clients has been reached.
+     * The most likely fix is to make sure you always call close() after a disconnect happens.
      */
-    FAILURE(0x101),
+    FAILURE_REGISTERING_CLIENT(0x101),
 
     /**
      * Used when status code is not defined in the class
