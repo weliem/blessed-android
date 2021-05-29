@@ -1094,7 +1094,7 @@ public class BluetoothPeripheral {
      * @param characteristicUUID the characteristic's UUID
      * @param value              the byte array to write
      * @param writeType          the write type to use when writing.
-     * @return true if the operation was enqueued, false if the characteristic was not found
+     * @return true if the operation was enqueued, otherwise false
      * @throws IllegalArgumentException if the characteristic does not support writing with the specified writeType or the byte array is empty or too long
      */
     public boolean writeCharacteristic(@NotNull final UUID serviceUUID, @NotNull final UUID characteristicUUID, @NotNull final byte[] value, @NotNull final WriteType writeType) {
@@ -1297,7 +1297,8 @@ public class BluetoothPeripheral {
      * @param serviceUUID        the service UUID the characteristic belongs to
      * @param characteristicUUID the characteristic's UUID
      * @param enable             true for setting notification on, false for turning it off
-     * @return true if the operation was enqueued, false the characteristic could not be found or does not support notifications
+     * @return true if the operation was enqueued, otherwise false
+     * @throws IllegalArgumentException if the CCC descriptor was not found or the characteristic does not support notifications or indications
      */
     public boolean setNotify(@NotNull final UUID serviceUUID, @NotNull final UUID characteristicUUID, final boolean enable) {
         Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
@@ -1318,7 +1319,7 @@ public class BluetoothPeripheral {
      * @param characteristic the characteristic to turn notification on/off for
      * @param enable         true for setting notification on, false for turning it off
      * @return true if the operation was enqueued, otherwise false
-     * @throws IllegalArgumentException if the CCC descriptor was not found
+     * @throws IllegalArgumentException if the CCC descriptor was not found or the characteristic does not support notifications or indications
      */
     public boolean setNotify(@NotNull final BluetoothGattCharacteristic characteristic, final boolean enable) {
         Objects.requireNonNull(characteristic, NO_VALID_CHARACTERISTIC_PROVIDED);
