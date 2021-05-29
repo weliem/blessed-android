@@ -15,8 +15,7 @@ import com.welie.blessed.BluetoothPeripheralCallback;
 import com.welie.blessed.ConnectionPriority;
 import com.welie.blessed.GattStatus;
 import com.welie.blessed.HciStatus;
-import com.welie.blessed.PhyOptions;
-import com.welie.blessed.PhyType;
+
 import com.welie.blessed.ScanFailure;
 import com.welie.blessed.WriteType;
 
@@ -30,7 +29,6 @@ import java.util.UUID;
 
 import timber.log.Timber;
 
-import static android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_HIGH;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_SINT16;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT16;

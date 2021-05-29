@@ -1025,11 +1025,6 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
         Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
 
-        if (notConnected()) {
-            Timber.e(PERIPHERAL_NOT_CONNECTED);
-            return false;
-        }
-
         BluetoothGattCharacteristic characteristic = getCharacteristic(serviceUUID, characteristicUUID);
         if (characteristic != null) {
             return readCharacteristic(characteristic);
@@ -1056,8 +1051,8 @@ public class BluetoothPeripheral {
         }
 
         if (doesNotSupportReading(characteristic)) {
-            Timber.e("characteristic does not have read property");
-            return false;
+            String message = String.format("characteristic <%s> does not have read property", characteristic.getUuid());
+            throw new IllegalArgumentException(message);
         }
 
         final boolean result = commandQueue.add(new Runnable() {
@@ -1107,11 +1102,6 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(value, NO_VALID_VALUE_PROVIDED);
         Objects.requireNonNull(writeType, NO_VALID_WRITE_TYPE_PROVIDED);
 
-        if (notConnected()) {
-            Timber.e(PERIPHERAL_NOT_CONNECTED);
-            return false;
-        }
-
         BluetoothGattCharacteristic characteristic = getCharacteristic(serviceUUID, characteristicUUID);
         if (characteristic != null) {
             return writeCharacteristic(characteristic, value, writeType);
@@ -1152,8 +1142,8 @@ public class BluetoothPeripheral {
         }
 
         if (doesNotSupportWriteType(characteristic, writeType)) {
-            Timber.e("characteristic <%s> does not support writeType '%s'", characteristic.getUuid(), writeType);
-            return false;
+            String message = String.format("characteristic <%s> does not support writeType '%s'", characteristic.getUuid(), writeType);
+            throw new IllegalArgumentException(message);
         }
 
         // Copy the value to avoid race conditions
@@ -1312,11 +1302,6 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
         Objects.requireNonNull(characteristicUUID, NO_VALID_CHARACTERISTIC_UUID_PROVIDED);
 
-        if (notConnected()) {
-            Timber.e(PERIPHERAL_NOT_CONNECTED);
-            return false;
-        }
-
         final BluetoothGattCharacteristic characteristic = getCharacteristic(serviceUUID, characteristicUUID);
         if (characteristic != null) {
             return setNotify(characteristic, enable);
@@ -1344,8 +1329,8 @@ public class BluetoothPeripheral {
         // Get the Client Characteristic Configuration Descriptor for the characteristic
         final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CCC_DESCRIPTOR_UUID);
         if (descriptor == null) {
-            Timber.e("could not get CCC descriptor for characteristic %s", characteristic.getUuid());
-            return false;
+            String message = String.format("could not get CCC descriptor for characteristic %s", characteristic.getUuid());
+            throw new IllegalArgumentException(message);
         }
 
         // Check if characteristic has NOTIFY or INDICATE properties and set the correct byte value to be written
@@ -1356,8 +1341,8 @@ public class BluetoothPeripheral {
         } else if ((properties & PROPERTY_INDICATE) > 0) {
             value = BluetoothGattDescriptor.ENABLE_INDICATION_VALUE;
         } else {
-            Timber.e("characteristic %s does not have notify or indicate property", characteristic.getUuid());
-            return false;
+            String message = String.format("characteristic %s does not have notify or indicate property", characteristic.getUuid());
+            throw new IllegalArgumentException(message);
         }
         final byte[] finalValue = enable ? value : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
 

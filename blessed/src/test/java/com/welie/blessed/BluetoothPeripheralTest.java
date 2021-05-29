@@ -501,7 +501,7 @@ public class BluetoothPeripheralTest {
         verify(gatt, never()).readCharacteristic(characteristic);
     }
 
-    @Test
+    @Test (expected = IllegalArgumentException.class)
     public void Given_a_connected_peripheral_without_a_readable_characteristic_when_readCharacteristic_is_called_then_the_characteristic_is_not_read() {
         // Given
         BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"), 0,0);
@@ -509,10 +509,6 @@ public class BluetoothPeripheralTest {
 
         // When
         peripheral.readCharacteristic(characteristic);
-        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
-
-        // Then
-        verify(gatt, never()).readCharacteristic(any(BluetoothGattCharacteristic.class));
     }
 
     @Test
@@ -631,18 +627,14 @@ public class BluetoothPeripheralTest {
         verify(gatt, never()).writeCharacteristic(characteristic);
     }
 
-    @Test
+    @Test (expected = IllegalArgumentException.class)
     public void Given_a_connected_peripheral_with_not_writable_characteristic_when_writeCharacteristic_is_called_then_the_value_is_not_written() {
         // Given
         connectAndGetCallback();
         BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"), 0,0);
 
         // When
-        boolean result = peripheral.writeCharacteristic(characteristic, new byte[] { 0, 0 }, WriteType.WITH_RESPONSE);
-
-        // Then
-        assertFalse(result);
-        verify(gatt, never()).writeCharacteristic(any(BluetoothGattCharacteristic.class));
+        peripheral.writeCharacteristic(characteristic, new byte[] { 0, 0 }, WriteType.WITH_RESPONSE);
     }
 
     @Test (expected = IllegalArgumentException.class)
@@ -767,6 +759,8 @@ public class BluetoothPeripheralTest {
         // Given
         BluetoothGattCallback callback = connectAndGetCallback();
         BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(UUID.fromString("00002A1C-0000-1000-8000-00805f9b34fb"), PROPERTY_INDICATE,0);
+        BluetoothGattDescriptor cccd = new BluetoothGattDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"),0);
+        characteristic.addDescriptor(cccd);
         peripheral.setNotify(characteristic, true);
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
