@@ -1593,12 +1593,10 @@ public class BluetoothPeripheral {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         bluetoothGatt.readPhy();
                         Timber.d("reading Phy");
-                        return;
                     }
+                } else {
+                    completedCommand();
                 }
-
-                // complete command immediately as this command is not blocking
-                completedCommand();
             }
         });
 
