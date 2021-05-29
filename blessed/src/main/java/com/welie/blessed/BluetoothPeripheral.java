@@ -125,6 +125,7 @@ public class BluetoothPeripheral {
     // String constants for commands where the callbacks can also happen because the remote peripheral initiated the command
     private static final int IDLE = 0;
     private static final int REQUEST_MTU_COMMAND = 1;
+    private static final int SET_PHY_TYPE_COMMAND = 2;
 
     private @NotNull final Context context;
     private @NotNull final Handler callbackHandler;
@@ -399,6 +400,12 @@ public class BluetoothPeripheral {
                     peripheralCallback.onPhyUpdate(BluetoothPeripheral.this, PhyType.fromValue(txPhy), PhyType.fromValue(rxPhy), gattStatus);
                 }
             });
+
+            // Only complete the command if we initiated the operation. It can also be initiated by the remote peripheral...
+            if (currentCommand == SET_PHY_TYPE_COMMAND) {
+                currentCommand = IDLE;
+                completedCommand();
+            }
         }
 
         /**
@@ -1553,13 +1560,13 @@ public class BluetoothPeripheral {
             public void run() {
                 if (isConnected()) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        currentCommand = SET_PHY_TYPE_COMMAND;
                         Timber.i("setting preferred Phy: tx = %s, rx = %s, options = %s", txPhy, rxPhy, phyOptions);
                         bluetoothGatt.setPreferredPhy(txPhy.mask, rxPhy.mask, phyOptions.value);
                     }
+                } else {
+                    completedCommand();
                 }
-
-                // complete command immediately as this command is not blocking
-                completedCommand();
             }
         });
 
