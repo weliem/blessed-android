@@ -1015,11 +1015,12 @@ public class BluetoothPeripheral {
     /**
      * Read the value of a characteristic.
      *
-     * <p>The characteristic must support reading it, otherwise the operation will not be enqueued.
+     * Convenience function to read a characteristic without first having to find it.
      *
      * @param serviceUUID        the service UUID the characteristic belongs to
      * @param characteristicUUID the characteristic's UUID
-     * @return true if the operation was enqueued, false if the characteristic does not support reading or the characteristic was not found
+     * @return true if the operation was enqueued, false if the characteristic was not found
+     * @throws IllegalArgumentException if the characteristic does not support reading
      */
     public boolean readCharacteristic(@NotNull final UUID serviceUUID, @NotNull final UUID characteristicUUID) {
         Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
@@ -1035,12 +1036,11 @@ public class BluetoothPeripheral {
     /**
      * Read the value of a characteristic.
      *
-     * <p>The characteristic must support reading it, otherwise the operation will not be enqueued.
-     *
      * <p>{@link BluetoothPeripheralCallback#onCharacteristicUpdate(BluetoothPeripheral, byte[], BluetoothGattCharacteristic, GattStatus)}   will be triggered as a result of this call.
      *
      * @param characteristic Specifies the characteristic to read.
-     * @return true if the operation was enqueued, false if the characteristic does not support reading or the characteristic was invalid
+     * @return true if the operation was enqueued, otherwise false
+     * @throws IllegalArgumentException if the characteristic does not support reading
      */
     public boolean readCharacteristic(@NotNull final BluetoothGattCharacteristic characteristic) {
         Objects.requireNonNull(characteristic, NO_VALID_CHARACTERISTIC_PROVIDED);
@@ -1087,14 +1087,15 @@ public class BluetoothPeripheral {
     /**
      * Write a value to a characteristic using the specified write type.
      *
-     * <p>All parameters must have a valid value in order for the operation
-     * to be enqueued. If the characteristic does not support writing with the specified writeType, the operation will not be enqueued.
+     * Convenience function to write a characteristic without first having to find it.
+     * All parameters must have a valid value in order for the operation to be enqueued.
      *
      * @param serviceUUID        the service UUID the characteristic belongs to
      * @param characteristicUUID the characteristic's UUID
      * @param value              the byte array to write
-     * @param writeType          the write type to use when writing. Must be WRITE_TYPE_DEFAULT, WRITE_TYPE_NO_RESPONSE or WRITE_TYPE_SIGNED
-     * @return true if the operation was enqueued, false if the characteristic does not support reading or the characteristic was not found
+     * @param writeType          the write type to use when writing.
+     * @return true if the operation was enqueued, false if the characteristic was not found
+     * @throws IllegalArgumentException if the characteristic does not support writing with the specified writeType or the byte array is empty or too long
      */
     public boolean writeCharacteristic(@NotNull final UUID serviceUUID, @NotNull final UUID characteristicUUID, @NotNull final byte[] value, @NotNull final WriteType writeType) {
         Objects.requireNonNull(serviceUUID, NO_VALID_SERVICE_UUID_PROVIDED);
@@ -1112,8 +1113,7 @@ public class BluetoothPeripheral {
     /**
      * Write a value to a characteristic using the specified write type.
      *
-     * <p>All parameters must have a valid value in order for the operation
-     * to be enqueued. If the characteristic does not support writing with the specified writeType, the operation will not be enqueued.
+     * <p>All parameters must have a valid value in order for the operation to be enqueued.
      * The length of the byte array to write must be between 1 and getMaximumWriteValueLength(writeType).
      *
      * <p>{@link BluetoothPeripheralCallback#onCharacteristicWrite(BluetoothPeripheral, byte[], BluetoothGattCharacteristic, GattStatus)} will be triggered as a result of this call.
@@ -1122,6 +1122,7 @@ public class BluetoothPeripheral {
      * @param value          the byte array to write
      * @param writeType      the write type to use when writing.
      * @return true if a write operation was succesfully enqueued, otherwise false
+     * @throws IllegalArgumentException if the characteristic does not support writing with the specified writeType or the byte array is empty or too long
      */
     public boolean writeCharacteristic(@NotNull final BluetoothGattCharacteristic characteristic, @NotNull final byte[] value, @NotNull final WriteType writeType) {
         Objects.requireNonNull(characteristic, NO_VALID_CHARACTERISTIC_PROVIDED);
@@ -1316,7 +1317,8 @@ public class BluetoothPeripheral {
      *
      * @param characteristic the characteristic to turn notification on/off for
      * @param enable         true for setting notification on, false for turning it off
-     * @return true if the operation was enqueued, false if the characteristic doesn't support notification or indications or
+     * @return true if the operation was enqueued, otherwise false
+     * @throws IllegalArgumentException if the CCC descriptor was not found
      */
     public boolean setNotify(@NotNull final BluetoothGattCharacteristic characteristic, final boolean enable) {
         Objects.requireNonNull(characteristic, NO_VALID_CHARACTERISTIC_PROVIDED);
