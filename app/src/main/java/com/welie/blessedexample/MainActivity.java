@@ -219,10 +219,14 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
 
-        boolean isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            return locationManager.isLocationEnabled();
+        } else {
+            boolean isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-        return isGpsEnabled || isNetworkEnabled;
+            return isGpsEnabled || isNetworkEnabled;
+        }
     }
 
     private boolean checkLocationServices() {
