@@ -308,12 +308,17 @@ public class BluetoothCentralManager {
     }
 
     /**
-     * Enable or disable logging
-     *
-     * @param enabled if true, logging is enabled, otherwise logging is disabled
+     * Enable logging
      */
-    public void enableLogging(Boolean enabled) {
-        Logger.enabled = enabled;
+    public void enableLogging() {
+        Logger.enabled = true;
+    }
+
+    /**
+     * Disable logging
+     */
+    public void disableLogging() {
+        Logger.enabled = false;
     }
 
     private ScanSettings getScanSettings(@NotNull final ScanMode scanMode) {

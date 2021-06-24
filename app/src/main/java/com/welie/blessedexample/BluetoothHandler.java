@@ -361,6 +361,7 @@ class BluetoothHandler {
 
         // Create BluetoothCentral
         central = new BluetoothCentralManager(context, bluetoothCentralManagerCallback, new Handler());
+        central.disableLogging();
 
         // Scan for peripherals with a certain service UUIDs
         central.startPairingPopupHack();
