@@ -103,7 +103,9 @@ class Logger {
     }
 
     private static void triggerLogger(int priority, String tag, String msg, Object... args) {
-        triggerLogger(priority, tag, String.format(msg, args));
+        if (enabled) {
+            triggerLogger(priority, tag, String.format(msg, args));
+        }
     }
 
     private static void triggerLogger(int priority, String tag, String msg) {
