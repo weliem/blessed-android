@@ -19,7 +19,7 @@ class Logger {
     }
 
     /** Log an verbose message with optional format args. */
-    public static void verbose(String tag, String msg, Object... args) {
+    public static void v(String tag, String msg, Object... args) {
         triggerLogger(Log.VERBOSE, tag, msg, args);
     }
 
@@ -95,6 +95,11 @@ class Logger {
      */
     public static void wtf(String tag, String msg) {
         triggerLogger(Log.ASSERT, tag, msg);
+    }
+
+    /** Log an wtf message with optional format args. */
+    public static void wtf(String tag, String msg, Object... args) {
+        triggerLogger(Log.ASSERT, tag, msg, args);
     }
 
     private static void triggerLogger(int priority, String tag, String msg, Object... args) {
