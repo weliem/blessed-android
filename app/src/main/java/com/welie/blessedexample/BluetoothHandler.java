@@ -336,7 +336,7 @@ class BluetoothHandler {
                 // Bluetooth is on now, start scanning again
                 // Scan for peripherals with a certain service UUIDs
                 central.startPairingPopupHack();
-                central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID, HRS_SERVICE_UUID});
+                startScan();
             }
         }
 
@@ -361,10 +361,13 @@ class BluetoothHandler {
 
         // Create BluetoothCentral
         central = new BluetoothCentralManager(context, bluetoothCentralManagerCallback, new Handler());
-        central.disableLogging();
 
         // Scan for peripherals with a certain service UUIDs
         central.startPairingPopupHack();
+        startScan();
+    }
+
+    private void startScan() {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
