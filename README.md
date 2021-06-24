@@ -250,6 +250,30 @@ public boolean readPhy()
 
 The result will be again delivered on `onPhyUpdate()`
 
+## Logging
+
+Blessed uses Timber for logging. If you don't want Blessed to do any logging you can disable logging:
+
+```java
+central.disableLogging()
+```
+## Installation
+
+Blessed is available on Jitpack. Modify your gradle file to include the library:
+
+```groovy
+allprojects {
+        repositories {
+                ...
+                maven { url 'https://jitpack.io' }
+        }
+}
+
+dependencies {
+        implementation 'com.github.weliem:blessed-android:2.0.6'
+}
+```
+
 ## Example application
 
 An example application is provided in the repo. It shows how to connect to Blood Pressure meters, Heart Rate monitors, Weight scales, Glucose Meters, Pulse Oximeters and Thermometers, read the data and show it on screen. It only works with peripherals that use the Bluetooth SIG services. Working peripherals include:
