@@ -29,7 +29,9 @@ The `BluetoothBytesParser` class is a utility class that makes parsing byte arra
 
 The BLESSED library was inspired by CoreBluetooth on iOS and provides the same level of abstraction, but at the same time it also stays true to Android by keeping most methods the same and allowing you to work with the standard classes for Services, Characteristics and Descriptors. If you already have developed using CoreBluetooth you can very easily port your code to Android using this library.
 
-BLESSED is written in Java but has been optimized for Kotlin as well. When using the library in Kotlin, all types will be correct in (non-)nullability. This library is also available for Linux, see [blessed-bluez](https://github.com/weliem/blessed-bluez)
+BLESSED is written in Java but has been optimized for Kotlin as well. When using the library in Kotlin, all types will be correct in (non-)nullability. A full Kotlin variant using coroutines is available as [blessed-android-coroutines](https://github.com/weliem/blessed-android-coroutines)
+
+This library is also available for Linux, see [blessed-bluez](https://github.com/weliem/blessed-bluez)
 
 ## Scanning
 
