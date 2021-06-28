@@ -22,7 +22,6 @@ import static java.nio.ByteOrder.BIG_ENDIAN;
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertNull;
 
 import static android.os.Build.VERSION_CODES.M;
 import static org.junit.Assert.assertArrayEquals;
@@ -40,7 +39,7 @@ public class BluetoothBytesParserTest {
     public void constructor1Test() {
         BluetoothBytesParser parser = new BluetoothBytesParser();
         assertEquals(LITTLE_ENDIAN, parser.getByteOrder());
-        assertNull(parser.getValue());
+        assertEquals(0, parser.getValue().length);
         assertEquals(0, parser.getOffset());
     }
 
@@ -52,11 +51,10 @@ public class BluetoothBytesParserTest {
         assertEquals(1, parser.getOffset());
     }
 
-    @Test
+    @Test (expected = IllegalArgumentException.class)
     public void getIntInvalidFormatTest() {
         BluetoothBytesParser parser = new BluetoothBytesParser(new byte[]{1,2});
-        Integer value = parser.getIntValue(249);
-        assertNull(value);
+        parser.getIntValue(249);
     }
 
     @Test
@@ -294,11 +292,10 @@ public class BluetoothBytesParserTest {
         assertEquals(72623859790382856L, parser.getLongValue());
     }
 
-    @Test
+    @Test (expected = IllegalArgumentException.class)
     public void getFloatInvalidFormatTest() {
         BluetoothBytesParser parser = new BluetoothBytesParser(new byte[]{1,2,3,4});
-        Float value = parser.getFloatValue(249);
-        assertNull(value);
+        parser.getFloatValue(249);
     }
 
     @Test
