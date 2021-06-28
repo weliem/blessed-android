@@ -37,7 +37,7 @@ import static java.nio.ByteOrder.LITTLE_ENDIAN;
 
 public class BluetoothBytesParser {
 
-    private int offset = 0;
+    private int internalOffset = 0;
     private byte[] mValue;
     private final ByteOrder byteOrder;
 
@@ -93,7 +93,7 @@ public class BluetoothBytesParser {
     /**
      * Create a BluetoothBytesParser that does not contain a byte array and sets the byteOrder.
      */
-    public BluetoothBytesParser(ByteOrder byteOrder) {
+    public BluetoothBytesParser(final ByteOrder byteOrder) {
         this(null, byteOrder);
     }
 
@@ -102,7 +102,7 @@ public class BluetoothBytesParser {
      *
      * @param value byte array
      */
-    public BluetoothBytesParser(byte[] value) {
+    public BluetoothBytesParser(final byte[] value) {
         this(value, 0, LITTLE_ENDIAN);
     }
 
@@ -112,7 +112,7 @@ public class BluetoothBytesParser {
      * @param value     byte array
      * @param byteOrder the byte order to use (either LITTLE_ENDIAN or BIG_ENDIAN)
      */
-    public BluetoothBytesParser(byte[] value, ByteOrder byteOrder) {
+    public BluetoothBytesParser(final byte[] value, final ByteOrder byteOrder) {
         this(value, 0, byteOrder);
     }
 
@@ -122,7 +122,7 @@ public class BluetoothBytesParser {
      * @param value  the byte array
      * @param offset the offset from which parsing will start
      */
-    public BluetoothBytesParser(byte[] value, int offset) {
+    public BluetoothBytesParser(final byte[] value, final int offset) {
         this(value, offset, LITTLE_ENDIAN);
     }
 
@@ -133,9 +133,9 @@ public class BluetoothBytesParser {
      * @param offset    the offset from which parsing will start
      * @param byteOrder the byte order, either LITTLE_ENDIAN or BIG_ENDIAN
      */
-    public BluetoothBytesParser(byte[] value, int offset, ByteOrder byteOrder) {
+    public BluetoothBytesParser(final byte[] value, final int offset, final ByteOrder byteOrder) {
         mValue = value;
-        this.offset = offset;
+        this.internalOffset = offset;
         this.byteOrder = byteOrder;
     }
 
@@ -145,9 +145,9 @@ public class BluetoothBytesParser {
      * @param formatType The format type used to interpret the byte(s) value
      * @return An Integer object or null in case the byte array was not valid
      */
-    public Integer getIntValue(int formatType) {
-        Integer result = getIntValue(formatType, offset, byteOrder);
-        offset += getTypeLen(formatType);
+    public Integer getIntValue(final int formatType) {
+        Integer result = getIntValue(formatType, internalOffset, byteOrder);
+        internalOffset += getTypeLen(formatType);
         return result;
     }
 
@@ -157,9 +157,9 @@ public class BluetoothBytesParser {
      * @param formatType the format type used to interpret the byte(s) value
      * @return an Integer object or null in case the byte array was not valid
      */
-    public Integer getIntValue(int formatType, ByteOrder byteOrder) {
-        Integer result = getIntValue(formatType, offset, byteOrder);
-        offset += getTypeLen(formatType);
+    public Integer getIntValue(final int formatType, final ByteOrder byteOrder) {
+        Integer result = getIntValue(formatType, internalOffset, byteOrder);
+        internalOffset += getTypeLen(formatType);
         return result;
     }
 
@@ -177,9 +177,9 @@ public class BluetoothBytesParser {
      *
      * @return an Long object or null in case the byte array was not valid
      */
-    public long getLongValue(ByteOrder byteOrder) {
-        long result = getLongValue(offset, byteOrder);
-        offset += 8;
+    public long getLongValue(final ByteOrder byteOrder) {
+        long result = getLongValue(internalOffset, byteOrder);
+        internalOffset += 8;
         return result;
     }
 
@@ -188,7 +188,7 @@ public class BluetoothBytesParser {
      *
      * @return an Long object or null in case the byte array was not valid
      */
-    public long getLongValue(int offset, ByteOrder byteOrder) {
+    public long getLongValue(final int offset, final ByteOrder byteOrder) {
         if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
             long value = 0x00FF & mValue[offset + 7];
             for (int i = 6; i >= 0; i--) {
@@ -220,7 +220,7 @@ public class BluetoothBytesParser {
      * @param byteOrder  the byte order, either LITTLE_ENDIAN or BIG_ENDIAN
      * @return Cached value of the byte array or null of offset exceeds value size.
      */
-    public Integer getIntValue(int formatType, int offset, ByteOrder byteOrder) {
+    public Integer getIntValue(final int formatType, final int offset, final ByteOrder byteOrder) {
         if ((offset + getTypeLen(formatType)) > mValue.length) return null;
 
         switch (formatType) {
@@ -270,9 +270,9 @@ public class BluetoothBytesParser {
      * @param formatType The format type used to interpret the byte array
      * @return The float value at the position of the internal offset
      */
-    public Float getFloatValue(int formatType) {
-        Float result = getFloatValue(formatType, offset, byteOrder);
-        offset += getTypeLen(formatType);
+    public Float getFloatValue(final int formatType) {
+        Float result = getFloatValue(formatType, internalOffset, byteOrder);
+        internalOffset += getTypeLen(formatType);
         return result;
     }
 
@@ -283,9 +283,9 @@ public class BluetoothBytesParser {
      * @param byteOrder  the byte order, either LITTLE_ENDIAN or BIG_ENDIAN
      * @return The float value at the position of the internal offset
      */
-    public Float getFloatValue(int formatType, ByteOrder byteOrder) {
-        Float result = getFloatValue(formatType, offset, byteOrder);
-        offset += getTypeLen(formatType);
+    public Float getFloatValue(final int formatType, final ByteOrder byteOrder) {
+        Float result = getFloatValue(formatType, internalOffset, byteOrder);
+        internalOffset += getTypeLen(formatType);
         return result;
     }
 
@@ -296,7 +296,7 @@ public class BluetoothBytesParser {
      * @param byteOrder  the byte order, either LITTLE_ENDIAN or BIG_ENDIAN
      * @return The float value at the position of the internal offset
      */
-    public Float getFloatValue(int formatType, int offset, ByteOrder byteOrder) {
+    public Float getFloatValue(final int formatType, final int offset, final ByteOrder byteOrder) {
         if ((offset + getTypeLen(formatType)) > mValue.length) return null;
 
         switch (formatType) {
@@ -324,7 +324,7 @@ public class BluetoothBytesParser {
      * @return String value representated by the byte array
      */
     public String getStringValue() {
-        return getStringValue(offset);
+        return getStringValue(internalOffset);
     }
 
     /**
@@ -333,7 +333,7 @@ public class BluetoothBytesParser {
      * @param offset Offset at which the string value can be found.
      * @return String value representated by the byte array
      */
-    public String getStringValue(int offset) {
+    public String getStringValue(final int offset) {
         // Check if there are enough bytes to parse
         if (mValue == null || offset > mValue.length) return null;
 
@@ -357,8 +357,8 @@ public class BluetoothBytesParser {
      * @return the Date represented by the byte array
      */
     public Date getDateTime() {
-        Date result = getDateTime(offset);
-        offset += 7;
+        Date result = getDateTime(internalOffset);
+        internalOffset += 7;
         return result;
     }
 
@@ -368,19 +368,20 @@ public class BluetoothBytesParser {
      * @param offset Offset of value
      * @return Parsed date from value
      */
-    public Date getDateTime(int offset) {
+    public Date getDateTime(final int offset) {
         // DateTime is always in little endian
-        int year = getIntValue(FORMAT_UINT16, offset, LITTLE_ENDIAN);
-        offset += getTypeLen(FORMAT_UINT16);
-        int month = getIntValue(FORMAT_UINT8, offset, LITTLE_ENDIAN);
-        offset += getTypeLen(FORMAT_UINT8);
-        int day = getIntValue(FORMAT_UINT8, offset, LITTLE_ENDIAN);
-        offset += getTypeLen(FORMAT_UINT8);
-        int hour = getIntValue(FORMAT_UINT8, offset, LITTLE_ENDIAN);
-        offset += getTypeLen(FORMAT_UINT8);
-        int min = getIntValue(FORMAT_UINT8, offset, LITTLE_ENDIAN);
-        offset += getTypeLen(FORMAT_UINT8);
-        int sec = getIntValue(FORMAT_UINT8, offset, LITTLE_ENDIAN);
+        int newOffset = offset;
+        int year = getIntValue(FORMAT_UINT16, newOffset, LITTLE_ENDIAN);
+        newOffset += getTypeLen(FORMAT_UINT16);
+        int month = getIntValue(FORMAT_UINT8, newOffset, LITTLE_ENDIAN);
+        newOffset += getTypeLen(FORMAT_UINT8);
+        int day = getIntValue(FORMAT_UINT8, newOffset, LITTLE_ENDIAN);
+        newOffset += getTypeLen(FORMAT_UINT8);
+        int hour = getIntValue(FORMAT_UINT8, newOffset, LITTLE_ENDIAN);
+        newOffset += getTypeLen(FORMAT_UINT8);
+        int min = getIntValue(FORMAT_UINT8, newOffset, LITTLE_ENDIAN);
+        newOffset += getTypeLen(FORMAT_UINT8);
+        int sec = getIntValue(FORMAT_UINT8, newOffset, LITTLE_ENDIAN);
 
         GregorianCalendar calendar = new GregorianCalendar(year, month - 1, day, hour, min, sec);
         return calendar.getTime();
@@ -401,8 +402,8 @@ public class BluetoothBytesParser {
      * @return The DateTime read from the bytes. This will cause an exception if bytes run past end. Will return 0 epoch if unparsable
      */
     public byte[] getByteArray(final int length) {
-        byte[] array = Arrays.copyOfRange(mValue, offset, offset + length);
-        offset += length;
+        byte[] array = Arrays.copyOfRange(mValue, internalOffset, internalOffset + length);
+        internalOffset += length;
         return array;
     }
 
@@ -414,44 +415,47 @@ public class BluetoothBytesParser {
      * @param offset     Offset at which the value should be placed
      * @return true if the locally stored value has been set
      */
-    public boolean setIntValue(int value, int formatType, int offset) {
+    public boolean setIntValue(final int value, final int formatType, final int offset) {
         prepareArray(offset + getTypeLen(formatType));
+
+        int newValue = value;
+        int newOffset = offset;
 
         switch (formatType) {
             case FORMAT_SINT8:
-                value = intToSignedBits(value, 8);
+                newValue = intToSignedBits(newValue, 8);
                 // Fall-through intended
             case FORMAT_UINT8:
-                mValue[offset] = (byte) (value & 0xFF);
+                mValue[newOffset] = (byte) (newValue & 0xFF);
                 break;
 
             case FORMAT_SINT16:
-                value = intToSignedBits(value, 16);
+                newValue = intToSignedBits(newValue, 16);
                 // Fall-through intended
             case FORMAT_UINT16:
                 if (byteOrder == LITTLE_ENDIAN) {
-                    mValue[offset++] = (byte) (value & 0xFF);
-                    mValue[offset] = (byte) ((value >> 8) & 0xFF);
+                    mValue[newOffset++] = (byte) (newValue & 0xFF);
+                    mValue[newOffset] = (byte) ((newValue >> 8) & 0xFF);
                 } else {
-                    mValue[offset++] = (byte) ((value >> 8) & 0xFF);
-                    mValue[offset] = (byte) (value & 0xFF);
+                    mValue[newOffset++] = (byte) ((newValue >> 8) & 0xFF);
+                    mValue[newOffset] = (byte) (newValue & 0xFF);
                 }
                 break;
 
             case FORMAT_SINT32:
-                value = intToSignedBits(value, 32);
+                newValue = intToSignedBits(newValue, 32);
                 // Fall-through intended
             case FORMAT_UINT32:
                 if (byteOrder == LITTLE_ENDIAN) {
-                    mValue[offset++] = (byte) (value & 0xFF);
-                    mValue[offset++] = (byte) ((value >> 8) & 0xFF);
-                    mValue[offset++] = (byte) ((value >> 16) & 0xFF);
-                    mValue[offset] = (byte) ((value >> 24) & 0xFF);
+                    mValue[newOffset++] = (byte) (newValue & 0xFF);
+                    mValue[newOffset++] = (byte) ((newValue >> 8) & 0xFF);
+                    mValue[newOffset++] = (byte) ((newValue >> 16) & 0xFF);
+                    mValue[newOffset] = (byte) ((newValue >> 24) & 0xFF);
                 } else {
-                    mValue[offset++] = (byte) ((value >> 24) & 0xFF);
-                    mValue[offset++] = (byte) ((value >> 16) & 0xFF);
-                    mValue[offset++] = (byte) ((value >> 8) & 0xFF);
-                    mValue[offset] = (byte) (value & 0xFF);
+                    mValue[newOffset++] = (byte) ((newValue >> 24) & 0xFF);
+                    mValue[newOffset++] = (byte) ((newValue >> 16) & 0xFF);
+                    mValue[newOffset++] = (byte) ((newValue >> 8) & 0xFF);
+                    mValue[newOffset] = (byte) (newValue & 0xFF);
                 }
                 break;
 
@@ -468,10 +472,10 @@ public class BluetoothBytesParser {
      * @param formatType Integer format type used to transform the value parameter
      * @return true if the locally stored value has been set
      */
-    public boolean setIntValue(int value, int formatType) {
-        boolean result = setIntValue(value, formatType, offset);
+    public boolean setIntValue(final int value, final int formatType) {
+        boolean result = setIntValue(value, formatType, internalOffset);
         if (result) {
-            offset += getTypeLen(formatType);
+            internalOffset += getTypeLen(formatType);
         }
         return result;
     }
@@ -482,8 +486,8 @@ public class BluetoothBytesParser {
      * @param value New long value for this byte array
      * @return true if the locally stored value has been set
      */
-    public boolean setLong(long value) {
-        return setLong(value, offset);
+    public boolean setLong(final long value) {
+        return setLong(value, internalOffset);
     }
 
     /**
@@ -493,18 +497,19 @@ public class BluetoothBytesParser {
      * @param offset Offset at which the value should be placed
      * @return true if the locally stored value has been set
      */
-    public boolean setLong(long value, int offset) {
+    public boolean setLong(final long value, final int offset) {
         prepareArray(offset + 8);
 
+        long newValue = value;
         if (byteOrder == ByteOrder.BIG_ENDIAN) {
             for (int i = 7; i >= 0; i--) {
-                mValue[i + offset] = (byte) (value & 0xFF);
-                value >>= 8;
+                mValue[i + offset] = (byte) (newValue & 0xFF);
+                newValue >>= 8;
             }
         } else {
             for (int i = 0; i < 8; i++) {
-                mValue[i + offset] = (byte) (value & 0xFF);
-                value >>= 8;
+                mValue[i + offset] = (byte) (newValue & 0xFF);
+                newValue >>= 8;
             }
         }
 
@@ -520,37 +525,40 @@ public class BluetoothBytesParser {
      * @param offset     Offset at which the value should be placed
      * @return true if the locally stored value has been set
      */
-    public boolean setFloatValue(int mantissa, int exponent, int formatType, int offset) {
+    public boolean setFloatValue(final int mantissa, final int exponent, final int formatType, final int offset) {
         prepareArray(offset + getTypeLen(formatType));
 
+        int newMantissa = mantissa;
+        int newExponent = exponent;
+        int newOffset = offset;
         switch (formatType) {
             case FORMAT_SFLOAT:
-                mantissa = intToSignedBits(mantissa, 12);
-                exponent = intToSignedBits(exponent, 4);
+                newMantissa = intToSignedBits(newMantissa, 12);
+                newExponent = intToSignedBits(newExponent, 4);
                 if (byteOrder == LITTLE_ENDIAN) {
-                    mValue[offset++] = (byte) (mantissa & 0xFF);
-                    mValue[offset] = (byte) ((mantissa >> 8) & 0x0F);
-                    mValue[offset] += (byte) ((exponent & 0x0F) << 4);
+                    mValue[newOffset++] = (byte) (newMantissa & 0xFF);
+                    mValue[newOffset] = (byte) ((newMantissa >> 8) & 0x0F);
+                    mValue[newOffset] += (byte) ((newExponent & 0x0F) << 4);
                 } else {
-                    mValue[offset] = (byte) ((mantissa >> 8) & 0x0F);
-                    mValue[offset++] += (byte) ((exponent & 0x0F) << 4);
-                    mValue[offset] = (byte) (mantissa & 0xFF);
+                    mValue[newOffset] = (byte) ((newMantissa >> 8) & 0x0F);
+                    mValue[newOffset++] += (byte) ((newExponent & 0x0F) << 4);
+                    mValue[newOffset] = (byte) (mantissa & 0xFF);
                 }
                 break;
 
             case FORMAT_FLOAT:
-                mantissa = intToSignedBits(mantissa, 24);
-                exponent = intToSignedBits(exponent, 8);
+                newMantissa = intToSignedBits(newMantissa, 24);
+                newExponent = intToSignedBits(newExponent, 8);
                 if (byteOrder == LITTLE_ENDIAN) {
-                    mValue[offset++] = (byte) (mantissa & 0xFF);
-                    mValue[offset++] = (byte) ((mantissa >> 8) & 0xFF);
-                    mValue[offset++] = (byte) ((mantissa >> 16) & 0xFF);
-                    mValue[offset] += (byte) (exponent & 0xFF);
+                    mValue[newOffset++] = (byte) (newMantissa & 0xFF);
+                    mValue[newOffset++] = (byte) ((newMantissa >> 8) & 0xFF);
+                    mValue[newOffset++] = (byte) ((newMantissa >> 16) & 0xFF);
+                    mValue[newOffset] += (byte) (newExponent & 0xFF);
                 } else {
-                    mValue[offset++] += (byte) (exponent & 0xFF);
-                    mValue[offset++] = (byte) ((mantissa >> 16) & 0xFF);
-                    mValue[offset++] = (byte) ((mantissa >> 8) & 0xFF);
-                    mValue[offset] = (byte) (mantissa & 0xFF);
+                    mValue[newOffset++] += (byte) (newExponent & 0xFF);
+                    mValue[newOffset++] = (byte) ((newMantissa >> 16) & 0xFF);
+                    mValue[newOffset++] = (byte) ((newMantissa >> 8) & 0xFF);
+                    mValue[newOffset] = (byte) (newMantissa & 0xFF);
                 }
                 break;
 
@@ -568,9 +576,9 @@ public class BluetoothBytesParser {
      * @param precision number of digits after the comma to use
      * @return true if the locally stored value has been set
      */
-    public boolean setFloatValue(float value, int precision) {
+    public boolean setFloatValue(final float value, final int precision) {
         float mantissa = (float) (value * Math.pow(10, precision));
-        return setFloatValue((int) mantissa, -precision, FORMAT_FLOAT, offset);
+        return setFloatValue((int) mantissa, -precision, FORMAT_FLOAT, internalOffset);
     }
 
     /**
@@ -579,10 +587,10 @@ public class BluetoothBytesParser {
      * @param value String to be added to byte array
      * @return true if the locally stored value has been set
      */
-    public boolean setString(String value) {
+    public boolean setString(final String value) {
         if (value != null) {
-            setString(value, offset);
-            offset += value.getBytes().length;
+            setString(value, internalOffset);
+            internalOffset += value.getBytes().length;
             return true;
         }
         return false;
@@ -595,7 +603,7 @@ public class BluetoothBytesParser {
      * @param offset the offset to place the string at
      * @return true if the locally stored value has been set
      */
-    public boolean setString(String value, int offset) {
+    public boolean setString(final String value, final int offset) {
         if (value != null) {
             prepareArray(offset + value.length());
             byte[] valueBytes = value.getBytes();
@@ -611,7 +619,7 @@ public class BluetoothBytesParser {
      *
      * @param value New value for this byte array
      */
-    public void setValue(byte[] value) {
+    public void setValue(final byte[] value) {
         mValue = value;
     }
 
@@ -621,7 +629,7 @@ public class BluetoothBytesParser {
      * @param calendar the calendar object representing the current date
      * @return flase if the calendar object was null, otherwise true
      */
-    public boolean setCurrentTime(Calendar calendar) {
+    public boolean setCurrentTime(final Calendar calendar) {
         if (calendar == null) return false;
         mValue = new byte[10];
         mValue[0] = (byte) calendar.get(Calendar.YEAR);
@@ -643,7 +651,7 @@ public class BluetoothBytesParser {
      * @param calendar the calendar object representing the current date
      * @return flase if the calendar object was null, otherwise true
      */
-    public boolean setDateTime(Calendar calendar) {
+    public boolean setDateTime(final Calendar calendar) {
         if (calendar == null) return false;
         mValue = new byte[7];
         mValue[0] = (byte) calendar.get(Calendar.YEAR);
@@ -659,28 +667,28 @@ public class BluetoothBytesParser {
     /**
      * Returns the size of a give value type.
      */
-    private int getTypeLen(int formatType) {
+    private int getTypeLen(final int formatType) {
         return formatType & 0xF;
     }
 
     /**
      * Convert a signed byte to an unsigned int.
      */
-    private int unsignedByteToInt(byte b) {
+    private int unsignedByteToInt(final byte b) {
         return b & 0xFF;
     }
 
     /**
      * Convert signed bytes to a 16-bit unsigned int.
      */
-    private int unsignedBytesToInt(byte b0, byte b1) {
+    private int unsignedBytesToInt(final byte b0, final byte b1) {
         return (unsignedByteToInt(b0) + (unsignedByteToInt(b1) << 8));
     }
 
     /**
      * Convert signed bytes to a 32-bit unsigned int.
      */
-    private int unsignedBytesToInt(byte b0, byte b1, byte b2, byte b3) {
+    private int unsignedBytesToInt(final byte b0, final byte b1, final byte b2, final byte b3) {
         return (unsignedByteToInt(b0) + (unsignedByteToInt(b1) << 8))
                 + (unsignedByteToInt(b2) << 16) + (unsignedByteToInt(b3) << 24);
     }
@@ -688,7 +696,7 @@ public class BluetoothBytesParser {
     /**
      * Convert signed bytes to a 16-bit short float value.
      */
-    private float bytesToFloat(byte b0, byte b1) {
+    private float bytesToFloat(final byte b0, final byte b1) {
         int mantissa = unsignedToSigned(unsignedByteToInt(b0)
                 + ((unsignedByteToInt(b1) & 0x0F) << 8), 12);
         int exponent = unsignedToSigned(unsignedByteToInt(b1) >> 4, 4);
@@ -698,7 +706,7 @@ public class BluetoothBytesParser {
     /**
      * Convert signed bytes to a 32-bit short float value.
      */
-    private float bytesToFloat(byte b0, byte b1, byte b2, byte b3) {
+    private float bytesToFloat(final byte b0, final byte b1, final byte b2, final byte b3) {
         int mantissa = unsignedToSigned(unsignedByteToInt(b0)
                 + (unsignedByteToInt(b1) << 8)
                 + (unsignedByteToInt(b2) << 16), 24);
@@ -709,9 +717,9 @@ public class BluetoothBytesParser {
      * Convert an unsigned integer value to a two's-complement encoded
      * signed value.
      */
-    private int unsignedToSigned(int unsigned, int size) {
+    private int unsignedToSigned(final int unsigned, int size) {
         if ((unsigned & (1 << size - 1)) != 0) {
-            unsigned = -1 * ((1 << size - 1) - (unsigned & ((1 << size - 1) - 1)));
+            return -1 * ((1 << size - 1) - (unsigned & ((1 << size - 1) - 1)));
         }
         return unsigned;
     }
@@ -719,9 +727,9 @@ public class BluetoothBytesParser {
     /**
      * Convert an integer into the signed bits of a given length.
      */
-    private int intToSignedBits(int i, int size) {
+    private int intToSignedBits(final int i, int size) {
         if (i < 0) {
-            i = (1 << size - 1) + (i & ((1 << size - 1) - 1));
+            return (1 << size - 1) + (i & ((1 << size - 1) - 1));
         }
         return i;
     }
@@ -783,14 +791,14 @@ public class BluetoothBytesParser {
      * Get the value of the internal offset
      */
     public int getOffset() {
-        return offset;
+        return internalOffset;
     }
 
     /**
      * Set the value of the internal offset
      */
     public void setOffset(int offset) {
-        this.offset = offset;
+        this.internalOffset = offset;
     }
 
     /**
