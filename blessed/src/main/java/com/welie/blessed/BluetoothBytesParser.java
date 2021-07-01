@@ -39,9 +39,9 @@ import static java.nio.ByteOrder.LITTLE_ENDIAN;
 
 public class BluetoothBytesParser {
 
-    public static final String INVALID_OFFSET = "invalid offset";
-    public static final String UNSUPPORTED_FORMAT_TYPE = "unsupported format type";
-    public static final String OFFSET_MUST_BE_GREATER_OR_EQUAL_TO_ZERO = "offset must be greater or equal to zero";
+    private static final String INVALID_OFFSET = "invalid offset";
+    private static final String UNSUPPORTED_FORMAT_TYPE = "unsupported format type";
+    private static final String OFFSET_MUST_BE_GREATER_OR_EQUAL_TO_ZERO = "offset must be greater or equal to zero";
     private int internalOffset;
 
     @NotNull
@@ -91,7 +91,7 @@ public class BluetoothBytesParser {
     public static final int FORMAT_FLOAT = 0x34;
 
     /**
-     * Create a BluetoothBytesParser that contains an empty byte array and sets the byteOrder to LITTLE_ENDIAN.
+     * Create a BluetoothBytesParser containing an empty byte array and sets the byteOrder to LITTLE_ENDIAN.
      *
      */
     public BluetoothBytesParser() {
@@ -383,6 +383,7 @@ public class BluetoothBytesParser {
      *
      * @return String value represented by the byte array
      */
+    @NotNull
     public String getStringValue() {
         return getStringValue(internalOffset);
     }
@@ -466,7 +467,7 @@ public class BluetoothBytesParser {
         return mValue;
     }
 
-    /*
+    /**
      * Read bytes and return the ByteArray of the length passed.  This will increment the internal offset
      *
      * @return the byte array
@@ -831,6 +832,7 @@ public class BluetoothBytesParser {
      * @param arrays Arrays to merge
      * @return Merge array
      */
+    @NotNull
     public static byte[] mergeArrays(byte[]... arrays) {
         int size = 0;
         for (byte[] array : arrays) {
