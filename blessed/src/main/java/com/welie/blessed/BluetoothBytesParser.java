@@ -34,18 +34,21 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Objects;
 
+import static java.nio.ByteOrder.BIG_ENDIAN;
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 
 public class BluetoothBytesParser {
 
     public static final String INVALID_OFFSET = "invalid offset";
+    public static final String UNSUPPORTED_FORMAT_TYPE = "unsupported format type";
+    public static final String OFFSET_MUST_BE_GREATER_OR_EQUAL_TO_ZERO = "offset must be greater or equal to zero";
     private int internalOffset;
 
     @NotNull
     private byte[] mValue;
 
     @NotNull
-    private final ByteOrder byteOrder;
+    private final ByteOrder internalByteOrder;
 
     /**
      * Characteristic value format type uint8
@@ -61,8 +64,6 @@ public class BluetoothBytesParser {
      * Characteristic value format type uint32
      */
     public static final int FORMAT_UINT32 = 0x14;
-
-    //public static final int FORMAT_UINT64 = 0x18;
 
     /**
      * Characteristic value format type sint8
@@ -90,100 +91,98 @@ public class BluetoothBytesParser {
     public static final int FORMAT_FLOAT = 0x34;
 
     /**
-     * Create a BluetoothBytesParser that does not contain a byte array and sets the byteOrder to LITTLE_ENDIAN.
+     * Create a BluetoothBytesParser that contains an empty byte array and sets the byteOrder to LITTLE_ENDIAN.
+     *
      */
     public BluetoothBytesParser() {
         this(new byte[0], LITTLE_ENDIAN);
     }
 
     /**
-     * Create a BluetoothBytesParser that does not contain a byte array and sets the byteOrder.
+     * Create a BluetoothBytesParser that contains an empty byte array and sets the byteOrder.
+     *
+     * @param byteOrder the byte order to use (either LITTLE_ENDIAN or BIG_ENDIAN)
+     * @throws NullPointerException if the byteOrder is null
      */
     public BluetoothBytesParser(@NotNull final ByteOrder byteOrder) {
         this(new byte[0], byteOrder);
     }
 
     /**
-     * Create a BluetoothBytesParser and set the byte array and sets the byteOrder to LITTLE_ENDIAN.
+     * Create a BluetoothBytesParser containing the byte array and sets the byteOrder to LITTLE_ENDIAN.
      *
-     * @param value byte array
+     * @param value the byte array
+     * @throws NullPointerException if the value is null
      */
     public BluetoothBytesParser(@NotNull final byte[] value) {
         this(value, 0, LITTLE_ENDIAN);
     }
 
     /**
-     * Create a BluetoothBytesParser and set the byte array and byteOrder.
+     * Create a BluetoothBytesParser containing the byte array and byteOrder.
      *
      * @param value     byte array
      * @param byteOrder the byte order to use (either LITTLE_ENDIAN or BIG_ENDIAN)
+     * @throws IllegalArgumentException if the byteOrder is not LITTLE_ENDIAN or BIG_ENDIAN
+     * @throws NullPointerException if the value or byteOrder are null
      */
     public BluetoothBytesParser(@NotNull final byte[] value, @NotNull final ByteOrder byteOrder) {
         this(value, 0, byteOrder);
     }
 
     /**
-     * Create a BluetoothBytesParser, set the byte array, the internal offset and the byteOrder to LITTLE_ENDIAN.
+     * Create a BluetoothBytesParser containing the byte array, the offset and the byteOrder to LITTLE_ENDIAN.
      *
      * @param value  the byte array
      * @param offset the offset from which parsing will start
+     * @throws IllegalArgumentException if the offset is negative
+     * @throws NullPointerException     if the value is null
      */
     public BluetoothBytesParser(@NotNull final byte[] value, final int offset) {
         this(value, offset, LITTLE_ENDIAN);
     }
 
     /**
-     * Create a BluetoothBytesParser, set the byte array, the internal offset and the byteOrder.
+     * Create a BluetoothBytesParser containing the byte array, the offset and the byteOrder.
      *
      * @param value     the byte array
      * @param offset    the offset from which parsing will start
      * @param byteOrder the byte order, either LITTLE_ENDIAN or BIG_ENDIAN
+     * @throws IllegalArgumentException if the offset is negative or the byteOrder is not LITTLE_ENDIAN or BIG_ENDIAN
+     * @throws NullPointerException if the value or byteOrder are null
      */
     public BluetoothBytesParser(@NotNull final byte[] value, final int offset, @NotNull final ByteOrder byteOrder) {
+        if (offset < 0) throw new IllegalArgumentException(OFFSET_MUST_BE_GREATER_OR_EQUAL_TO_ZERO);
+        Objects.requireNonNull(byteOrder);
+        if (!(byteOrder == LITTLE_ENDIAN || byteOrder == BIG_ENDIAN)) throw new IllegalArgumentException("unsupported ByteOrder value");
+
         mValue = Objects.requireNonNull(value);
         this.internalOffset = offset;
-        this.byteOrder = Objects.requireNonNull(byteOrder);
-    }
-
-    /**
-     * Return an Integer value of the specified type. This operation will automatically advance the internal offset to the next position.
-     *
-     * @param formatType The format type used to interpret the byte(s) value
-     * @return An Integer object or null in case the byte array was not valid
-     */
-    public Integer getIntValue(final int formatType) {
-        Integer result = getIntValue(formatType, internalOffset, byteOrder);
-        internalOffset += getTypeLen(formatType);
-        return result;
-    }
-
-    /**
-     * Return an Integer value of the specified type and specified byte order. This operation will automatically advance the internal offset to the next position.
-     *
-     * @param formatType the format type used to interpret the byte(s) value
-     * @return an Integer object or null in case the byte array was not valid
-     */
-    public Integer getIntValue(final int formatType, final ByteOrder byteOrder) {
-        Integer result = getIntValue(formatType, internalOffset, byteOrder);
-        internalOffset += getTypeLen(formatType);
-        return result;
+        this.internalByteOrder = byteOrder;
     }
 
     /**
      * Return a Long value. This operation will automatically advance the internal offset to the next position.
      *
-     * @return an Long object or null in case the byte array was not valid
+     * @return a Long value
+     * @throws IllegalArgumentException if there are not enough bytes for a long value
      */
-    public long getLongValue() {
-        return getLongValue(byteOrder);
+    @NotNull
+    public Long getLongValue() {
+        return getLongValue(internalByteOrder);
     }
 
     /**
      * Return a Long value using the specified byte order. This operation will automatically advance the internal offset to the next position.
      *
-     * @return an Long object or null in case the byte array was not valid
+     * @param byteOrder  the byte order, either LITTLE_ENDIAN or BIG_ENDIAN
+     * @return a Long value
+     * @throws IllegalArgumentException if there are not enough bytes for a long value
+     * @throws NullPointerException if the value of byteOrder is null
      */
-    public long getLongValue(final ByteOrder byteOrder) {
+    @NotNull
+    public Long getLongValue(@NotNull final ByteOrder byteOrder) {
+        Objects.requireNonNull(byteOrder);
         long result = getLongValue(internalOffset, byteOrder);
         internalOffset += 8;
         return result;
@@ -192,17 +191,26 @@ public class BluetoothBytesParser {
     /**
      * Return a Long value using the specified byte order and offset position. This operation will not advance the internal offset to the next position.
      *
-     * @return an Long object or null in case the byte array was not valid
+     * @param offset     Offset at which the Long value can be found.
+     * @param byteOrder  the byte order, either LITTLE_ENDIAN or BIG_ENDIAN
+     * @return a Long value
+     * @throws IllegalArgumentException if the offset is not valid for getting a long value
+     * @throws NullPointerException if the value of byteOrder is null
      */
-    public long getLongValue(final int offset, final ByteOrder byteOrder) {
-        if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
+    @NotNull
+    public Long getLongValue(final int offset, @NotNull final ByteOrder byteOrder) {
+        Objects.requireNonNull(byteOrder);
+        if (offset < 0) throw new IllegalArgumentException(OFFSET_MUST_BE_GREATER_OR_EQUAL_TO_ZERO);
+        if ((offset + 8) > mValue.length) throw new IllegalArgumentException(INVALID_OFFSET);
+
+        if (byteOrder == LITTLE_ENDIAN) {
             long value = 0x00FF & mValue[offset + 7];
             for (int i = 6; i >= 0; i--) {
                 value <<= 8;
                 value += 0x00FF & mValue[i + offset];
             }
             return value;
-        } else {
+        } else if (byteOrder == BIG_ENDIAN) {
             long value = 0x00FF & mValue[offset];
             for (int i = 1; i < 8; i++) {
                 value <<= 8;
@@ -210,13 +218,43 @@ public class BluetoothBytesParser {
             }
             return value;
         }
+        throw new IllegalArgumentException("invalid byte order");
+    }
+
+    /**
+     * Return an Integer value of the specified type. This operation will automatically advance the internal offset to the next position.
+     *
+     * @param formatType The format type used to interpret the byte(s) value
+     * @return An Integer value
+     * @throws IllegalArgumentException if there are not enough bytes for an Integer value
+     */
+    public Integer getIntValue(final int formatType) {
+        Integer result = getIntValue(formatType, internalOffset, internalByteOrder);
+        internalOffset += getTypeLen(formatType);
+        return result;
+    }
+
+    /**
+     * Return an Integer value of the specified type and specified byte order. This operation will automatically advance the internal offset to the next position.
+     *
+     * @param formatType the format type used to interpret the byte(s) value
+     * @param byteOrder  the byte order, either LITTLE_ENDIAN or BIG_ENDIAN
+     * @return an Integer value
+     * @throws IllegalArgumentException if there are not enough bytes for an Integer value
+     * @throws NullPointerException if the value of byteOrder is null
+     */
+    public Integer getIntValue(final int formatType, @NotNull final ByteOrder byteOrder) {
+        Objects.requireNonNull(byteOrder);
+        Integer result = getIntValue(formatType, internalOffset, byteOrder);
+        internalOffset += getTypeLen(formatType);
+        return result;
     }
 
     /**
      * Return an Integer value of the specified type. This operation will not advance the internal offset to the next position.
      *
-     * <p>The formatType parameter determines how the byte array
-     * is to be interpreted. For example, settting formatType to
+     * The formatType parameter determines how the byte array
+     * is to be interpreted. For example, setting formatType to
      * {@link #FORMAT_UINT16} specifies that the first two bytes of the
      * byte array at the given offset are interpreted to generate the
      * return value.
@@ -224,10 +262,14 @@ public class BluetoothBytesParser {
      * @param formatType The format type used to interpret the byte array.
      * @param offset     Offset at which the integer value can be found.
      * @param byteOrder  the byte order, either LITTLE_ENDIAN or BIG_ENDIAN
-     * @return Cached value of the byte array or null of offset exceeds value size.
+     * @return an Integer value
+     * @throws IllegalArgumentException if there are not enough bytes for an Integer value
+     * @throws NullPointerException if the value of byteOrder is null
      */
     @NotNull
     public Integer getIntValue(final int formatType, final int offset, final ByteOrder byteOrder) {
+        Objects.requireNonNull(byteOrder);
+        if (offset < 0) throw new IllegalArgumentException(OFFSET_MUST_BE_GREATER_OR_EQUAL_TO_ZERO);
         if ((offset + getTypeLen(formatType)) > mValue.length) throw new IllegalArgumentException(INVALID_OFFSET);
 
         switch (formatType) {
@@ -268,17 +310,19 @@ public class BluetoothBytesParser {
                             mValue[offset + 2], mValue[offset + 1], mValue[offset]), 32);
         }
 
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException(UNSUPPORTED_FORMAT_TYPE);
     }
 
     /**
      * Return a float value of the specified format. This operation will automatically advance the internal offset to the next position.
      *
      * @param formatType The format type used to interpret the byte array
-     * @return The float value at the position of the internal offset
+     * @return The float value at the position of the internal offset and set ByteOrder
+     * @throws IllegalArgumentException if there are not enough bytes for an Float value
      */
+    @NotNull
     public Float getFloatValue(final int formatType) {
-        Float result = getFloatValue(formatType, internalOffset, byteOrder);
+        Float result = getFloatValue(formatType, internalOffset, internalByteOrder);
         internalOffset += getTypeLen(formatType);
         return result;
     }
@@ -289,22 +333,30 @@ public class BluetoothBytesParser {
      * @param formatType The format type used to interpret the byte array
      * @param byteOrder  the byte order, either LITTLE_ENDIAN or BIG_ENDIAN
      * @return The float value at the position of the internal offset
+     * @throws IllegalArgumentException if there are not enough bytes for an Float value
+     * @throws NullPointerException if the value of byteOrder is null
      */
-    public Float getFloatValue(final int formatType, final ByteOrder byteOrder) {
+    @NotNull
+    public Float getFloatValue(final int formatType, @NotNull final ByteOrder byteOrder) {
+        Objects.requireNonNull(byteOrder);
         Float result = getFloatValue(formatType, internalOffset, byteOrder);
         internalOffset += getTypeLen(formatType);
         return result;
     }
 
     /**
-     * Return a float value of the specified format, offset and byte order. This operation will not advance the internal offset to the next position.
+     * Return a Float value of the specified format, offset and byte order. This operation will not advance the internal offset to the next position.
      *
-     * @param formatType The format type used to interpret the byte array
+     * @param formatType The format type used to interpret the byte array (FORMAT_SFLOAT or FORMAT_FLOAT)
      * @param byteOrder  the byte order, either LITTLE_ENDIAN or BIG_ENDIAN
      * @return The float value at the position of the internal offset
+     * @throws IllegalArgumentException if there are not enough bytes for an Float value or if the formatType is not FORMAT_SFLOAT or FORMAT_FLOAT
+     * @throws NullPointerException if the value of byteOrder is null
      */
     @NotNull
-    public Float getFloatValue(final int formatType, final int offset, final ByteOrder byteOrder) {
+    public Float getFloatValue(final int formatType, final int offset, @NotNull final ByteOrder byteOrder) {
+        Objects.requireNonNull(byteOrder);
+        if (offset < 0) throw new IllegalArgumentException(OFFSET_MUST_BE_GREATER_OR_EQUAL_TO_ZERO);
         if ((offset + getTypeLen(formatType)) > mValue.length) throw new IllegalArgumentException(INVALID_OFFSET);
 
         switch (formatType) {
@@ -323,13 +375,13 @@ public class BluetoothBytesParser {
                             mValue[offset + 1], mValue[offset]);
         }
 
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException(UNSUPPORTED_FORMAT_TYPE);
     }
 
     /**
      * Return a String from this byte array. This operation will not advance the internal offset to the next position.
      *
-     * @return String value representated by the byte array
+     * @return String value represented by the byte array
      */
     public String getStringValue() {
         return getStringValue(internalOffset);
@@ -339,11 +391,12 @@ public class BluetoothBytesParser {
      * Return a String from this byte array. This operation will not advance the internal offset to the next position.
      *
      * @param offset Offset at which the string value can be found.
-     * @return String value representated by the byte array
+     * @return String value represented by the byte array
+     * @throws IllegalArgumentException if the offset is invalid
      */
     @NotNull
     public String getStringValue(final int offset) {
-        // Check if there are enough bytes to parse
+        if (offset < 0) throw new IllegalArgumentException(OFFSET_MUST_BE_GREATER_OR_EQUAL_TO_ZERO);
         if (mValue == null || offset > mValue.length) throw new IllegalArgumentException(INVALID_OFFSET);
 
         // Copy all bytes
@@ -360,10 +413,11 @@ public class BluetoothBytesParser {
 
     /**
      * Return a the date represented by the byte array.
-     * <p>
+     *
      * The byte array must conform to the DateTime specification (year, month, day, hour, min, sec)
      *
      * @return the Date represented by the byte array
+     * @throws IllegalArgumentException if there are not enough bytes to get a Date
      */
     @NotNull
     public Date getDateTime() {
@@ -377,9 +431,13 @@ public class BluetoothBytesParser {
      *
      * @param offset Offset of value
      * @return Parsed date from value
+     * @throws IllegalArgumentException if there are not enough bytes to get a Date
      */
     @NotNull
     public Date getDateTime(final int offset) {
+        if (offset < 0) throw new IllegalArgumentException(OFFSET_MUST_BE_GREATER_OR_EQUAL_TO_ZERO);
+        if ((offset + 7) > mValue.length) throw new IllegalArgumentException(INVALID_OFFSET);
+
         // DateTime is always in little endian
         int newOffset = offset;
         int year = getIntValue(FORMAT_UINT16, newOffset, LITTLE_ENDIAN);
@@ -403,15 +461,18 @@ public class BluetoothBytesParser {
      *
      * @return the complete byte array
      */
+    @NotNull
     public byte[] getValue() {
         return mValue;
     }
 
     /*
-     * Read bytes and return the ByteArray of the length passed in.  This will increment the offset
+     * Read bytes and return the ByteArray of the length passed.  This will increment the internal offset
      *
      * @return the byte array
+     * @throws IllegalArgumentException if length is longer than the remaining bytes counting from the internal offset
      */
+    @NotNull
     public byte[] getByteArray(final int length) {
         byte[] array = Arrays.copyOfRange(mValue, internalOffset, internalOffset + length);
         internalOffset += length;
@@ -424,9 +485,10 @@ public class BluetoothBytesParser {
      * @param value      New value for this byte array
      * @param formatType Integer format type used to transform the value parameter
      * @param offset     Offset at which the value should be placed
-     * @return true if the locally stored value has been set
+     * @throws IllegalArgumentException if the formatType is invalid for an Integer
      */
-    public boolean setIntValue(final int value, final int formatType, final int offset) {
+    public void setIntValue(final int value, final int formatType, final int offset) {
+        if (offset < 0) throw new IllegalArgumentException(OFFSET_MUST_BE_GREATER_OR_EQUAL_TO_ZERO);
         prepareArray(offset + getTypeLen(formatType));
 
         int newValue = value;
@@ -444,7 +506,7 @@ public class BluetoothBytesParser {
                 newValue = intToSignedBits(newValue, 16);
                 // Fall-through intended
             case FORMAT_UINT16:
-                if (byteOrder == LITTLE_ENDIAN) {
+                if (internalByteOrder == LITTLE_ENDIAN) {
                     mValue[newOffset++] = (byte) (newValue & 0xFF);
                     mValue[newOffset] = (byte) ((newValue >> 8) & 0xFF);
                 } else {
@@ -457,7 +519,7 @@ public class BluetoothBytesParser {
                 newValue = intToSignedBits(newValue, 32);
                 // Fall-through intended
             case FORMAT_UINT32:
-                if (byteOrder == LITTLE_ENDIAN) {
+                if (internalByteOrder == LITTLE_ENDIAN) {
                     mValue[newOffset++] = (byte) (newValue & 0xFF);
                     mValue[newOffset++] = (byte) ((newValue >> 8) & 0xFF);
                     mValue[newOffset++] = (byte) ((newValue >> 16) & 0xFF);
@@ -471,34 +533,30 @@ public class BluetoothBytesParser {
                 break;
 
             default:
-                return false;
+                throw new IllegalArgumentException(UNSUPPORTED_FORMAT_TYPE);
         }
-        return true;
     }
 
     /**
-     * Set byte array to an Integer with specified format.
+     * Set byte array to an Integer with specified format. This will increment the internal offset
      *
      * @param value      New value for this byte array
      * @param formatType Integer format type used to transform the value parameter
-     * @return true if the locally stored value has been set
+     * @throws IllegalArgumentException if the formatType is invalid for an Integer
      */
-    public boolean setIntValue(final int value, final int formatType) {
-        boolean result = setIntValue(value, formatType, internalOffset);
-        if (result) {
-            internalOffset += getTypeLen(formatType);
-        }
-        return result;
+    public void setIntValue(final int value, final int formatType) {
+        setIntValue(value, formatType, internalOffset);
+        internalOffset += getTypeLen(formatType);
     }
 
     /**
-     * Set byte array to a long
+     * Set byte array to a long. This will increment the internal offset
      *
      * @param value New long value for this byte array
-     * @return true if the locally stored value has been set
      */
-    public boolean setLong(final long value) {
-        return setLong(value, internalOffset);
+    public void setLong(final long value) {
+        setLong(value, internalOffset);
+        internalOffset += 8;
     }
 
     /**
@@ -506,13 +564,14 @@ public class BluetoothBytesParser {
      *
      * @param value  New long value for this byte array
      * @param offset Offset at which the value should be placed
-     * @return true if the locally stored value has been set
+     * @throws IllegalArgumentException if the offset is invalid
      */
-    public boolean setLong(final long value, final int offset) {
+    public void setLong(final long value, final int offset) {
+        if (offset < 0) throw new IllegalArgumentException(OFFSET_MUST_BE_GREATER_OR_EQUAL_TO_ZERO);
         prepareArray(offset + 8);
 
         long newValue = value;
-        if (byteOrder == ByteOrder.BIG_ENDIAN) {
+        if (internalByteOrder == ByteOrder.BIG_ENDIAN) {
             for (int i = 7; i >= 0; i--) {
                 mValue[i + offset] = (byte) (newValue & 0xFF);
                 newValue >>= 8;
@@ -523,8 +582,6 @@ public class BluetoothBytesParser {
                 newValue >>= 8;
             }
         }
-
-        return true;
     }
 
     /**
@@ -534,9 +591,10 @@ public class BluetoothBytesParser {
      * @param exponent   exponent value for this float value
      * @param formatType Float format type used to transform the value parameter
      * @param offset     Offset at which the value should be placed
-     * @return true if the locally stored value has been set
+     * @throws IllegalArgumentException if the offset is invalid or formatType is invalid for a Float
      */
-    public boolean setFloatValue(final int mantissa, final int exponent, final int formatType, final int offset) {
+    public void setFloatValue(final int mantissa, final int exponent, final int formatType, final int offset) {
+        if (offset < 0) throw new IllegalArgumentException(OFFSET_MUST_BE_GREATER_OR_EQUAL_TO_ZERO);
         prepareArray(offset + getTypeLen(formatType));
 
         int newMantissa = mantissa;
@@ -546,7 +604,7 @@ public class BluetoothBytesParser {
             case FORMAT_SFLOAT:
                 newMantissa = intToSignedBits(newMantissa, 12);
                 newExponent = intToSignedBits(newExponent, 4);
-                if (byteOrder == LITTLE_ENDIAN) {
+                if (internalByteOrder == LITTLE_ENDIAN) {
                     mValue[newOffset++] = (byte) (newMantissa & 0xFF);
                     mValue[newOffset] = (byte) ((newMantissa >> 8) & 0x0F);
                     mValue[newOffset] += (byte) ((newExponent & 0x0F) << 4);
@@ -560,7 +618,7 @@ public class BluetoothBytesParser {
             case FORMAT_FLOAT:
                 newMantissa = intToSignedBits(newMantissa, 24);
                 newExponent = intToSignedBits(newExponent, 8);
-                if (byteOrder == LITTLE_ENDIAN) {
+                if (internalByteOrder == LITTLE_ENDIAN) {
                     mValue[newOffset++] = (byte) (newMantissa & 0xFF);
                     mValue[newOffset++] = (byte) ((newMantissa >> 8) & 0xFF);
                     mValue[newOffset++] = (byte) ((newMantissa >> 16) & 0xFF);
@@ -572,39 +630,33 @@ public class BluetoothBytesParser {
                     mValue[newOffset] = (byte) (newMantissa & 0xFF);
                 }
                 break;
-
             default:
-                return false;
+                throw new IllegalArgumentException(UNSUPPORTED_FORMAT_TYPE);
         }
-
-        return true;
     }
 
     /**
-     * Create byte[] value from Float usingg a given precision, i.e. number of digits after the comma
+     * Set byte array to a Float using a given precision, i.e. number of digits after the comma
      *
      * @param value     Float value to create byte[] from
      * @param precision number of digits after the comma to use
-     * @return true if the locally stored value has been set
      */
-    public boolean setFloatValue(final float value, final int precision) {
+    public void setFloatValue(final float value, final int precision) {
         float mantissa = (float) (value * Math.pow(10, precision));
-        return setFloatValue((int) mantissa, -precision, FORMAT_FLOAT, internalOffset);
+        setFloatValue((int) mantissa, -precision, FORMAT_FLOAT, internalOffset);
+        internalOffset += getTypeLen(FORMAT_FLOAT);
     }
 
     /**
      * Set byte array to a string at current offset
      *
      * @param value String to be added to byte array
-     * @return true if the locally stored value has been set
+     * @throws NullPointerException if value is null
      */
-    public boolean setString(final String value) {
-        if (value != null) {
-            setString(value, internalOffset);
-            internalOffset += value.getBytes().length;
-            return true;
-        }
-        return false;
+    public void setString(@NotNull final String value) {
+        Objects.requireNonNull(value);
+        setString(value, internalOffset);
+        internalOffset += value.getBytes().length;
     }
 
     /**
@@ -612,16 +664,13 @@ public class BluetoothBytesParser {
      *
      * @param value  String to be added to byte array
      * @param offset the offset to place the string at
-     * @return true if the locally stored value has been set
+     * @throws NullPointerException if value is null
      */
-    public boolean setString(final String value, final int offset) {
-        if (value != null) {
-            prepareArray(offset + value.length());
-            byte[] valueBytes = value.getBytes();
-            System.arraycopy(valueBytes, 0, mValue, offset, valueBytes.length);
-            return true;
-        }
-        return false;
+    public void setString(final String value, final int offset) {
+        Objects.requireNonNull(value);
+        prepareArray(offset + value.length());
+        byte[] valueBytes = value.getBytes();
+        System.arraycopy(valueBytes, 0, mValue, offset, valueBytes.length);
     }
 
 
@@ -638,9 +687,9 @@ public class BluetoothBytesParser {
      * Sets the byte array to represent the current date in CurrentTime format
      *
      * @param calendar the calendar object representing the current date
-     * @return flase if the calendar object was null, otherwise true
+     * @throws NullPointerException if calendar is null
      */
-    public boolean setCurrentTime(@NotNull final Calendar calendar) {
+    public void setCurrentTime(@NotNull final Calendar calendar) {
         Objects.requireNonNull(calendar);
 
         mValue = new byte[10];
@@ -654,16 +703,15 @@ public class BluetoothBytesParser {
         mValue[7] = (byte) ((calendar.get(Calendar.DAY_OF_WEEK) + 5) % 7 + 1);
         mValue[8] = (byte) (calendar.get(Calendar.MILLISECOND) * 256 / 1000);
         mValue[9] = 1;
-        return true;
     }
 
     /**
      * Sets the byte array to represent the current date in CurrentTime format
      *
      * @param calendar the calendar object representing the current date
-     * @return flase if the calendar object was null, otherwise true
+     * @throws NullPointerException if calendar is null
      */
-    public boolean setDateTime(@NotNull final Calendar calendar) {
+    public void setDateTime(@NotNull final Calendar calendar) {
         Objects.requireNonNull(calendar);
 
         mValue = new byte[7];
@@ -674,7 +722,6 @@ public class BluetoothBytesParser {
         mValue[4] = (byte) calendar.get(Calendar.HOUR_OF_DAY);
         mValue[5] = (byte) calendar.get(Calendar.MINUTE);
         mValue[6] = (byte) calendar.get(Calendar.SECOND);
-        return true;
     }
 
     /**
@@ -809,8 +856,10 @@ public class BluetoothBytesParser {
 
     /**
      * Set the value of the internal offset
+     * @throws IllegalArgumentException if the offset is negative
      */
     public void setOffset(int offset) {
+        if (offset < 0) throw new IllegalArgumentException(OFFSET_MUST_BE_GREATER_OR_EQUAL_TO_ZERO);
         this.internalOffset = offset;
     }
 
@@ -818,7 +867,7 @@ public class BluetoothBytesParser {
      * Get the set byte order
      */
     public @NotNull ByteOrder getByteOrder() {
-        return byteOrder;
+        return internalByteOrder;
     }
 
     private void prepareArray(int neededLength) {
