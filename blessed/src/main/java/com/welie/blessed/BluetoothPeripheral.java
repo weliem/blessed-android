@@ -172,9 +172,11 @@ public class BluetoothPeripheral {
                         break;
                     case BluetoothProfile.STATE_DISCONNECTING:
                         Logger.i(TAG,"peripheral '%s' is disconnecting", getAddress());
+                        listener.disconnecting(BluetoothPeripheral.this);
                         break;
                     case BluetoothProfile.STATE_CONNECTING:
                         Logger.i(TAG,"peripheral '%s' is connecting", getAddress());
+                        listener.connecting(BluetoothPeripheral.this);
                         break;
                     default:
                         Logger.e(TAG,"unknown state received");
@@ -1736,27 +1738,41 @@ public class BluetoothPeripheral {
     interface InternalCallback {
 
         /**
+         * Trying to connect to {@link BluetoothPeripheral}
+         *
+         * @param peripheral {@link BluetoothPeripheral} the peripheral.
+         */
+        void connecting(@NotNull BluetoothPeripheral peripheral);
+
+        /**
          * {@link BluetoothPeripheral} has successfully connected.
          *
-         * @param device {@link BluetoothPeripheral} that connected.
+         * @param peripheral {@link BluetoothPeripheral} that connected.
          */
-        void connected(@NotNull BluetoothPeripheral device);
+        void connected(@NotNull BluetoothPeripheral peripheral);
 
         /**
          * Connecting with {@link BluetoothPeripheral} has failed.
          *
-         * @param device {@link BluetoothPeripheral} of which connect failed.
+         * @param peripheral {@link BluetoothPeripheral} of which connect failed.
          */
-        void connectFailed(@NotNull BluetoothPeripheral device, @NotNull final HciStatus status);
+        void connectFailed(@NotNull BluetoothPeripheral peripheral, @NotNull final HciStatus status);
+
+        /**
+         * Trying to disconnect to {@link BluetoothPeripheral}
+         *
+         * @param peripheral {@link BluetoothPeripheral} the peripheral.
+         */
+        void disconnecting(@NotNull BluetoothPeripheral peripheral);
 
         /**
          * {@link BluetoothPeripheral} has disconnected.
          *
-         * @param device {@link BluetoothPeripheral} that disconnected.
+         * @param peripheral {@link BluetoothPeripheral} that disconnected.
          */
-        void disconnected(@NotNull BluetoothPeripheral device, @NotNull final HciStatus status);
+        void disconnected(@NotNull BluetoothPeripheral peripheral, @NotNull final HciStatus status);
 
-        String getPincode(@NotNull BluetoothPeripheral device);
+        String getPincode(@NotNull BluetoothPeripheral peripheral);
 
     }
 

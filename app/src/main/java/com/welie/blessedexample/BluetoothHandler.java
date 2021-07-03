@@ -319,7 +319,6 @@ class BluetoothHandler {
                     central.autoConnectPeripheral(peripheral, peripheralCallback);
                 }
             }, 5000);
-
         }
 
         @Override

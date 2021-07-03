@@ -33,6 +33,13 @@ import org.jetbrains.annotations.NotNull;
 public abstract class BluetoothCentralManagerCallback {
 
     /**
+     * Trying to connected with a peripheral.
+     *
+     * @param peripheral the peripheral that is connecting
+     */
+    public void onConnectingPeripheral(@NotNull BluetoothPeripheral peripheral) {}
+
+    /**
      * Successfully connected with a peripheral.
      *
      * @param peripheral the peripheral that was connected.
@@ -46,6 +53,13 @@ public abstract class BluetoothCentralManagerCallback {
      * @param status the status code for the connection failure
      */
     public void onConnectionFailed(@NotNull BluetoothPeripheral peripheral, @NotNull HciStatus status) {}
+
+    /**
+     * Trying to disconnect peripheral
+     *
+     * @param peripheral the peripheral we are trying to disconnect
+     */
+    public void onDisconnectingPeripheral(@NotNull BluetoothPeripheral peripheral) {}
 
     /**
      * Peripheral disconnected

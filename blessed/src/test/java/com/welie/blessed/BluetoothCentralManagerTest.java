@@ -445,6 +445,9 @@ public class BluetoothCentralManagerTest {
 
         // Then
         verify(peripheral).connect();
+        central.internalCallback.connecting(peripheral);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+        verify(callback).onConnectingPeripheral(peripheral);
 
         // When
         central.internalCallback.connected(peripheral);
@@ -643,6 +646,13 @@ public class BluetoothCentralManagerTest {
         when(peripheral.getType()).thenReturn(PeripheralType.LE);
         central.autoConnectPeripheral(peripheral, peripheralCallback);
         verify(peripheral).autoConnect();
+
+        // When
+        central.internalCallback.connecting(peripheral);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        // Then
+        verify(callback).onConnectingPeripheral(peripheral);
 
         // When
         central.internalCallback.connected(peripheral);

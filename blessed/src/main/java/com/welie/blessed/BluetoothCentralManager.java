@@ -204,6 +204,16 @@ public class BluetoothCentralManager {
 
     protected final BluetoothPeripheral.InternalCallback internalCallback = new BluetoothPeripheral.InternalCallback() {
         @Override
+        public void connecting(@NotNull final BluetoothPeripheral peripheral) {
+            callBackHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    bluetoothCentralManagerCallback.onConnectingPeripheral(peripheral);
+                }
+            });
+        }
+
+        @Override
         public void connected(@NotNull final BluetoothPeripheral peripheral) {
             connectionRetries.remove(peripheral.getAddress());
             unconnectedPeripherals.remove(peripheral.getAddress());
@@ -248,6 +258,16 @@ public class BluetoothCentralManager {
         }
 
         @Override
+        public void disconnecting(@NotNull final BluetoothPeripheral peripheral) {
+            callBackHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    bluetoothCentralManagerCallback.onDisconnectingPeripheral(peripheral);
+                }
+            });
+        }
+
+        @Override
         public void disconnected(@NotNull final BluetoothPeripheral peripheral, @NotNull final HciStatus status) {
             if (expectingBluetoothOffDisconnects) {
                 cancelDisconnectionTimer();
@@ -268,8 +288,8 @@ public class BluetoothCentralManager {
         }
 
         @Override
-        public @Nullable String getPincode(@NotNull final BluetoothPeripheral device) {
-            return pinCodes.get(device.getAddress());
+        public @Nullable String getPincode(@NotNull final BluetoothPeripheral peripheral) {
+            return pinCodes.get(peripheral.getAddress());
         }
     };
 
