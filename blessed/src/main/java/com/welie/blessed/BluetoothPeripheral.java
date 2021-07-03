@@ -171,10 +171,10 @@ public class BluetoothPeripheral {
                         successfullyDisconnected(previousState);
                         break;
                     case BluetoothProfile.STATE_DISCONNECTING:
-                        Logger.i(TAG,"peripheral is disconnecting");
+                        Logger.i(TAG,"peripheral '%s' is disconnecting", getAddress());
                         break;
                     case BluetoothProfile.STATE_CONNECTING:
-                        Logger.i(TAG,"peripheral is connecting");
+                        Logger.i(TAG,"peripheral '%s' is connecting", getAddress());
                         break;
                     default:
                         Logger.e(TAG,"unknown state received");
@@ -676,9 +676,10 @@ public class BluetoothPeripheral {
                     // Connect to device with autoConnect = false
                     Logger.i(TAG,"connect to '%s' (%s) using TRANSPORT_LE", getName(), getAddress());
                     registerBondingBroadcastReceivers();
-                    state = BluetoothProfile.STATE_CONNECTING;
                     discoveryStarted = false;
                     bluetoothGatt = connectGattHelper(device, false, bluetoothGattCallback);
+                    ConnectionState newState = getState();
+                    bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTING);
                     connectTimestamp = SystemClock.elapsedRealtime();
                     startConnectionTimer(BluetoothPeripheral.this);
                 }
@@ -702,9 +703,9 @@ public class BluetoothPeripheral {
                     // Connect to device with autoConnect = true
                     Logger.i(TAG,"autoConnect to '%s' (%s) using TRANSPORT_LE", getName(), getAddress());
                     registerBondingBroadcastReceivers();
-                    state = BluetoothProfile.STATE_CONNECTING;
                     discoveryStarted = false;
                     bluetoothGatt = connectGattHelper(device, true, bluetoothGattCallback);
+                    bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTING);
                     connectTimestamp = SystemClock.elapsedRealtime();
                 }
             });
@@ -802,7 +803,7 @@ public class BluetoothPeripheral {
      */
     private void disconnect() {
         if (state == BluetoothProfile.STATE_CONNECTED || state == BluetoothProfile.STATE_CONNECTING) {
-            this.state = BluetoothProfile.STATE_DISCONNECTING;
+            bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_DISCONNECTED);
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
