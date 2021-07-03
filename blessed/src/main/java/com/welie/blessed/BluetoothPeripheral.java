@@ -678,7 +678,6 @@ public class BluetoothPeripheral {
                     registerBondingBroadcastReceivers();
                     discoveryStarted = false;
                     bluetoothGatt = connectGattHelper(device, false, bluetoothGattCallback);
-                    ConnectionState newState = getState();
                     bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTING);
                     connectTimestamp = SystemClock.elapsedRealtime();
                     startConnectionTimer(BluetoothPeripheral.this);

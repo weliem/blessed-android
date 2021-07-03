@@ -45,6 +45,7 @@ import static android.bluetooth.BluetoothProfile.STATE_DISCONNECTED;
 import static android.os.Build.VERSION_CODES.M;
 import static android.os.Build.VERSION_CODES.O_MR1;
 import static com.welie.blessed.ConnectionState.CONNECTED;
+import static com.welie.blessed.ConnectionState.CONNECTING;
 import static com.welie.blessed.ConnectionState.DISCONNECTED;
 import static com.welie.blessed.ConnectionState.DISCONNECTING;
 import static junit.framework.Assert.assertFalse;
@@ -118,6 +119,8 @@ public class BluetoothPeripheralTest {
         peripheral.connect();
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
+        assertEquals(CONNECTING,  peripheral.getState());
+
         ArgumentCaptor<BluetoothGattCallback> captor = ArgumentCaptor.forClass(BluetoothGattCallback.class);
         verify(device).connectGatt(any(Context.class), anyBoolean(), captor.capture(), anyInt());
         BluetoothGattCallback callback = captor.getValue();
@@ -132,6 +135,8 @@ public class BluetoothPeripheralTest {
         // When
         peripheral.autoConnect();
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        assertEquals(CONNECTING,  peripheral.getState());
 
         ArgumentCaptor<BluetoothGattCallback> captor = ArgumentCaptor.forClass(BluetoothGattCallback.class);
         ArgumentCaptor<Boolean> autoConnectCaptor = ArgumentCaptor.forClass(Boolean.class);
