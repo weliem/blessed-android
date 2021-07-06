@@ -161,6 +161,8 @@ public class BluetoothPeripheral {
             final int previousState = state;
             state = newState;
 
+			Logger.i(TAG, "onConnectionStateChange for %s  previousState: '%s' newState:'%s' with status: '%s'", getAddress(), previousState, newState, status);
+
             final HciStatus hciStatus = HciStatus.fromValue(status);
             if (hciStatus == HciStatus.SUCCESS) {
                 switch (newState) {
