@@ -1686,6 +1686,10 @@ public class BluetoothPeripheral {
                 return;
             }
 
+            if (getBondState() == BondState.BONDING) {
+                Logger.w(TAG, "bonding is in progress, command may fail");
+            }
+
             // Execute the next command in the queue
             commandQueueBusy = true;
             if (!isRetrying) {
