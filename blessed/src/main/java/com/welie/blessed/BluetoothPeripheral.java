@@ -145,6 +145,7 @@ public class BluetoothPeripheral {
     private boolean isRetrying;
     private boolean bondLost = false;
     private boolean manuallyBonding = false;
+    private volatile boolean peripheralInitiatedBonding = false;
     private boolean discoveryStarted = false;
     private volatile int state = BluetoothProfile.STATE_DISCONNECTED;
     private int nrTries;
@@ -591,6 +592,13 @@ public class BluetoothPeripheral {
                     manuallyBonding = false;
                     completedCommand();
                 }
+
+                // If the peripheral initated the bonding, continue the queue
+                if (peripheralInitiatedBonding) {
+                    peripheralInitiatedBonding = false;
+                    nextCommand();
+                }
+
                 break;
             case BOND_NONE:
                 if (previousBondState == BOND_BONDING) {
@@ -1686,8 +1694,11 @@ public class BluetoothPeripheral {
                 return;
             }
 
+            // Check if the peripheral has initiated bonding as this may be a reason for failures
             if (getBondState() == BondState.BONDING) {
-                Logger.w(TAG, "bonding is in progress, command may fail");
+                Logger.w(TAG, "bonding is in progress, waiting for bonding to complete");
+                peripheralInitiatedBonding = true;
+                return;
             }
 
             // Execute the next command in the queue

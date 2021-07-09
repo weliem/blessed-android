@@ -290,6 +290,7 @@ An example application is provided in the repo. It shows how to connect to Blood
 * Polar H7/H10/OH1 heartrate monitors
 * Contour Next One glucose meter
 * Accu-Chek Instant glucose meter
+* Omron X4 Smart
 
 ## Acknowledgements
 
