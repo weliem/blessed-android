@@ -61,7 +61,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import static android.bluetooth.BluetoothDevice.BOND_BONDED;
 import static android.bluetooth.BluetoothDevice.BOND_BONDING;
 import static android.bluetooth.BluetoothDevice.BOND_NONE;
-import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_INDICATE;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_NOTIFY;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_READ;
@@ -151,6 +150,7 @@ public class BluetoothPeripheral {
     private int nrTries;
     private long connectTimestamp;
     private int currentMtu = DEFAULT_MTU;
+    private Transport transport;
 
     /**
      * This abstract class is used to implement BluetoothGatt callbacks.
@@ -657,13 +657,15 @@ public class BluetoothPeripheral {
      * @param context  Android application environment.
      * @param device   Wrapped Android bluetooth device.
      * @param listener Callback to {@link BluetoothCentralManager}.
+     * @param transport Transport to be used during connection phase.
      */
-    BluetoothPeripheral(@NotNull final Context context, @NotNull final BluetoothDevice device, @NotNull final InternalCallback listener, @NotNull final BluetoothPeripheralCallback peripheralCallback, @NotNull final Handler callbackHandler) {
+    BluetoothPeripheral(@NotNull final Context context, @NotNull final BluetoothDevice device, @NotNull final InternalCallback listener, @NotNull final BluetoothPeripheralCallback peripheralCallback, @NotNull final Handler callbackHandler, @NotNull final Transport transport) {
         this.context = Objects.requireNonNull(context, "no valid context provided");
         this.device = Objects.requireNonNull(device, NO_VALID_DEVICE_PROVIDED);
         this.listener = Objects.requireNonNull(listener, "no valid listener provided");
         this.peripheralCallback = Objects.requireNonNull(peripheralCallback, NO_VALID_PERIPHERAL_CALLBACK_PROVIDED);
         this.callbackHandler = Objects.requireNonNull(callbackHandler, "no valid callback handler provided");
+        this.transport =  Objects.requireNonNull(transport, "no valid transport provided");
     }
 
     void setPeripheralCallback(@NotNull final BluetoothPeripheralCallback peripheralCallback) {
@@ -684,7 +686,7 @@ public class BluetoothPeripheral {
                 @Override
                 public void run() {
                     // Connect to device with autoConnect = false
-                    Logger.i(TAG,"connect to '%s' (%s) using TRANSPORT_LE", getName(), getAddress());
+                    Logger.i(TAG,"connect to '%s' (%s) using transport %s", getName(), getAddress(), transport.name());
                     registerBondingBroadcastReceivers();
                     discoveryStarted = false;
                     bluetoothGatt = connectGattHelper(device, false, bluetoothGattCallback);
@@ -710,7 +712,7 @@ public class BluetoothPeripheral {
                 @Override
                 public void run() {
                     // Connect to device with autoConnect = true
-                    Logger.i(TAG,"autoConnect to '%s' (%s) using TRANSPORT_LE", getName(), getAddress());
+                    Logger.i(TAG,"autoConnect to '%s' (%s) using transport %s", getName(), getAddress(), transport.name());
                     registerBondingBroadcastReceivers();
                     discoveryStarted = false;
                     bluetoothGatt = connectGattHelper(device, true, bluetoothGattCallback);
@@ -989,6 +991,14 @@ public class BluetoothPeripheral {
             default:
                 return currentMtu - 3;
         }
+    }
+
+    /**
+     * Returns the transport used during connection phase.
+     * @return the Transport.
+     */
+    public Transport getTransport() {
+        return transport;
     }
 
     /**
@@ -1847,13 +1857,13 @@ public class BluetoothPeripheral {
 
     private BluetoothGatt connectGattCompat(BluetoothGattCallback bluetoothGattCallback, BluetoothDevice device, boolean autoConnect) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return device.connectGatt(context, autoConnect, bluetoothGattCallback, TRANSPORT_LE);
+            return device.connectGatt(context, autoConnect, bluetoothGattCallback, transport.value);
         } else {
-            // Try to call connectGatt with TRANSPORT_LE parameter using reflection
+            // Try to call connectGatt with transport parameter using reflection
             try {
                 Method connectGattMethod = device.getClass().getMethod("connectGatt", Context.class, boolean.class, BluetoothGattCallback.class, int.class);
                 try {
-                    return (BluetoothGatt) connectGattMethod.invoke(device, context, autoConnect, bluetoothGattCallback, TRANSPORT_LE);
+                    return (BluetoothGatt) connectGattMethod.invoke(device, context, autoConnect, bluetoothGattCallback, transport.value);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     e.printStackTrace();
                 }
@@ -1861,7 +1871,7 @@ public class BluetoothPeripheral {
                 e.printStackTrace();
             }
         }
-        // Fallback on connectGatt without TRANSPORT_LE parameter
+        // Fallback on connectGatt without transport parameter
         return device.connectGatt(context, autoConnect, bluetoothGattCallback);
     }
 
@@ -1879,7 +1889,7 @@ public class BluetoothPeripheral {
         Constructor bluetoothGattConstructor = BluetoothGatt.class.getDeclaredConstructors()[0];
         bluetoothGattConstructor.setAccessible(true);
         if (bluetoothGattConstructor.getParameterTypes().length == 4) {
-            return (BluetoothGatt) (bluetoothGattConstructor.newInstance(context, iBluetoothGatt, remoteDevice, TRANSPORT_LE));
+            return (BluetoothGatt) (bluetoothGattConstructor.newInstance(context, iBluetoothGatt, remoteDevice, transport.value));
         } else {
             return (BluetoothGatt) (bluetoothGattConstructor.newInstance(context, iBluetoothGatt, remoteDevice));
         }

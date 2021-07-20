@@ -67,6 +67,7 @@ public class BluetoothCentralManager {
     private static final long SCAN_TIMEOUT = 180_000L;
     private static final int SCAN_RESTART_DELAY = 1000;
     private static final int MAX_CONNECTION_RETRIES = 1;
+    private static final Transport DEFAULT_TRANSPORT = Transport.LE;
 
     private static final String NO_PERIPHERAL_ADDRESS_PROVIDED = "no peripheral address provided";
     private static final String NO_VALID_PERIPHERAL_PROVIDED = "no valid peripheral provided";
@@ -96,6 +97,7 @@ public class BluetoothCentralManager {
     private boolean expectingBluetoothOffDisconnects = false;
     private @Nullable Runnable disconnectRunnable;
     private @NotNull final Map<String, String> pinCodes = new ConcurrentHashMap<>();
+    private @NotNull Transport transport = DEFAULT_TRANSPORT;
 
     //region Callbacks
 
@@ -369,6 +371,24 @@ public class BluetoothCentralManager {
         Objects.requireNonNull(scanMode);
 
         scanSettings = getScanSettings(scanMode);
+    }
+
+    /**
+     * Get the transport to be used during connection phase.
+     *
+     * @return transport
+     */
+    public Transport getTransport() {
+        return transport;
+    }
+
+    /**
+     * Set the transport to be used when creating instances of {@link BluetoothPeripheral}.
+     *
+     * @param transport the Transport to set
+     */
+    public void setTransport(@NotNull Transport transport) {
+        this.transport = transport;
     }
 
     private void startScan(@NotNull final List<ScanFilter> filters, @NotNull final ScanSettings scanSettings, @NotNull final ScanCallback scanCallback) {
@@ -731,7 +751,7 @@ public class BluetoothCentralManager {
         } else if (scannedPeripherals.containsKey(peripheralAddress)) {
             return Objects.requireNonNull(scannedPeripherals.get(peripheralAddress));
         } else {
-            final BluetoothPeripheral peripheral = new BluetoothPeripheral(context, bluetoothAdapter.getRemoteDevice(peripheralAddress), internalCallback, new BluetoothPeripheralCallback.NULL(), callBackHandler);
+            final BluetoothPeripheral peripheral = new BluetoothPeripheral(context, bluetoothAdapter.getRemoteDevice(peripheralAddress), internalCallback, new BluetoothPeripheralCallback.NULL(), callBackHandler, transport);
             scannedPeripherals.put(peripheralAddress, peripheral);
             return peripheral;
         }
