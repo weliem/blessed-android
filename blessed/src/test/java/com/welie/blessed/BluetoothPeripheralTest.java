@@ -54,6 +54,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
@@ -102,6 +103,8 @@ public class BluetoothPeripheralTest {
     @Captor
     ArgumentCaptor<GattStatus> captorGattStatus;
 
+    private final Transport transport = Transport.LE;
+
     @Before
     public void setUp() {
         openMocks(this);
@@ -110,7 +113,7 @@ public class BluetoothPeripheralTest {
         when(device.connectGatt(any(Context.class), anyBoolean(), any(BluetoothGattCallback.class), anyInt())).thenReturn(gatt);
         when(gatt.getDevice()).thenReturn(device);
 
-        peripheral = new BluetoothPeripheral(context, device, internalCallback, peripheralCallback, handler);
+        peripheral = new BluetoothPeripheral(context, device, internalCallback, peripheralCallback, handler, transport);
     }
 
     @Test
@@ -122,7 +125,7 @@ public class BluetoothPeripheralTest {
         assertEquals(CONNECTING,  peripheral.getState());
 
         ArgumentCaptor<BluetoothGattCallback> captor = ArgumentCaptor.forClass(BluetoothGattCallback.class);
-        verify(device).connectGatt(any(Context.class), anyBoolean(), captor.capture(), anyInt());
+        verify(device).connectGatt(any(Context.class), anyBoolean(), captor.capture(), eq(transport.value));
         BluetoothGattCallback callback = captor.getValue();
         callback.onConnectionStateChange(gatt, GATT_SUCCESS, STATE_CONNECTED);
 

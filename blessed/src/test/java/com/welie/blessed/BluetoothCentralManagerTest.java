@@ -1,7 +1,6 @@
 package com.welie.blessed;
 
 import android.Manifest;
-
 import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -10,9 +9,12 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Handler;
+
+import androidx.test.core.app.ApplicationProvider;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -50,10 +52,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static org.robolectric.Shadows.shadowOf;
-
-import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(manifest=Config.NONE, sdk = { M }, shadows={ShadowBluetoothLEAdapter.class} )
@@ -911,5 +909,21 @@ public class BluetoothCentralManagerTest {
     public void When_permission_are_not_correct_then_a_scan_is_not_attempted() {
         central.scanForPeripherals();
         verify(scanner, never()).startScan(ArgumentMatchers.<ScanFilter>anyList(), any(ScanSettings.class), any(ScanCallback.class));
+    }
+
+    @Test
+    public void Given_a_transport_when_getPeripheral_is_called_a_peripheral_is_returned_with_specified_transport() {
+        // Given
+        String address = "AC:DE:EF:12:34:56";
+        BluetoothDevice device = mock(BluetoothDevice.class);
+        when(device.getAddress()).thenReturn(address);
+        bluetoothAdapter.addDevice(device);
+
+        central.setTransport(Transport.BR_EDR);
+
+        // Get peripheral and supply lowercase mac address
+        BluetoothPeripheral peripheral = central.getPeripheral(address);
+        assertNotNull(peripheral);
+        assertEquals(Transport.BR_EDR, peripheral.getTransport());
     }
 }
