@@ -177,8 +177,7 @@ public class BluetoothCentralManager {
 
                 reconnectPeripheralAddresses.remove(deviceAddress);
                 reconnectCallbacks.remove(deviceAddress);
-                unconnectedPeripherals.remove(deviceAddress);
-                scannedPeripherals.remove(deviceAddress);
+                removePeripheralFromCaches(deviceAddress);
 
                 if (peripheral != null && callback != null) {
                     connectPeripheral(peripheral, callback);
@@ -217,10 +216,9 @@ public class BluetoothCentralManager {
 
         @Override
         public void connected(@NotNull final BluetoothPeripheral peripheral) {
-            connectionRetries.remove(peripheral.getAddress());
-            unconnectedPeripherals.remove(peripheral.getAddress());
-            scannedPeripherals.remove((peripheral.getAddress()));
-            connectedPeripherals.put(peripheral.getAddress(), peripheral);
+            final String peripheralAddress = peripheral.getAddress();
+            removePeripheralFromCaches(peripheralAddress);
+            connectedPeripherals.put(peripheralAddress, peripheral);
 
             callBackHandler.post(new Runnable() {
                 @Override
@@ -232,24 +230,24 @@ public class BluetoothCentralManager {
 
         @Override
         public void connectFailed(@NotNull final BluetoothPeripheral peripheral, @NotNull final HciStatus status) {
-            unconnectedPeripherals.remove(peripheral.getAddress());
-            scannedPeripherals.remove((peripheral.getAddress()));
+            final String peripheralAddress = peripheral.getAddress();
 
             // Get the number of retries for this peripheral
             int nrRetries = 0;
-            Integer retries = connectionRetries.get(peripheral.getAddress());
+            final Integer retries = connectionRetries.get(peripheralAddress);
             if (retries != null) nrRetries = retries;
+
+            removePeripheralFromCaches(peripheralAddress);
 
             // Retry connection or conclude the connection has failed
             if (nrRetries < MAX_CONNECTION_RETRIES && status != HciStatus.CONNECTION_FAILED_ESTABLISHMENT) {
-                Logger.i(TAG,"retrying connection to '%s' (%s)", peripheral.getName(), peripheral.getAddress());
+                Logger.i(TAG,"retrying connection to '%s' (%s)", peripheral.getName(), peripheralAddress);
                 nrRetries++;
-                connectionRetries.put(peripheral.getAddress(), nrRetries);
-                unconnectedPeripherals.put(peripheral.getAddress(), peripheral);
+                connectionRetries.put(peripheralAddress, nrRetries);
+                unconnectedPeripherals.put(peripheralAddress, peripheral);
                 peripheral.connect();
             } else {
-                Logger.i(TAG,"connection to '%s' (%s) failed", peripheral.getName(), peripheral.getAddress());
-                connectionRetries.remove(peripheral.getAddress());
+                Logger.i(TAG,"connection to '%s' (%s) failed", peripheral.getName(), peripheralAddress);
                 callBackHandler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -276,11 +274,7 @@ public class BluetoothCentralManager {
                 expectingBluetoothOffDisconnects = false;
             }
 
-            connectedPeripherals.remove(peripheral.getAddress());
-            unconnectedPeripherals.remove(peripheral.getAddress());
-            scannedPeripherals.remove((peripheral.getAddress()));
-            connectionRetries.remove(peripheral.getAddress());
-
+            removePeripheralFromCaches(peripheral.getAddress());
             callBackHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -294,6 +288,13 @@ public class BluetoothCentralManager {
             return pinCodes.get(peripheral.getAddress());
         }
     };
+
+    private void removePeripheralFromCaches(String peripheralAddress) {
+        connectedPeripherals.remove(peripheralAddress);
+        unconnectedPeripherals.remove(peripheralAddress);
+        scannedPeripherals.remove(peripheralAddress);
+        connectionRetries.remove(peripheralAddress);
+    }
 
     //endregion
 
@@ -321,11 +322,13 @@ public class BluetoothCentralManager {
      * Closes BluetoothCentralManager and cleans up internals. BluetoothCentralManager will not work anymore after this is called.
      */
     public void close() {
+        scannedPeripherals.clear();
         unconnectedPeripherals.clear();
         connectedPeripherals.clear();
         reconnectCallbacks.clear();
         reconnectPeripheralAddresses.clear();
-        scannedPeripherals.clear();
+        connectionRetries.clear();
+        pinCodes.clear();
         context.unregisterReceiver(adapterStateReceiver);
     }
 
@@ -343,7 +346,7 @@ public class BluetoothCentralManager {
         Logger.enabled = false;
     }
 
-    private ScanSettings getScanSettings(@NotNull final ScanMode scanMode) {
+    private @NotNull ScanSettings getScanSettings(@NotNull final ScanMode scanMode) {
         Objects.requireNonNull(scanMode, "scanMode is null");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -378,7 +381,7 @@ public class BluetoothCentralManager {
      *
      * @return transport
      */
-    public Transport getTransport() {
+    public @NotNull Transport getTransport() {
         return transport;
     }
 
@@ -387,8 +390,8 @@ public class BluetoothCentralManager {
      *
      * @param transport the Transport to set
      */
-    public void setTransport(@NotNull Transport transport) {
-        this.transport = transport;
+    public void setTransport(@NotNull final Transport transport) {
+        this.transport = Objects.requireNonNull(transport, "not a valid transport");
     }
 
     private void startScan(@NotNull final List<ScanFilter> filters, @NotNull final ScanSettings scanSettings, @NotNull final ScanCallback scanCallback) {
