@@ -805,6 +805,9 @@ public class BluetoothCentralManager {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && targetSdkVersion >= Build.VERSION_CODES.S) {
             if (context.checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
                 throw new SecurityException("app does not have BLUETOOTH_SCAN permission, cannot start scan");
+            }
+            if (context.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                throw new SecurityException("app does not have BLUETOOTH_CONNECT permission, cannot connect");
             } else return true;
         }
         else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && targetSdkVersion >= Build.VERSION_CODES.Q) {
