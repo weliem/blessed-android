@@ -480,15 +480,22 @@ public class BluetoothPeripheral {
         }
 
         if (bondLost) {
-            completeDisconnect(false, HciStatus.SUCCESS);
+            Logger.d(TAG, "disconnected because of bond lost");
 
-            // Consider the loss of the bond a connection failure so that a connection retry will take place
+            // Give the stack some time to register the bond loss internally. This is needed on most phones...
             callbackHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    listener.connectFailed(BluetoothPeripheral.this, HciStatus.SUCCESS);
+                    if (getServices().isEmpty()) {
+                        // Service discovery was not completed yet so consider it a connectionFailure
+                        completeDisconnect(false, HciStatus.AUTHENTICATION_FAILURE);
+                        listener.connectFailed(BluetoothPeripheral.this, HciStatus.AUTHENTICATION_FAILURE);
+                    } else {
+                        // Bond was lost after a succesful connection was established
+                        completeDisconnect(true, HciStatus.AUTHENTICATION_FAILURE);
+                    }
                 }
-            }, DELAY_AFTER_BOND_LOST); // Give the stack some time to register the bond loss internally. This is needed on most phones...
+            }, DELAY_AFTER_BOND_LOST);
         } else {
             completeDisconnect(true, HciStatus.SUCCESS);
         }
@@ -623,7 +630,28 @@ public class BluetoothPeripheral {
                         }
                     });
                 }
-                disconnect();
+
+                // There are 2 scenarios here:
+                // 1. The user removed the peripheral from the list of paired devices in the settings menu
+                // 2. The peripheral bonded with another phone after the last connection
+                //
+                // In both scenarios we want to end up in a disconnected state.
+                // When removing a bond via the settings menu, Android will disconnect the peripheral itself.
+                // However, the disconnected event (CONNECTION_TERMINATED_BY_LOCAL_HOST) will come either before or after the bond state update and on a different thread
+                // Note that on the Samsung J5 (J530F) the disconnect happens but no bond change is received!
+                // And in case of scenario 2 we may need to issue a disconnect ourselves.
+                // Therefor to solve this race condition, add a bit of delay to see if a disconnect is needed for scenario 2
+                mainHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                    if (getState() == ConnectionState.CONNECTED) {
+                        // If we are still connected, then disconnect because we usually can't interact with the peripheral anymore
+                        // Some peripherals already do a diconnect by themselves (REMOTE_USER_TERMINATED_CONNECTION) so we may already be disconnected
+                        disconnect();
+                    }
+                    }
+                }, 100);
+
                 break;
         }
     }
