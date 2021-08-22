@@ -1,6 +1,7 @@
 # BLESSED for Android - BLE made easy
 
 [![](https://jitpack.io/v/weliem/blessed-android.svg)](https://jitpack.io/#weliem/blessed-android)
+[![Downloads](https://jitpack.io/v/weliem/blessed-android/month.svg)](https://jitpack.io/#weliem/blessed-android)
 [![Android Build](https://github.com/weliem/blessed-android/actions/workflows/gradle.yml/badge.svg)](https://github.com/weliem/blessed-android/actions/workflows/gradle.yml)
 
 BLESSED is a very compact Bluetooth Low Energy (BLE) library for Android 5 and higher, that makes working with BLE on Android very easy. It takes care of many aspects of working with BLE you would normally have to take care of yourself like:
