@@ -208,8 +208,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void permissionsGranted() {
-        // Check if Location services are on because they are required to make scanning work
-        if (checkLocationServices()) {
+        // Check if Location services are on because they are required to make scanning work for SDK < 31
+        int targetSdkVersion = getApplicationInfo().targetSdkVersion;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S && targetSdkVersion < Build.VERSION_CODES.S) {
+            if (checkLocationServices()) {
+                initBluetoothHandler();
+            }
+        } else {
             initBluetoothHandler();
         }
     }
