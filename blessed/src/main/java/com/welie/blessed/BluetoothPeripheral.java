@@ -150,7 +150,7 @@ public class BluetoothPeripheral {
     private int nrTries;
     private long connectTimestamp;
     private int currentMtu = DEFAULT_MTU;
-    private Transport transport;
+    private final Transport transport;
 
     /**
      * This abstract class is used to implement BluetoothGatt callbacks.
@@ -428,6 +428,16 @@ public class BluetoothPeripheral {
                     peripheralCallback.onConnectionUpdated(BluetoothPeripheral.this, interval, latency, timeout, gattStatus);
                 }
             });
+        }
+
+        @Override
+        public void onServiceChanged(BluetoothGatt gatt) {
+            Logger.d(TAG, "onServiceChangedCalled");
+
+            // Does it realy make sense to discover services? Or should we just disconnect and reconnect?
+            commandQueue.clear();
+            commandQueueBusy = false;
+            delayedDiscoverServices(100);
         }
     };
 
