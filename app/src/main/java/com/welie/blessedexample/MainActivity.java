@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        BluetoothManager manager = Objects.requireNonNull((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE),"cannot get BluetoothManager");
+        final BluetoothManager manager = Objects.requireNonNull((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE),"cannot get BluetoothManager");
 
         if (manager.getAdapter() != null) {
             if (!isBluetoothEnabled()) {
@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isBluetoothEnabled() {
-        BluetoothManager manager = Objects.requireNonNull((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE),"cannot get BluetoothManager");
+        final BluetoothManager manager = Objects.requireNonNull((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE),"cannot get BluetoothManager");
 
         BluetoothAdapter bluetoothAdapter = manager.getAdapter();
         if(bluetoothAdapter == null) return false;

@@ -310,7 +310,7 @@ public class BluetoothCentralManager {
         this.context = Objects.requireNonNull(context, "no valid context provided");
         this.bluetoothCentralManagerCallback = Objects.requireNonNull(bluetoothCentralManagerCallback, "no valid bluetoothCallback provided");
         this.callBackHandler = Objects.requireNonNull(handler, "no valid handler provided");
-        BluetoothManager manager = Objects.requireNonNull((BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE),"cannot get BluetoothManager");
+        final BluetoothManager manager = Objects.requireNonNull((BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE),"cannot get BluetoothManager");
         this.bluetoothAdapter = Objects.requireNonNull(manager.getAdapter(), "no bluetooth adapter found");
         this.autoConnectScanSettings = getScanSettings(ScanMode.LOW_POWER);
         this.scanSettings = getScanSettings(ScanMode.LOW_LATENCY);
