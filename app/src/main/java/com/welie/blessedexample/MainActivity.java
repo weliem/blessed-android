@@ -3,6 +3,7 @@ package com.welie.blessedexample;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -24,6 +25,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import timber.log.Timber;
 
@@ -53,7 +55,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        if (BluetoothAdapter.getDefaultAdapter() != null) {
+        BluetoothManager manager = Objects.requireNonNull((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE),"cannot get BluetoothManager");
+
+        if (manager.getAdapter() != null) {
             if (!isBluetoothEnabled()) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
@@ -66,7 +70,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isBluetoothEnabled() {
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothManager manager = Objects.requireNonNull((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE),"cannot get BluetoothManager");
+
+        BluetoothAdapter bluetoothAdapter = manager.getAdapter();
         if(bluetoothAdapter == null) return false;
 
         return bluetoothAdapter.isEnabled();

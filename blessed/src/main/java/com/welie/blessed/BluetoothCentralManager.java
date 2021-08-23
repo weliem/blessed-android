@@ -26,6 +26,7 @@ package com.welie.blessed;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
@@ -309,7 +310,8 @@ public class BluetoothCentralManager {
         this.context = Objects.requireNonNull(context, "no valid context provided");
         this.bluetoothCentralManagerCallback = Objects.requireNonNull(bluetoothCentralManagerCallback, "no valid bluetoothCallback provided");
         this.callBackHandler = Objects.requireNonNull(handler, "no valid handler provided");
-        this.bluetoothAdapter = Objects.requireNonNull(BluetoothAdapter.getDefaultAdapter(), "no bluetooth adapter found");
+        BluetoothManager manager = Objects.requireNonNull((BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE),"cannot get BluetoothManager");
+        this.bluetoothAdapter = Objects.requireNonNull(manager.getAdapter(), "no bluetooth adapter found");
         this.autoConnectScanSettings = getScanSettings(ScanMode.LOW_POWER);
         this.scanSettings = getScanSettings(ScanMode.LOW_LATENCY);
 
