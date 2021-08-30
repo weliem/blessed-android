@@ -599,6 +599,10 @@ public class BluetoothCentralManager {
                 return;
             }
 
+            if (!bluetoothAdapter.isEnabled()) {
+                Logger.e(TAG, "cannot connect to peripheral because Bluetooth is off");
+            }
+
             // Check if the peripheral is cached or not. If not, issue a warning because connection may fail
             // This is because Android will guess the address type and when incorrect it will fail
             if (peripheral.isUncached()) {
@@ -630,6 +634,10 @@ public class BluetoothCentralManager {
             if (unconnectedPeripherals.get(peripheral.getAddress()) != null) {
                 Logger.w(TAG,"already issued autoconnect for '%s' ", peripheral.getAddress());
                 return;
+            }
+
+            if (!bluetoothAdapter.isEnabled()) {
+                Logger.e(TAG, "cannot connect to peripheral because Bluetooth is off");
             }
 
             // Check if the peripheral is uncached and start autoConnectPeripheralByScan
