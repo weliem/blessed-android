@@ -20,6 +20,8 @@ import android.widget.TextView;
 import com.welie.blessed.BluetoothCentralManager;
 import com.welie.blessed.BluetoothPeripheral;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -55,9 +57,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        final BluetoothManager manager = Objects.requireNonNull((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE),"cannot get BluetoothManager");
-
-        if (manager.getAdapter() != null) {
+        if (getBluetoothManager().getAdapter() != null) {
             if (!isBluetoothEnabled()) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
@@ -70,9 +70,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isBluetoothEnabled() {
-        final BluetoothManager manager = Objects.requireNonNull((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE),"cannot get BluetoothManager");
-
-        BluetoothAdapter bluetoothAdapter = manager.getAdapter();
+        BluetoothAdapter bluetoothAdapter = getBluetoothManager().getAdapter();
         if(bluetoothAdapter == null) return false;
 
         return bluetoothAdapter.isEnabled();
@@ -81,6 +79,11 @@ public class MainActivity extends AppCompatActivity {
     private void initBluetoothHandler()
     {
         BluetoothHandler.getInstance(getApplicationContext());
+    }
+
+    @NotNull
+    private BluetoothManager getBluetoothManager() {
+        return Objects.requireNonNull((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE),"cannot get BluetoothManager");
     }
 
     @Override
