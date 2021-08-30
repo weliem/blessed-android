@@ -73,6 +73,7 @@ public class BluetoothCentralManager {
     private static final String NO_PERIPHERAL_ADDRESS_PROVIDED = "no peripheral address provided";
     private static final String NO_VALID_PERIPHERAL_PROVIDED = "no valid peripheral provided";
     private static final String NO_VALID_PERIPHERAL_CALLBACK_SPECIFIED = "no valid peripheral callback specified";
+    private static final String CANNOT_CONNECT_TO_PERIPHERAL_BECAUSE_BLUETOOTH_IS_OFF = "cannot connect to peripheral because Bluetooth is off";
 
     private @NotNull final Context context;
     private @NotNull final Handler callBackHandler;
@@ -600,7 +601,7 @@ public class BluetoothCentralManager {
             }
 
             if (!bluetoothAdapter.isEnabled()) {
-                Logger.e(TAG, "cannot connect to peripheral because Bluetooth is off");
+                Logger.e(TAG, CANNOT_CONNECT_TO_PERIPHERAL_BECAUSE_BLUETOOTH_IS_OFF);
             }
 
             // Check if the peripheral is cached or not. If not, issue a warning because connection may fail
@@ -637,7 +638,7 @@ public class BluetoothCentralManager {
             }
 
             if (!bluetoothAdapter.isEnabled()) {
-                Logger.e(TAG, "cannot connect to peripheral because Bluetooth is off");
+                Logger.e(TAG, CANNOT_CONNECT_TO_PERIPHERAL_BECAUSE_BLUETOOTH_IS_OFF);
             }
 
             // Check if the peripheral is uncached and start autoConnectPeripheralByScan
@@ -720,6 +721,10 @@ public class BluetoothCentralManager {
      */
     public void autoConnectPeripheralsBatch(@NotNull final Map<BluetoothPeripheral, BluetoothPeripheralCallback> batch) {
         Objects.requireNonNull(batch, "no valid batch provided");
+
+        if (!bluetoothAdapter.isEnabled()) {
+            Logger.e(TAG, CANNOT_CONNECT_TO_PERIPHERAL_BECAUSE_BLUETOOTH_IS_OFF);
+        }
 
         // Find the uncached peripherals and issue autoConnectPeripheral for the cached ones
         final Map<BluetoothPeripheral, BluetoothPeripheralCallback> uncachedPeripherals = new HashMap<>();
