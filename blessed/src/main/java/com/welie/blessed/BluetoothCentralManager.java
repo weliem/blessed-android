@@ -602,6 +602,7 @@ public class BluetoothCentralManager {
 
             if (!bluetoothAdapter.isEnabled()) {
                 Logger.e(TAG, CANNOT_CONNECT_TO_PERIPHERAL_BECAUSE_BLUETOOTH_IS_OFF);
+                return;
             }
 
             // Check if the peripheral is cached or not. If not, issue a warning because connection may fail
@@ -639,6 +640,7 @@ public class BluetoothCentralManager {
 
             if (!bluetoothAdapter.isEnabled()) {
                 Logger.e(TAG, CANNOT_CONNECT_TO_PERIPHERAL_BECAUSE_BLUETOOTH_IS_OFF);
+                return;
             }
 
             // Check if the peripheral is uncached and start autoConnectPeripheralByScan
@@ -724,6 +726,7 @@ public class BluetoothCentralManager {
 
         if (!bluetoothAdapter.isEnabled()) {
             Logger.e(TAG, CANNOT_CONNECT_TO_PERIPHERAL_BECAUSE_BLUETOOTH_IS_OFF);
+            return;
         }
 
         // Find the uncached peripherals and issue autoConnectPeripheral for the cached ones

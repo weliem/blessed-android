@@ -289,7 +289,7 @@ public class MainActivity extends AppCompatActivity {
             permissionsGranted();
         } else {
             new AlertDialog.Builder(MainActivity.this)
-                    .setTitle("Location permission is required for scanning Bluetooth peripherals")
+                    .setTitle("Permission is required for scanning Bluetooth peripherals")
                     .setMessage("Please grant permissions")
                     .setPositiveButton("Retry", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialogInterface, int i) {
