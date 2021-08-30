@@ -883,6 +883,11 @@ public class BluetoothPeripheral {
         commandQueue.clear();
         commandQueueBusy = false;
         notifyingCharacteristics.clear();
+        currentMtu = DEFAULT_MTU;
+        currentCommand = IDLE;
+        manuallyBonding = false;
+        peripheralInitiatedBonding = false;
+        discoveryStarted = false;
         try {
             context.unregisterReceiver(bondStateReceiver);
             context.unregisterReceiver(pairingRequestBroadcastReceiver);
