@@ -585,7 +585,7 @@ public class BluetoothPeripheral {
                     }
                 });
 
-                // Check if we have a gatt object. This is the case if createBond was called on a disconnected peripheral
+                // Check if we are missing a gatt object. This is the case if createBond was called on a disconnected peripheral
                 if (bluetoothGatt == null) {
                     // Bonding succeeded so now we can connect
                     connect();
