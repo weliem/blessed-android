@@ -327,7 +327,7 @@ class BluetoothHandler {
             central.stopScan();
 
             if (peripheral.getName().contains("Contour") && peripheral.getBondState() == BondState.NONE) {
-                // Create a bond immediately
+                // Create a bond immediately to avoid double pairing popups
                 central.createBond(peripheral, peripheralCallback);
             } else {
                 central.connectPeripheral(peripheral, peripheralCallback);
