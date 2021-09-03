@@ -12,6 +12,7 @@ import com.welie.blessed.BluetoothCentralManager;
 import com.welie.blessed.BluetoothCentralManagerCallback;
 import com.welie.blessed.BluetoothPeripheral;
 import com.welie.blessed.BluetoothPeripheralCallback;
+import com.welie.blessed.BondState;
 import com.welie.blessed.ConnectionPriority;
 import com.welie.blessed.GattStatus;
 import com.welie.blessed.HciStatus;
@@ -323,7 +324,13 @@ class BluetoothHandler {
         public void onDiscoveredPeripheral(@NotNull BluetoothPeripheral peripheral, @NotNull ScanResult scanResult) {
             Timber.i("Found peripheral '%s'", peripheral.getName());
             central.stopScan();
-            central.connectPeripheral(peripheral, peripheralCallback);
+
+            if (peripheral.getName().contains("Contour") && peripheral.getBondState() == BondState.NONE) {
+                // Create a bond immediately
+                central.createBond(peripheral, peripheralCallback);
+            } else {
+                central.connectPeripheral(peripheral, peripheralCallback);
+            }
         }
 
         @Override

@@ -158,7 +158,7 @@ public class BluetoothPeripheral {
     private final BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(@NotNull final BluetoothGatt gatt, final int status, final int newState) {
-            cancelConnectionTimer();
+            if (newState != BluetoothProfile.STATE_CONNECTING) cancelConnectionTimer();
             final int previousState = state;
             state = newState;
 
@@ -585,6 +585,13 @@ public class BluetoothPeripheral {
                     }
                 });
 
+                // Check if we have a gatt object. This is the case if createBond was called on a disconnected peripheral
+                if (bluetoothGatt == null) {
+                    // Bonding succeeded so now we can connect
+                    connect();
+                    return;
+                }
+
                 // If bonding was started at connection time, we may still have to discover the services
                 // Also make sure we are not starting a discovery while another one is already in progress
                 if (getServices().isEmpty() && !discoveryStarted) {
@@ -727,10 +734,10 @@ public class BluetoothPeripheral {
                     Logger.i(TAG,"connect to '%s' (%s) using transport %s", getName(), getAddress(), transport.name());
                     registerBondingBroadcastReceivers();
                     discoveryStarted = false;
-                    bluetoothGatt = connectGattHelper(device, false, bluetoothGattCallback);
-                    bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTING);
                     connectTimestamp = SystemClock.elapsedRealtime();
                     startConnectionTimer(BluetoothPeripheral.this);
+                    bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTING);
+                    bluetoothGatt = connectGattHelper(device, false, bluetoothGattCallback);
                 }
             }, DIRECT_CONNECTION_DELAY_IN_MS);
         } else {
@@ -753,9 +760,9 @@ public class BluetoothPeripheral {
                     Logger.i(TAG,"autoConnect to '%s' (%s) using transport %s", getName(), getAddress(), transport.name());
                     registerBondingBroadcastReceivers();
                     discoveryStarted = false;
+                    connectTimestamp = SystemClock.elapsedRealtime();
                     bluetoothGatt = connectGattHelper(device, true, bluetoothGattCallback);
                     bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTING);
-                    connectTimestamp = SystemClock.elapsedRealtime();
                 }
             });
         } else {
@@ -781,6 +788,8 @@ public class BluetoothPeripheral {
         // Check if we have a Gatt object
         if (bluetoothGatt == null) {
             // No gatt object so no connection issued, do create bond immediately
+            Logger.d(TAG, "connecting and creating bond with '%s'", getName());
+            registerBondingBroadcastReceivers();
             return device.createBond();
         }
 

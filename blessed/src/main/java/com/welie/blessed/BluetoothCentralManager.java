@@ -619,6 +619,43 @@ public class BluetoothCentralManager {
     }
 
     /**
+     * Connect to a known peripheral and bond immediately. The peripheral must have been found by scanning for this call to succeed. This method will time out in max 30 seconds on most phones and in 5 seconds on Samsung phones.
+     * If the peripheral is already connected, no connection attempt will be made. This method is asynchronous and there can be only one outstanding connect.
+     *
+     * @param peripheral BLE peripheral to connect with
+     */
+    public void createBond(@NotNull final BluetoothPeripheral peripheral, @NotNull final BluetoothPeripheralCallback peripheralCallback) {
+        synchronized (connectLock) {
+            Objects.requireNonNull(peripheral, NO_VALID_PERIPHERAL_PROVIDED);
+            Objects.requireNonNull(peripheralCallback, NO_VALID_PERIPHERAL_CALLBACK_SPECIFIED);
+
+            if (connectedPeripherals.containsKey(peripheral.getAddress())) {
+                Logger.w(TAG,"already connected to %s'", peripheral.getAddress());
+                return;
+            }
+
+            if (unconnectedPeripherals.containsKey(peripheral.getAddress())) {
+                Logger.w(TAG,"already connecting to %s'", peripheral.getAddress());
+                return;
+            }
+
+            if (!bluetoothAdapter.isEnabled()) {
+                Logger.e(TAG, CANNOT_CONNECT_TO_PERIPHERAL_BECAUSE_BLUETOOTH_IS_OFF);
+                return;
+            }
+
+            // Check if the peripheral is cached or not. If not, issue a warning because connection may fail
+            // This is because Android will guess the address type and when incorrect it will fail
+            if (peripheral.isUncached()) {
+                Logger.w(TAG,"peripheral with address '%s' is not in the Bluetooth cache, hence connection may fail", peripheral.getAddress());
+            }
+
+            peripheral.setPeripheralCallback(peripheralCallback);
+            peripheral.createBond();
+        }
+    }
+
+    /**
      * Automatically connect to a peripheral when it is advertising. It is not necessary to scan for the peripheral first. This call is asynchronous and will not time out.
      *
      * @param peripheral the peripheral
