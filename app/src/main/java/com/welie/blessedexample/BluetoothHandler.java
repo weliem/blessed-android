@@ -273,6 +273,7 @@ class BluetoothHandler {
         private void writeContourClock(@NotNull BluetoothPeripheral peripheral) {
             Calendar calendar = Calendar.getInstance();
             int offsetInMinutes = calendar.getTimeZone().getRawOffset() / 60000;
+            int dstSavingsInMinutes = calendar.getTimeZone().getDSTSavings() / 60000;
             calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
             BluetoothBytesParser parser = new BluetoothBytesParser(ByteOrder.LITTLE_ENDIAN);
             parser.setIntValue(1, FORMAT_UINT8);
@@ -282,7 +283,7 @@ class BluetoothHandler {
             parser.setIntValue(calendar.get(Calendar.HOUR_OF_DAY), FORMAT_UINT8);
             parser.setIntValue(calendar.get(Calendar.MINUTE), FORMAT_UINT8);
             parser.setIntValue(calendar.get(Calendar.SECOND), FORMAT_UINT8);
-            parser.setIntValue(offsetInMinutes, FORMAT_SINT16);
+            parser.setIntValue(offsetInMinutes + dstSavingsInMinutes, FORMAT_SINT16);
             peripheral.writeCharacteristic(CONTOUR_SERVICE_UUID, CONTOUR_CLOCK, parser.getValue(), WriteType.WITH_RESPONSE);
         }
 
