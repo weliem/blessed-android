@@ -33,3 +33,17 @@ dependencies {
     testImplementation "org.mockito:mockito-core:3.8.0"
     testImplementation 'androidx.test:core:1.4.0'
 }
+
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.weliem'
+                artifactId = 'blessed'
+                version = '1.0'
+            }
+        }
+    }
+}
