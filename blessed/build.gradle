@@ -1,6 +1,8 @@
 apply plugin: 'com.android.library'
 apply plugin: 'maven-publish'
 
+group = 'com.github.weliem'
+
 android {
     compileSdkVersion 31
 
