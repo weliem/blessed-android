@@ -41,7 +41,7 @@ afterEvaluate {
             release(MavenPublication) {
                 from components.release
                 groupId = 'com.github.weliem'
-                artifactId = 'blessed'
+                artifactId = 'blessed-android'
                 version = '1.0'
             }
         }
