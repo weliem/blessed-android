@@ -12,6 +12,7 @@ import com.welie.blessed.BluetoothCentralManager;
 import com.welie.blessed.BluetoothCentralManagerCallback;
 import com.welie.blessed.BluetoothPeripheral;
 import com.welie.blessed.BluetoothPeripheralCallback;
+import com.welie.blessed.BondState;
 import com.welie.blessed.ConnectionPriority;
 import com.welie.blessed.GattStatus;
 import com.welie.blessed.HciStatus;
@@ -272,6 +273,7 @@ class BluetoothHandler {
         private void writeContourClock(@NotNull BluetoothPeripheral peripheral) {
             Calendar calendar = Calendar.getInstance();
             int offsetInMinutes = calendar.getTimeZone().getRawOffset() / 60000;
+            int dstSavingsInMinutes = calendar.getTimeZone().getDSTSavings() / 60000;
             calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
             BluetoothBytesParser parser = new BluetoothBytesParser(ByteOrder.LITTLE_ENDIAN);
             parser.setIntValue(1, FORMAT_UINT8);
@@ -281,7 +283,7 @@ class BluetoothHandler {
             parser.setIntValue(calendar.get(Calendar.HOUR_OF_DAY), FORMAT_UINT8);
             parser.setIntValue(calendar.get(Calendar.MINUTE), FORMAT_UINT8);
             parser.setIntValue(calendar.get(Calendar.SECOND), FORMAT_UINT8);
-            parser.setIntValue(offsetInMinutes, FORMAT_SINT16);
+            parser.setIntValue(offsetInMinutes + dstSavingsInMinutes, FORMAT_SINT16);
             peripheral.writeCharacteristic(CONTOUR_SERVICE_UUID, CONTOUR_CLOCK, parser.getValue(), WriteType.WITH_RESPONSE);
         }
 
@@ -323,7 +325,13 @@ class BluetoothHandler {
         public void onDiscoveredPeripheral(@NotNull BluetoothPeripheral peripheral, @NotNull ScanResult scanResult) {
             Timber.i("Found peripheral '%s'", peripheral.getName());
             central.stopScan();
-            central.connectPeripheral(peripheral, peripheralCallback);
+
+            if (peripheral.getName().contains("Contour") && peripheral.getBondState() == BondState.NONE) {
+                // Create a bond immediately to avoid double pairing popups
+                central.createBond(peripheral, peripheralCallback);
+            } else {
+                central.connectPeripheral(peripheral, peripheralCallback);
+            }
         }
 
         @Override

@@ -3,6 +3,7 @@ package com.welie.blessedexample;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -19,11 +20,14 @@ import android.widget.TextView;
 import com.welie.blessed.BluetoothCentralManager;
 import com.welie.blessed.BluetoothPeripheral;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import timber.log.Timber;
 
@@ -53,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        if (BluetoothAdapter.getDefaultAdapter() != null) {
+        if (getBluetoothManager().getAdapter() != null) {
             if (!isBluetoothEnabled()) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
@@ -66,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isBluetoothEnabled() {
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothAdapter bluetoothAdapter = getBluetoothManager().getAdapter();
         if(bluetoothAdapter == null) return false;
 
         return bluetoothAdapter.isEnabled();
@@ -75,6 +79,11 @@ public class MainActivity extends AppCompatActivity {
     private void initBluetoothHandler()
     {
         BluetoothHandler.getInstance(getApplicationContext());
+    }
+
+    @NotNull
+    private BluetoothManager getBluetoothManager() {
+        return Objects.requireNonNull((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE),"cannot get BluetoothManager");
     }
 
     @Override
@@ -200,14 +209,21 @@ public class MainActivity extends AppCompatActivity {
 
     private String[] getRequiredPermissions() {
         int targetSdkVersion = getApplicationInfo().targetSdkVersion;
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && targetSdkVersion >= Build.VERSION_CODES.Q)
-            return new String[] {Manifest.permission.ACCESS_FINE_LOCATION};
-        else return new String[] {Manifest.permission.ACCESS_COARSE_LOCATION};
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && targetSdkVersion >= Build.VERSION_CODES.S) {
+            return new String[]{Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT};
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && targetSdkVersion >= Build.VERSION_CODES.Q) {
+            return new String[]{Manifest.permission.ACCESS_FINE_LOCATION};
+        } else return new String[]{Manifest.permission.ACCESS_COARSE_LOCATION};
     }
 
     private void permissionsGranted() {
-        // Check if Location services are on because they are required to make scanning work
-        if (checkLocationServices()) {
+        // Check if Location services are on because they are required to make scanning work for SDK < 31
+        int targetSdkVersion = getApplicationInfo().targetSdkVersion;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S && targetSdkVersion < Build.VERSION_CODES.S) {
+            if (checkLocationServices()) {
+                initBluetoothHandler();
+            }
+        } else {
             initBluetoothHandler();
         }
     }
@@ -273,7 +289,7 @@ public class MainActivity extends AppCompatActivity {
             permissionsGranted();
         } else {
             new AlertDialog.Builder(MainActivity.this)
-                    .setTitle("Location permission is required for scanning Bluetooth peripherals")
+                    .setTitle("Permission is required for scanning Bluetooth peripherals")
                     .setMessage("Please grant permissions")
                     .setPositiveButton("Retry", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialogInterface, int i) {
