@@ -577,7 +577,8 @@ public class BluetoothPeripheralManager {
 
         if (doesNotSupportNotifying(characteristic)) return false;
 
-        final boolean confirm = supportsIndicate(characteristic);
+        final byte[] descriptorValue = characteristic.getDescriptor(CCC_DESCRIPTOR_UUID).getValue();
+        final boolean confirm = supportsIndicate(characteristic) && Arrays.equals(descriptorValue, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
         final boolean result = commandQueue.add(new Runnable() {
             @Override
             public void run() {
