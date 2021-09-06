@@ -13,9 +13,11 @@ import java.util.GregorianCalendar;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_FLOAT;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_SFLOAT;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_SINT16;
+import static com.welie.blessed.BluetoothBytesParser.FORMAT_SINT24;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_SINT32;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_SINT8;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT16;
+import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT24;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT32;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT8;
 import static java.nio.ByteOrder.BIG_ENDIAN;
@@ -179,6 +181,82 @@ public class BluetoothBytesParserTest {
         parser.setOffset(0);
         assertEquals(510, (int) parser.getIntValue(FORMAT_SINT16, BIG_ENDIAN));
         assertEquals(1020, (int) parser.getIntValue(FORMAT_SINT16, BIG_ENDIAN));
+    }
+
+    @Test
+    public void parseUINT24_LittleEndianTest() {
+        BluetoothBytesParser parser = new BluetoothBytesParser(new byte[]{1, 2, 3, 4, 5, 6});
+
+        // Read using offsets
+        assertEquals(0x030201, (int) parser.getIntValue(FORMAT_UINT24, 0, LITTLE_ENDIAN));
+        assertEquals(0x040302, (int) parser.getIntValue(FORMAT_UINT24, 1, LITTLE_ENDIAN));
+        assertEquals(0x050403, (int) parser.getIntValue(FORMAT_UINT24, 2, LITTLE_ENDIAN));
+
+        // Read using auto-advance offsets
+        assertEquals(0x030201, (int) parser.getIntValue(FORMAT_UINT24));
+        assertEquals(0x060504, (int) parser.getIntValue(FORMAT_UINT24));
+
+        // Read using auto-advance and byte order
+        parser.setOffset(0);
+        assertEquals(0x030201, (int) parser.getIntValue(FORMAT_UINT24, LITTLE_ENDIAN));
+        assertEquals(0x060504, (int) parser.getIntValue(FORMAT_UINT24, LITTLE_ENDIAN));
+    }
+
+    @Test
+    public void parseUINT24_BigEndianTest() {
+        BluetoothBytesParser parser = new BluetoothBytesParser(new byte[]{1, 2, 3, 4, 5, 6}, BIG_ENDIAN);
+
+        // Read using offsets
+        assertEquals(0x010203, (int) parser.getIntValue(FORMAT_UINT24, 0, BIG_ENDIAN));
+        assertEquals(0x020304, (int) parser.getIntValue(FORMAT_UINT24, 1, BIG_ENDIAN));
+        assertEquals(0x030405, (int) parser.getIntValue(FORMAT_UINT24, 2, BIG_ENDIAN));
+
+        // Read using auto-advance offsets
+        assertEquals(0x010203, (int) parser.getIntValue(FORMAT_UINT24));
+        assertEquals(0x040506, (int) parser.getIntValue(FORMAT_UINT24));
+
+        // Read using auto-advance and byte order
+        parser.setOffset(0);
+        assertEquals(0x010203, (int) parser.getIntValue(FORMAT_UINT24, BIG_ENDIAN));
+        assertEquals(0x040506, (int) parser.getIntValue(FORMAT_UINT24, BIG_ENDIAN));
+    }
+
+    @Test
+    public void parseSINT24_LittleEndianTest() {
+        BluetoothBytesParser parser = new BluetoothBytesParser(new byte[]{1, -2, 3, -4, 5, -6});
+
+        // Read using offsets
+        assertEquals(0x03FE01, (int) parser.getIntValue(FORMAT_SINT24, 0, LITTLE_ENDIAN));
+        assertEquals(0xFC03FE - 0xFFFFFF - 1, (int) parser.getIntValue(FORMAT_SINT24, 1, LITTLE_ENDIAN));
+        assertEquals(0x05FC03, (int) parser.getIntValue(FORMAT_SINT24, 2, LITTLE_ENDIAN));
+
+        // Read using auto-advance offsets
+        assertEquals(0x03FE01, (int) parser.getIntValue(FORMAT_SINT24));
+        assertEquals(0xFA05FC - 0xFFFFFF - 1, (int) parser.getIntValue(FORMAT_SINT24));
+
+        // Read using auto-advance and byte order
+        parser.setOffset(0);
+        assertEquals(0x03FE01, (int) parser.getIntValue(FORMAT_SINT24, LITTLE_ENDIAN));
+        assertEquals(0xFA05FC - 0xFFFFFF - 1, (int) parser.getIntValue(FORMAT_SINT24, LITTLE_ENDIAN));
+    }
+
+    @Test
+    public void parseSINT24_BigEndianTest() {
+        BluetoothBytesParser parser = new BluetoothBytesParser(new byte[]{1, -2, 3, -4, 5, -6}, BIG_ENDIAN);
+
+        // Read using offsets
+        assertEquals(0x01FE03, (int) parser.getIntValue(FORMAT_SINT24, 0, BIG_ENDIAN));
+        assertEquals(0xFE03FC - 0xFFFFFF - 1, (int) parser.getIntValue(FORMAT_SINT24, 1, BIG_ENDIAN));
+        assertEquals(0x03FC05, (int) parser.getIntValue(FORMAT_SINT24, 2, BIG_ENDIAN));
+
+        // Read using auto-advance offsets
+        assertEquals(0x01FE03, (int) parser.getIntValue(FORMAT_SINT24));
+        assertEquals(0xFC05FA - 0xFFFFFF - 1, (int) parser.getIntValue(FORMAT_SINT24));
+
+        // Read using auto-advance and byte order
+        parser.setOffset(0);
+        assertEquals(0x01FE03, (int) parser.getIntValue(FORMAT_SINT24, BIG_ENDIAN));
+        assertEquals(0xFC05FA - 0xFFFFFF - 1, (int) parser.getIntValue(FORMAT_SINT24, BIG_ENDIAN));
     }
 
     @Test
@@ -556,6 +634,71 @@ public class BluetoothBytesParserTest {
         parser.setOffset(0);
         assertEquals(-1234, (int)parser.getIntValue(FORMAT_SINT16));
         assertEquals(5678, (int)parser.getIntValue(FORMAT_SINT16));
+    }
+
+    @Test
+    public void setUINT24_LittleEndianTest() {
+        BluetoothBytesParser parser = new BluetoothBytesParser(LITTLE_ENDIAN);
+        parser.setIntValue(0x010203, FORMAT_UINT24);
+        assertEquals(0x010203, (int) parser.getIntValue(FORMAT_UINT24, 0, LITTLE_ENDIAN));
+
+        // Add 2 values after each other
+        parser = new BluetoothBytesParser(LITTLE_ENDIAN);
+        parser.setIntValue(0x010203, FORMAT_UINT24);
+        parser.setIntValue(0x040506, FORMAT_UINT24);
+        assertEquals(6, parser.getValue().length);
+        parser.setOffset(0);
+        assertEquals(0x010203, (int)parser.getIntValue(FORMAT_UINT24));
+        assertEquals(0x040506, (int)parser.getIntValue(FORMAT_UINT24));
+    }
+
+    @Test
+    public void setUINT24_BigEndianTest() {
+        BluetoothBytesParser parser = new BluetoothBytesParser(BIG_ENDIAN);
+        parser.setIntValue(0x010203, FORMAT_UINT24);
+        assertEquals(0x010203, (int) parser.getIntValue(FORMAT_UINT24, 0, BIG_ENDIAN));
+
+        // Add 2 values after each other
+        parser = new BluetoothBytesParser(BIG_ENDIAN);
+        parser.setIntValue(0x010203, FORMAT_UINT24);
+        parser.setIntValue(0x040506, FORMAT_UINT24);
+        assertEquals(6, parser.getValue().length);
+        parser.setOffset(0);
+        assertEquals(0x010203, (int)parser.getIntValue(FORMAT_UINT24));
+        assertEquals(0x040506, (int)parser.getIntValue(FORMAT_UINT24));
+    }
+
+    @Test
+    public void setSINT24_LittleEndianTest() {
+        BluetoothBytesParser parser = new BluetoothBytesParser(LITTLE_ENDIAN);
+        parser.setIntValue(-0x010203, FORMAT_SINT24);
+        assertEquals(-0x010203, (int) parser.getIntValue(FORMAT_SINT24, 0, LITTLE_ENDIAN));
+
+        // Add 2 values after each other
+        parser = new BluetoothBytesParser(LITTLE_ENDIAN);
+        parser.setIntValue(-0x010203, FORMAT_SINT24);
+        parser.setIntValue(0x040506, FORMAT_SINT24);
+        assertEquals(6, parser.getValue().length);
+
+        parser.setOffset(0);
+        assertEquals(-0x010203, (int)parser.getIntValue(FORMAT_SINT24));
+        assertEquals(0x040506, (int)parser.getIntValue(FORMAT_SINT24));
+    }
+
+    @Test
+    public void setSINT24_BigEndianTest() {
+        BluetoothBytesParser parser = new BluetoothBytesParser(BIG_ENDIAN);
+        parser.setIntValue(-0x010203, FORMAT_SINT24);
+        assertEquals(-0x010203, (int) parser.getIntValue(FORMAT_SINT24, 0, BIG_ENDIAN));
+
+        // Add 2 values after each other
+        parser = new BluetoothBytesParser(BIG_ENDIAN);
+        parser.setIntValue(-0x010203, FORMAT_SINT24);
+        parser.setIntValue(0x040506, FORMAT_SINT24);
+        assertEquals(6, parser.getValue().length);
+        parser.setOffset(0);
+        assertEquals(-0x010203, (int)parser.getIntValue(FORMAT_SINT24));
+        assertEquals(0x040506, (int)parser.getIntValue(FORMAT_SINT24));
     }
 
     @Test
