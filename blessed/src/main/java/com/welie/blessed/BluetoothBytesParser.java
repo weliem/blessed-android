@@ -61,6 +61,11 @@ public class BluetoothBytesParser {
     public static final int FORMAT_UINT16 = 0x12;
 
     /**
+     * Characteristic value format type uint24
+     */
+    public static final int FORMAT_UINT24 = 0x13;
+
+    /**
      * Characteristic value format type uint32
      */
     public static final int FORMAT_UINT32 = 0x14;
@@ -74,6 +79,11 @@ public class BluetoothBytesParser {
      * Characteristic value format type sint16
      */
     public static final int FORMAT_SINT16 = 0x22;
+
+    /**
+     * Characteristic value format type sint24
+     */
+    public static final int FORMAT_SINT24 = 0x23;
 
     /**
      * Characteristic value format type sint32
@@ -282,6 +292,14 @@ public class BluetoothBytesParser {
                 else
                     return unsignedBytesToInt(mValue[offset + 1], mValue[offset]);
 
+            case FORMAT_UINT24:
+                if (byteOrder == LITTLE_ENDIAN)
+                    return unsignedBytesToInt(mValue[offset], mValue[offset + 1],
+                            mValue[offset + 2], (byte) 0);
+                else
+                    return unsignedBytesToInt(mValue[offset + 2], mValue[offset + 1],
+                            mValue[offset], (byte) 0);
+
             case FORMAT_UINT32:
                 if (byteOrder == LITTLE_ENDIAN)
                     return unsignedBytesToInt(mValue[offset], mValue[offset + 1],
@@ -300,6 +318,14 @@ public class BluetoothBytesParser {
                 else
                     return unsignedToSigned(unsignedBytesToInt(mValue[offset + 1],
                             mValue[offset]), 16);
+
+            case FORMAT_SINT24:
+                if (byteOrder == LITTLE_ENDIAN)
+                    return unsignedToSigned(unsignedBytesToInt(mValue[offset],
+                            mValue[offset + 1], mValue[offset + 2], (byte) 0), 24);
+                else
+                    return unsignedToSigned(unsignedBytesToInt(mValue[offset + 2],
+                            mValue[offset + 1], mValue[offset], (byte) 0), 24);
 
             case FORMAT_SINT32:
                 if (byteOrder == LITTLE_ENDIAN)
@@ -511,6 +537,21 @@ public class BluetoothBytesParser {
                     mValue[newOffset++] = (byte) (newValue & 0xFF);
                     mValue[newOffset] = (byte) ((newValue >> 8) & 0xFF);
                 } else {
+                    mValue[newOffset++] = (byte) ((newValue >> 8) & 0xFF);
+                    mValue[newOffset] = (byte) (newValue & 0xFF);
+                }
+                break;
+
+            case FORMAT_SINT24:
+                newValue = intToSignedBits(newValue, 24);
+                // Fall-through intended
+            case FORMAT_UINT24:
+                if (internalByteOrder == LITTLE_ENDIAN) {
+                    mValue[newOffset++] = (byte) (newValue & 0xFF);
+                    mValue[newOffset++] = (byte) ((newValue >> 8) & 0xFF);
+                    mValue[newOffset] = (byte) ((newValue >> 16) & 0xFF);
+                } else {
+                    mValue[newOffset++] = (byte) ((newValue >> 16) & 0xFF);
                     mValue[newOffset++] = (byte) ((newValue >> 8) & 0xFF);
                     mValue[newOffset] = (byte) (newValue & 0xFF);
                 }
