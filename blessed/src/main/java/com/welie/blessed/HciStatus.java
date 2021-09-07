@@ -391,6 +391,12 @@ public enum HciStatus {
     FAILURE_REGISTERING_CLIENT(0x101),
 
     /**
+     * An undefined error occurred
+     * See https://android.googlesource.com/platform/system/bt/+/master/stack/include/hci_error_code.h
+     */
+    UNDEFINED(0xFF),
+
+    /**
      * Used when status code is not defined in the class
      */
     UNKNOWN_STATUS_CODE(0xFFFF);
