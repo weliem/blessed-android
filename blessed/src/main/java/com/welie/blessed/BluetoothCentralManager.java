@@ -1134,10 +1134,18 @@ public class BluetoothCentralManager {
                 Logger.d(TAG,"bluetooth turned off");
                 break;
             case BluetoothAdapter.STATE_TURNING_OFF:
-                expectingBluetoothOffDisconnects = true;
-
                 // Stop all scans so that we are back in a clean state
                 // Note that we can't call stopScan if the adapter is off
+                if (isScanning()) {
+                    stopScan();
+                }
+
+                if(isAutoScanning()) {
+                    stopAutoconnectScan();
+                }
+
+                expectingBluetoothOffDisconnects = true;
+
                 cancelTimeoutTimer();
                 cancelAutoConnectTimer();
                 currentCallback = null;
