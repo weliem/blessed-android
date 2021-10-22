@@ -407,6 +407,10 @@ public class BluetoothCentralManager {
 
         if (bluetoothScanner == null) {
             bluetoothScanner = bluetoothAdapter.getBluetoothLeScanner();
+
+            // On some phones like Nokia 8, this scanner may still have an older active scan from us
+            // This happens when bluetooth is toggled. So make sure it is gone.
+            bluetoothScanner.stopScan(scanCallback);
         }
 
         if (bluetoothScanner != null) {
@@ -567,6 +571,7 @@ public class BluetoothCentralManager {
         }
         currentCallback = null;
         currentFilters = null;
+        bluetoothScanner = null;
         scannedPeripherals.clear();
     }
 
@@ -1135,13 +1140,19 @@ public class BluetoothCentralManager {
                 break;
             case BluetoothAdapter.STATE_TURNING_OFF:
                 // Stop all scans so that we are back in a clean state
-                // Note that we can't call stopScan if the adapter is off
                 if (isScanning()) {
-                    stopScan();
+                    // Note that we can't call stopScan if the adapter is off
+                    // On some phones like the Nokia 8, the adapter will be already off at this point
+                    // So add a try/catch to handle any exceptions
+                    try {
+                        stopScan();
+                    } catch (Exception ignored) { }
                 }
 
                 if(isAutoScanning()) {
-                    stopAutoconnectScan();
+                    try {
+                        stopAutoconnectScan();
+                    } catch (Exception ignored) { }
                 }
 
                 expectingBluetoothOffDisconnects = true;
@@ -1151,6 +1162,7 @@ public class BluetoothCentralManager {
                 currentCallback = null;
                 currentFilters = null;
                 autoConnectScanner = null;
+                bluetoothScanner = null;
                 Logger.d(TAG,"bluetooth turning off");
                 break;
             case BluetoothAdapter.STATE_ON:
