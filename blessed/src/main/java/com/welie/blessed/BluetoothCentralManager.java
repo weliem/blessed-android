@@ -121,6 +121,7 @@ public class BluetoothCentralManager {
 
         @Override
         public void onScanFailed(final int errorCode) {
+            stopScan();
             sendScanFailed(ScanFailure.fromValue(errorCode));
         }
     };
@@ -135,6 +136,7 @@ public class BluetoothCentralManager {
 
         @Override
         public void onScanFailed(final int errorCode) {
+            stopScan();
             sendScanFailed(ScanFailure.fromValue(errorCode));
         }
     };
@@ -195,7 +197,7 @@ public class BluetoothCentralManager {
         public void onScanFailed(final int errorCode) {
             final ScanFailure scanFailure = ScanFailure.fromValue(errorCode);
             Logger.e(TAG,"autoConnect scan failed with error code %d (%s)", errorCode, scanFailure);
-            autoConnectScanner = null;
+            stopAutoconnectScan();
             callBackHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -407,10 +409,6 @@ public class BluetoothCentralManager {
 
         if (bluetoothScanner == null) {
             bluetoothScanner = bluetoothAdapter.getBluetoothLeScanner();
-
-            // On some phones like Nokia 8, this scanner may still have an older active scan from us
-            // This happens when bluetooth is toggled. So make sure it is gone.
-            bluetoothScanner.stopScan(scanCallback);
         }
 
         if (bluetoothScanner != null) {
@@ -1166,8 +1164,14 @@ public class BluetoothCentralManager {
                 Logger.d(TAG,"bluetooth turning off");
                 break;
             case BluetoothAdapter.STATE_ON:
-                expectingBluetoothOffDisconnects = false;
                 Logger.d(TAG,"bluetooth turned on");
+
+                // On some phones like Nokia 8, this scanner may still have an older active scan from us
+                // This happens when bluetooth is toggled. So make sure it is gone.
+                bluetoothScanner = bluetoothAdapter.getBluetoothLeScanner();
+                bluetoothScanner.stopScan(defaultScanCallback);
+
+                expectingBluetoothOffDisconnects = false;
                 break;
             case BluetoothAdapter.STATE_TURNING_ON:
                 expectingBluetoothOffDisconnects = false;
