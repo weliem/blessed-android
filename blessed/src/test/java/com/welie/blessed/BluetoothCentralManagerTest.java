@@ -407,14 +407,13 @@ public class BluetoothCentralManagerTest {
         central.stopScan();
 
         // Then
-        // We should have 2 calls now (1 happens when startScan is done)
-        verify(scanner, times(2)).stopScan(scanCallbackCaptor.getValue());
+        verify(scanner, times(1)).stopScan(scanCallbackCaptor.getValue());
 
         // When
         central.stopScan();
 
         // Then
-        verify(scanner, times(2)).stopScan(any(ScanCallback.class));
+        verify(scanner, times(1)).stopScan(any(ScanCallback.class));
     }
 
     @Test

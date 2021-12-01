@@ -718,6 +718,15 @@ public class BluetoothBytesParserTest {
     }
 
     @Test
+    public void setUINT32_LittleEndian_zero_Test() {
+        BluetoothBytesParser parser = new BluetoothBytesParser(LITTLE_ENDIAN);
+        parser.setIntValue(0, FORMAT_UINT32);
+        assertEquals(0, (int) parser.getIntValue(FORMAT_UINT32, 0, LITTLE_ENDIAN));
+        byte[] value = parser.getValue();
+        assertEquals(4, value.length);
+    }
+
+    @Test
     public void setUINT32_BigEndianTest() {
         BluetoothBytesParser parser = new BluetoothBytesParser(BIG_ENDIAN);
         parser.setIntValue(1234567890, FORMAT_UINT32);
