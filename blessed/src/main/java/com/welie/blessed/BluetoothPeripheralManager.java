@@ -174,10 +174,10 @@ public class BluetoothPeripheralManager {
                         callback.onCharacteristicRead(bluetoothCentral, characteristic);
                     }
 
-                    // If data is longer than MTU - 1, cut the array. Only ATT_MTU - 1 bytes can be sent in Long Read.
-                    final byte[] value = copyOf(nonnullOf(characteristic.getValue()), offset, bluetoothCentral.getCurrentMtu() - 1);
+                    // chop the beginning of the array based on offset
+                    byte[] choppedValue = chopValue(characteristic.getValue(), offset);
 
-                    bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value);
+                    bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, choppedValue);
                 }
             });
         }
@@ -731,6 +731,22 @@ public class BluetoothPeripheralManager {
             bluetoothGattServerCallback.onConnectionStateChange(bluetoothAdapter.getRemoteDevice(bluetoothCentral.getAddress()), 0, BluetoothProfile.STATE_DISCONNECTED);
         }
         onAdvertisingStopped();
+    }
+
+    /**
+     * Chop only bytes at the beginning of the array based on offset, if array is bigger than MTU
+     * size Android OS will negotiate with central and it will issue multiple read requests.
+     * <p>
+     * Important note: When {@link BluetoothDevice#TRANSPORT_BREDR} is used by the central,
+     * only a single read request is issued by the central regardless of MTU size.
+     */
+    private byte[] chopValue(final byte[] value, final int offset) {
+        byte[] choppedValue = new byte[0];
+
+        if (offset <= value.length) {
+            choppedValue = Arrays.copyOfRange(value, offset, value.length);
+        }
+        return choppedValue;
     }
 
     private @NotNull byte[] copyOf(@NotNull final byte[] source, final int offset, final int maxSize) {
