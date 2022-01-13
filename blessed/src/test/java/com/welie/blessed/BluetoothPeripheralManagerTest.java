@@ -22,6 +22,8 @@ import androidx.test.core.app.ApplicationProvider;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
@@ -41,6 +43,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static android.os.Build.VERSION_CODES.M;
 import static org.mockito.MockitoAnnotations.openMocks;
+import static org.mockito.ArgumentMatchers.eq;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(manifest=Config.NONE, sdk = {M})
@@ -73,6 +76,9 @@ public class BluetoothPeripheralManagerTest {
 
     @Mock
     BluetoothGattDescriptor descriptor;
+
+    @Captor
+    ArgumentCaptor<byte[]> bytesCaptor;
 
     @Before
     public void setUp() {
@@ -173,6 +179,10 @@ public class BluetoothPeripheralManagerTest {
 
     @Test
     public void When_a_read_characteristic_request_is_received_then_onCharacteristicRead_is_called() {
+        // Given
+        byte[] value = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
+        when(characteristic.getValue()).thenReturn(value);
+
         // When
         peripheralManager.bluetoothGattServerCallback.onCharacteristicReadRequest(device, 1, 0, characteristic);
 
@@ -180,6 +190,32 @@ public class BluetoothPeripheralManagerTest {
 
         // Then
         verify(peripheralManagerCallback).onCharacteristicRead(any(BluetoothCentral.class), any(BluetoothGattCharacteristic.class));
+    }
+
+    @Test
+    public void When_a_read_characteristic_request_reached_end_of_array_then_empty_array_should_be_returned() {
+        // Given
+        byte[] value = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
+        when(characteristic.getValue()).thenReturn(value);
+
+        // When
+        peripheralManager.bluetoothGattServerCallback.onCharacteristicReadRequest(device, 1, 24, characteristic);
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        // Then
+        verify(server).sendResponse(eq(device), eq(1), eq(GattStatus.SUCCESS.value), eq(24), bytesCaptor.capture());
+        assertEquals(0, bytesCaptor.getValue().length);
+
+
+        // When
+        peripheralManager.bluetoothGattServerCallback.onCharacteristicReadRequest(device, 1, 25, characteristic);
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+
+        // Then
+        verify(server).sendResponse(eq(device), eq(1), eq(GattStatus.SUCCESS.value), eq(25), bytesCaptor.capture());
+        assertEquals(0, bytesCaptor.getValue().length);
     }
 
     @Test
@@ -201,7 +237,6 @@ public class BluetoothPeripheralManagerTest {
     public void When_a_long_read_characteristic_request_is_received_then_characteristic_value_is_returned_in_chunks() {
         // Given
         byte[] value = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
-        byte[] firstChunk = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22};
         byte[] secondChunk = new byte[]{23, 24};
         when(characteristic.getValue()).thenReturn(value);
 
@@ -210,7 +245,7 @@ public class BluetoothPeripheralManagerTest {
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(server).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, firstChunk);
+        verify(server).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, value);
 
         // When
         peripheralManager.bluetoothGattServerCallback.onCharacteristicReadRequest(device, 2, 22, characteristic);
