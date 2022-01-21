@@ -283,7 +283,6 @@ public class BluetoothPeripheralManagerTest {
     public void When_a_long_read_descriptor_request_is_received_then_Descriptor_value_is_returned_in_chunks() {
         // Given
         byte[] value = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
-        byte[] firstChunk = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22};
         byte[] secondChunk = new byte[]{23, 24};
         when(descriptor.getValue()).thenReturn(value);
 
@@ -292,7 +291,7 @@ public class BluetoothPeripheralManagerTest {
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
-        verify(server).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, firstChunk);
+        verify(server).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, value);
 
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorReadRequest(device, 2, 22, descriptor);

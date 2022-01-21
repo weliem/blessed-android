@@ -174,10 +174,10 @@ public class BluetoothPeripheralManager {
                         callback.onCharacteristicRead(bluetoothCentral, characteristic);
                     }
 
-                    // chop the beginning of the array based on offset
-                    byte[] choppedValue = chopValue(characteristic.getValue(), offset);
+                    // Get the byte array starting at the offset
+                    final byte[] value = chopValue(characteristic.getValue(), offset);
 
-                    bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, choppedValue);
+                    bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value);
                 }
             });
         }
@@ -231,8 +231,8 @@ public class BluetoothPeripheralManager {
                         callback.onDescriptorRead(bluetoothCentral, descriptor);
                     }
 
-                    // If data is longer than MTU - 1, cut the array. Only ATT_MTU - 1 bytes can be sent in Long Read.
-                    final byte[] value = copyOf(nonnullOf(descriptor.getValue()), offset, bluetoothCentral.getCurrentMtu() - 1);
+                    // Get the byte array starting at the offset
+                    final byte[] value = chopValue(descriptor.getValue(), offset);
 
                     bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value);
                 }
@@ -742,6 +742,8 @@ public class BluetoothPeripheralManager {
      */
     private byte[] chopValue(final byte[] value, final int offset) {
         byte[] choppedValue = new byte[0];
+
+        if (value == null) return choppedValue;
 
         if (offset <= value.length) {
             choppedValue = Arrays.copyOfRange(value, offset, value.length);
