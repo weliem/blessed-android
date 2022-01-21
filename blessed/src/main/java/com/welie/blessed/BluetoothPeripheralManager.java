@@ -740,7 +740,7 @@ public class BluetoothPeripheralManager {
      * Important note: When {@link BluetoothDevice#TRANSPORT_BREDR} is used by the central,
      * only a single read request is issued by the central regardless of MTU size.
      */
-    private byte[] chopValue(final byte[] value, final int offset) {
+    private byte[] chopValue(@Nullable final byte[] value, final int offset) {
         byte[] choppedValue = new byte[0];
 
         if (value == null) return choppedValue;
@@ -749,14 +749,6 @@ public class BluetoothPeripheralManager {
             choppedValue = Arrays.copyOfRange(value, offset, value.length);
         }
         return choppedValue;
-    }
-
-    private @NotNull byte[] copyOf(@NotNull final byte[] source, final int offset, final int maxSize) {
-        if (source.length > maxSize) {
-            final int chunkSize = Math.min(source.length - offset, maxSize);
-            return Arrays.copyOfRange(source, offset, offset + chunkSize);
-        }
-        return Arrays.copyOf(source, source.length);
     }
 
     /**
