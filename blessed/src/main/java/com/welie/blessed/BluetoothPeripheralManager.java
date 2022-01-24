@@ -497,7 +497,7 @@ public class BluetoothPeripheralManager {
     public boolean add(@NotNull final BluetoothGattService service) {
         Objects.requireNonNull(service, SERVICE_IS_NULL);
 
-        final boolean result = commandQueue.add(new Runnable() {
+        return enqueue(new Runnable() {
             @Override
             public void run() {
                 if (!bluetoothGattServer.addService(service)) {
@@ -506,13 +506,6 @@ public class BluetoothPeripheralManager {
                 }
             }
         });
-
-        if (result) {
-            nextCommand();
-        } else {
-            Logger.e(TAG,"could not enqueue add service command");
-        }
-        return result;
     }
 
     /**
@@ -579,7 +572,7 @@ public class BluetoothPeripheralManager {
 
         final byte[] descriptorValue = characteristic.getDescriptor(CCC_DESCRIPTOR_UUID).getValue();
         final boolean confirm = supportsIndicate(characteristic) && Arrays.equals(descriptorValue, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
-        final boolean result = commandQueue.add(new Runnable() {
+        return enqueue(new Runnable() {
             @Override
             public void run() {
                 currentNotifyValue = value;
@@ -591,13 +584,6 @@ public class BluetoothPeripheralManager {
                 }
             }
         });
-
-        if (result) {
-            nextCommand();
-        } else {
-            Logger.e(TAG,"could not enqueue notify command");
-        }
-        return result;
     }
 
     /**
@@ -629,6 +615,22 @@ public class BluetoothPeripheralManager {
     public @NotNull Set<BluetoothCentral> getConnectedCentrals() {
         Set<BluetoothCentral> bluetoothCentrals = new HashSet<>(connectedCentralsMap.values());
         return Collections.unmodifiableSet(bluetoothCentrals);
+    }
+
+    /**
+     * Enqueue a runnable to the command queue
+     *
+     * @param command a Runnable containg a command
+     * @return true if the command was successfully enqueued, otherwise false
+     */
+    private boolean enqueue(Runnable command) {
+        final boolean result = commandQueue.add(command);
+        if (result) {
+            nextCommand();
+        } else {
+            Logger.e(TAG,"could not enqueue command");
+        }
+        return result;
     }
 
     /**
