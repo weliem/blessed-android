@@ -794,7 +794,7 @@ public class BluetoothPeripheral {
         }
 
         // Enqueue the bond command because a connection has been issued or we are already connected
-        final boolean result = commandQueue.add(new Runnable() {
+        return enqueue(new Runnable() {
             @Override
             public void run() {
                 manuallyBonding = true;
@@ -807,13 +807,6 @@ public class BluetoothPeripheral {
                 }
             }
         });
-
-        if (result) {
-            nextCommand();
-        } else {
-            Logger.e(TAG,"could not enqueue bonding command");
-        }
-        return result;
     }
 
     /**
@@ -1133,7 +1126,7 @@ public class BluetoothPeripheral {
             throw new IllegalArgumentException(message);
         }
 
-        final boolean result = commandQueue.add(new Runnable() {
+        return enqueue(new Runnable() {
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1149,13 +1142,6 @@ public class BluetoothPeripheral {
                 }
             }
         });
-
-        if (result) {
-            nextCommand();
-        } else {
-            Logger.e(TAG,"could not enqueue read characteristic command");
-        }
-        return result;
     }
 
     private boolean doesNotSupportReading(@NotNull final BluetoothGattCharacteristic characteristic) {
@@ -1228,7 +1214,7 @@ public class BluetoothPeripheral {
         // Copy the value to avoid race conditions
         final byte[] bytesToWrite = copyOf(value);
 
-        final boolean result = commandQueue.add(new Runnable() {
+        return enqueue(new Runnable() {
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1257,13 +1243,6 @@ public class BluetoothPeripheral {
                 }
             }
         });
-
-        if (result) {
-            nextCommand();
-        } else {
-            Logger.e(TAG,"could not enqueue write characteristic command");
-        }
-        return result;
     }
 
     private boolean willCauseLongWrite(@NotNull final byte[] value, @NotNull final WriteType writeType) {
@@ -1288,7 +1267,7 @@ public class BluetoothPeripheral {
             return false;
         }
 
-        final boolean result = commandQueue.add(new Runnable() {
+        return enqueue(new Runnable() {
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1304,13 +1283,6 @@ public class BluetoothPeripheral {
                 }
             }
         });
-
-        if (result) {
-            nextCommand();
-        } else {
-            Logger.e(TAG,"could not enqueue read descriptor command");
-        }
-        return result;
     }
 
     /**
@@ -1342,7 +1314,7 @@ public class BluetoothPeripheral {
         // Copy the value to avoid race conditions
         final byte[] bytesToWrite = copyOf(value);
 
-        final boolean result = commandQueue.add(new Runnable() {
+        return enqueue(new Runnable() {
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1360,13 +1332,6 @@ public class BluetoothPeripheral {
                 }
             }
         });
-
-        if (result) {
-            nextCommand();
-        } else {
-            Logger.e(TAG,"could not enqueue write descriptor command");
-        }
-        return result;
     }
 
     /**
@@ -1427,7 +1392,7 @@ public class BluetoothPeripheral {
         }
         final byte[] finalValue = enable ? value : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
 
-        final boolean result = commandQueue.add(new Runnable() {
+        return enqueue(new Runnable() {
             @Override
             public void run() {
                 if (notConnected()) {
@@ -1454,13 +1419,6 @@ public class BluetoothPeripheral {
                 }
             }
         });
-
-        if (result) {
-            nextCommand();
-        } else {
-            Logger.e(TAG,"could not enqueue setNotify command");
-        }
-        return result;
     }
 
     private void adjustWriteTypeIfNeeded(@NotNull final BluetoothGattCharacteristic characteristic) {
@@ -1484,7 +1442,7 @@ public class BluetoothPeripheral {
             return false;
         }
 
-        final boolean result = commandQueue.add(new Runnable() {
+        return enqueue(new Runnable() {
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1497,13 +1455,6 @@ public class BluetoothPeripheral {
                 }
             }
         });
-
-        if (result) {
-            nextCommand();
-        } else {
-            Logger.e(TAG,"could not enqueue readRemoteRssi command");
-        }
-        return result;
     }
 
     /**
@@ -1529,7 +1480,7 @@ public class BluetoothPeripheral {
             return false;
         }
 
-        final boolean result = commandQueue.add(new Runnable() {
+        return enqueue(new Runnable() {
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1545,14 +1496,6 @@ public class BluetoothPeripheral {
                 }
             }
         });
-
-        if (result) {
-            nextCommand();
-        } else {
-            Logger.e(TAG,"could not enqueue requestMtu command");
-        }
-
-        return result;
     }
 
     /**
@@ -1569,7 +1512,7 @@ public class BluetoothPeripheral {
             return false;
         }
 
-        final boolean result = commandQueue.add(new Runnable() {
+        return enqueue(new Runnable() {
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1589,13 +1532,6 @@ public class BluetoothPeripheral {
                 }, AVG_REQUEST_CONNECTION_PRIORITY_DURATION);
             }
         });
-
-        if (result) {
-            nextCommand();
-        } else {
-            Logger.e(TAG,"could not enqueue request connection priority command");
-        }
-        return result;
     }
 
     /**
@@ -1626,7 +1562,7 @@ public class BluetoothPeripheral {
             return false;
         }
 
-        final boolean result = commandQueue.add(new Runnable() {
+        return enqueue(new Runnable() {
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1640,13 +1576,6 @@ public class BluetoothPeripheral {
                 }
             }
         });
-
-        if (result) {
-            nextCommand();
-        } else {
-            Logger.e(TAG,"could not enqueue setPreferredPhy command");
-        }
-        return result;
     }
 
     /**
@@ -1664,7 +1593,7 @@ public class BluetoothPeripheral {
             return false;
         }
 
-        final boolean result = commandQueue.add(new Runnable() {
+        return enqueue(new Runnable() {
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1677,13 +1606,6 @@ public class BluetoothPeripheral {
                 }
             }
         });
-
-        if (result) {
-            nextCommand();
-        } else {
-            Logger.e(TAG,"could not enqueue readyPhy command");
-        }
-        return result;
     }
 
     /**
@@ -1702,6 +1624,22 @@ public class BluetoothPeripheral {
             }
         } catch (Exception e) {
             Logger.e(TAG,"could not invoke refresh method");
+        }
+        return result;
+    }
+
+    /**
+     * Enqueue a runnable to the command queue
+     *
+     * @param command a Runnable containg a command
+     * @return true if the command was successfully enqueued, otherwise false
+     */
+    private boolean enqueue(Runnable command) {
+        final boolean result = commandQueue.add(command);
+        if (result) {
+            nextCommand();
+        } else {
+            Logger.e(TAG,"could not enqueue command");
         }
         return result;
     }
@@ -1735,9 +1673,10 @@ public class BluetoothPeripheral {
     }
 
     /**
-     * Execute the next command in the subscribe queue.
+     * Execute the next command in the command queue.
+     * If a command is being executed the next command will not be executed
      * A queue is used because the calls have to be executed sequentially.
-     * If the read or write fails, the next command in the queue is executed.
+     * If the command fails, the next command in the queue is executed.
      */
     private void nextCommand() {
         synchronized (this) {
