@@ -23,6 +23,7 @@
 
 package com.welie.blessed;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -456,6 +457,7 @@ public class BluetoothPeripheral {
 
     private void delayedDiscoverServices(final long delay) {
         discoverServicesRunnable = new Runnable() {
+            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 Logger.d(TAG,"discovering services of '%s' with delay of %d ms", getName(), delay);
@@ -674,6 +676,7 @@ public class BluetoothPeripheral {
     }
 
     private final BroadcastReceiver pairingRequestBroadcastReceiver = new BroadcastReceiver() {
+        @SuppressLint("MissingPermission")
         @Override
         public void onReceive(final Context context, final Intent intent) {
             final BluetoothDevice receivedDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
@@ -784,6 +787,7 @@ public class BluetoothPeripheral {
      *
      * @return true if bonding was started/enqueued, false if not
      */
+    @SuppressLint("MissingPermission")
     public boolean createBond() {
         // Check if we have a Gatt object
         if (bluetoothGatt == null) {
@@ -856,6 +860,7 @@ public class BluetoothPeripheral {
         if (state == BluetoothProfile.STATE_CONNECTED || state == BluetoothProfile.STATE_CONNECTING) {
             bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_DISCONNECTING);
             mainHandler.post(new Runnable() {
+                @SuppressLint("MissingPermission")
                 @Override
                 public void run() {
                     if (state == BluetoothProfile.STATE_DISCONNECTING && bluetoothGatt != null) {
@@ -877,6 +882,7 @@ public class BluetoothPeripheral {
     /**
      * Complete the disconnect after getting connectionstate == disconnected
      */
+    @SuppressLint("MissingPermission")
     private void completeDisconnect(final boolean notify, @NotNull final HciStatus status) {
         if (bluetoothGatt != null) {
             bluetoothGatt.close();
@@ -917,6 +923,7 @@ public class BluetoothPeripheral {
      *
      * @return the PeripheralType
      */
+    @SuppressLint("MissingPermission")
     @NotNull
     public PeripheralType getType() {
         return PeripheralType.fromValue(device.getType());
@@ -929,6 +936,7 @@ public class BluetoothPeripheral {
      */
     @NotNull
     public String getName() {
+        @SuppressLint("MissingPermission")
         final String name = device.getName();
         if (name != null) {
             // Cache the name so that we even know it when bluetooth is switched off
@@ -943,6 +951,7 @@ public class BluetoothPeripheral {
      *
      * @return the bond state
      */
+    @SuppressLint("MissingPermission")
     @NotNull
     public BondState getBondState() {
         return BondState.fromValue(device.getBondState());
@@ -1127,6 +1136,7 @@ public class BluetoothPeripheral {
         }
 
         return enqueue(new Runnable() {
+            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1215,6 +1225,7 @@ public class BluetoothPeripheral {
         final byte[] bytesToWrite = copyOf(value);
 
         return enqueue(new Runnable() {
+            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1268,6 +1279,7 @@ public class BluetoothPeripheral {
         }
 
         return enqueue(new Runnable() {
+            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1315,6 +1327,7 @@ public class BluetoothPeripheral {
         final byte[] bytesToWrite = copyOf(value);
 
         return enqueue(new Runnable() {
+            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1393,6 +1406,7 @@ public class BluetoothPeripheral {
         final byte[] finalValue = enable ? value : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
 
         return enqueue(new Runnable() {
+            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (notConnected()) {
@@ -1443,6 +1457,7 @@ public class BluetoothPeripheral {
         }
 
         return enqueue(new Runnable() {
+            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1481,6 +1496,7 @@ public class BluetoothPeripheral {
         }
 
         return enqueue(new Runnable() {
+            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1513,6 +1529,7 @@ public class BluetoothPeripheral {
         }
 
         return enqueue(new Runnable() {
+            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1563,6 +1580,7 @@ public class BluetoothPeripheral {
         }
 
         return enqueue(new Runnable() {
+            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1594,6 +1612,7 @@ public class BluetoothPeripheral {
         }
 
         return enqueue(new Runnable() {
+            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1794,6 +1813,7 @@ public class BluetoothPeripheral {
 
     /////////////////
 
+    @SuppressLint("MissingPermission")
     private BluetoothGatt connectGattHelper(BluetoothDevice remoteDevice, boolean autoConnect, BluetoothGattCallback bluetoothGattCallback) {
 
         if (remoteDevice == null) {
@@ -1846,6 +1866,7 @@ public class BluetoothPeripheral {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private BluetoothGatt connectGattCompat(BluetoothGattCallback bluetoothGattCallback, BluetoothDevice device, boolean autoConnect) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             return device.connectGatt(context, autoConnect, bluetoothGattCallback, transport.value);
