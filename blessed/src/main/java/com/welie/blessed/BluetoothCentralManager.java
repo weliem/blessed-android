@@ -24,6 +24,7 @@
 package com.welie.blessed;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -107,7 +108,7 @@ public class BluetoothCentralManager {
         @Override
         public void onScanResult(final int callbackType, final ScanResult result) {
             synchronized (this) {
-                final String deviceName = result.getDevice().getName();
+                @SuppressLint("MissingPermission") final String deviceName = result.getDevice().getName();
                 if (deviceName == null) return;
 
                 for (String name : scanPeripheralNames) {
@@ -399,6 +400,7 @@ public class BluetoothCentralManager {
         this.transport = Objects.requireNonNull(transport, "not a valid transport");
     }
 
+    @SuppressLint("MissingPermission")
     private void startScan(@NotNull final List<ScanFilter> filters, @NotNull final ScanSettings scanSettings, @NotNull final ScanCallback scanCallback) {
         if (bleNotReady()) return;
 
@@ -516,6 +518,7 @@ public class BluetoothCentralManager {
     /**
      * Scan for peripherals that need to be autoconnected but are not cached
      */
+    @SuppressLint("MissingPermission")
     private void scanForAutoConnectPeripherals() {
         if (bleNotReady()) return;
 
@@ -541,6 +544,7 @@ public class BluetoothCentralManager {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private void stopAutoconnectScan() {
         cancelAutoConnectTimer();
         if (autoConnectScanner != null) {
@@ -557,6 +561,7 @@ public class BluetoothCentralManager {
     /**
      * Stop scanning for peripherals.
      */
+    @SuppressLint("MissingPermission")
     public void stopScan() {
         cancelTimeoutTimer();
         if (isScanning()) {
@@ -928,6 +933,7 @@ public class BluetoothCentralManager {
     private void setAutoConnectTimer() {
         cancelAutoConnectTimer();
         autoConnectRunnable = new Runnable() {
+            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 Logger.d(TAG,"autoconnect scan timeout, restarting scan");
@@ -996,10 +1002,12 @@ public class BluetoothCentralManager {
      * @param peripheralAddress the address of the peripheral
      * @return true if the peripheral was succesfully bonded or it wasn't bonded, false if it was bonded and removing it failed
      */
+    @SuppressLint("MissingPermission")
     public boolean removeBond(@NotNull final String peripheralAddress) {
         Objects.requireNonNull(peripheralAddress, NO_PERIPHERAL_ADDRESS_PROVIDED);
 
         // Get the set of bonded devices
+        @SuppressLint("MissingPermission")
         final Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices();
 
         // See if the device is bonded
@@ -1038,6 +1046,7 @@ public class BluetoothCentralManager {
      * <p>
      * If the pairing popup is shown within 60 seconds, it will be shown in the foreground.
      */
+    @SuppressLint("MissingPermission")
     public void startPairingPopupHack() {
         // Check if we are on a Samsung device because those don't need the hack
         final String manufacturer = Build.MANUFACTURER;
@@ -1125,6 +1134,7 @@ public class BluetoothCentralManager {
         }
     };
 
+    @SuppressLint("MissingPermission")
     private void handleAdapterState(final int state) {
         switch (state) {
             case BluetoothAdapter.STATE_OFF:
