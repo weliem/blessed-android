@@ -690,6 +690,27 @@ public class BluetoothBytesParser {
     }
 
     /**
+     * Set byte array to the bytes at current offset
+     *
+     * @param value byteArray to be added to this byte array
+     */
+    public void setByteArray(final byte[] value) {
+        setByteArray(value, internalOffset);
+        internalOffset += value.length;
+    }
+
+    /**
+     * Set byte array to a string at specified offset position
+     *
+     * @param value  byte array to be added to this byte array
+     * @param offset the offset to place the string at
+     */
+    public void setByteArray(final byte[] value, final int offset) {
+        prepareArray(offset + value.length);
+        System.arraycopy(value, 0, getValue(), offset, value.length);
+    }
+
+    /**
      * Set byte array to a string at current offset
      *
      * @param value String to be added to byte array
@@ -708,11 +729,9 @@ public class BluetoothBytesParser {
      * @param offset the offset to place the string at
      * @throws NullPointerException if value is null
      */
-    public void setString(final String value, final int offset) {
+    public void setString(@NotNull final String value, final int offset) {
         Objects.requireNonNull(value);
-        prepareArray(offset + value.length());
-        byte[] valueBytes = value.getBytes();
-        System.arraycopy(valueBytes, 0, mValue, offset, valueBytes.length);
+        setByteArray(value.getBytes(), offset);
     }
 
 
