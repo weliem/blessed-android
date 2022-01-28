@@ -539,6 +539,7 @@ public class BluetoothBytesParserTest {
     }
 
     @Test
+    // Note: the setStringTest() implicitly tests setByteArray
     public void setStringTest() {
         String testString = "Hallo";
         String testString2 = " Martijn";
