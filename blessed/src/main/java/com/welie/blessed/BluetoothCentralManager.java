@@ -1122,14 +1122,13 @@ public class BluetoothCentralManager {
 
             if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
                 final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                handleAdapterState(state);
                 callBackHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         bluetoothCentralManagerCallback.onBluetoothAdapterStateChanged(state);
                     }
                 });
-
-                handleAdapterState(state);
             }
         }
     };
