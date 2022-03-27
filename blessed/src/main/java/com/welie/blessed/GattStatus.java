@@ -33,7 +33,7 @@ import org.jetbrains.annotations.NotNull;
  * </p>
  *
  * <p>Gatt status values as defined in the Android source code:
- * https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/master/stack/include/gatt_api.h
+ * https://cs.android.com/android/platform/superproject/+/master:packages/modules/Bluetooth/system/stack/include/gatt_api.h;l=37
  * </p>
  */
 public enum GattStatus {
@@ -138,6 +138,11 @@ public enum GattStatus {
      */
     VALUE_NOT_ALLOWED(0x13),
 
+    /**
+     * Too short
+     */
+    TOO_SHORT(0x7F),
+
     // (0x80 – 0x9F) - Application error code defined by a higher layer specification.
     // So the following codes are Android specific
 
@@ -220,6 +225,21 @@ public enum GattStatus {
      * Command is sent but L2CAP channel is congested
      */
     CONNECTION_CONGESTED(0x8f),
+
+    /**
+     * Duplicate registration
+     */
+    DUPLICATE_REGISTRATION(0x90),
+
+    /**
+     * Already open
+     */
+    ALREADY_OPEN(0x91),
+
+    /**
+     * Cancel
+     */
+    CANCEL(0x92),
 
     // (0xE0 – 0xFF) - Common profile and service error codes defined in Core Specification Supplement, Part B.
 
