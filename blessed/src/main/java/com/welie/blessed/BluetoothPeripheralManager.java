@@ -299,6 +299,8 @@ public class BluetoothPeripheralManager {
                             Logger.i(TAG,"notifying disabled for <%s>", characteristic.getUuid());
                             callback.onNotifyingDisabled(bluetoothCentral, characteristic);
                         }
+                    } else if (status == GattStatus.SUCCESS && !preparedWrite) {
+                        callback.onDescriptorWriteCompleted(bluetoothCentral, descriptor, safeValue);
                     }
                 }
             });

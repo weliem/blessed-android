@@ -116,6 +116,17 @@ public abstract class BluetoothPeripheralManagerCallback {
     }
 
     /**
+     * A remote central has successfully written a new value to a descriptor
+     *
+     * This callback is called after the value has been set to the descriptor
+     *
+     * @param bluetoothCentral the central that did the write
+     * @param descriptor the descriptor that was written
+     * @param value the value the central has written
+     */
+    public void onDescriptorWriteCompleted(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattDescriptor descriptor, @NotNull byte[] value) {}
+
+    /**
      * A remote central has enabled notifications or indications for a characteristic
      *
      * @param bluetoothCentral the central
