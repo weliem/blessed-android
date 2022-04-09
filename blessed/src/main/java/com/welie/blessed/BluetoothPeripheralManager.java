@@ -219,6 +219,10 @@ public class BluetoothPeripheralManager {
                     if (responseNeeded) {
                         bluetoothGattServer.sendResponse(device, requestId, status.value, offset, safeValue);
                     }
+
+                    if (status == GattStatus.SUCCESS && !preparedWrite) {
+                        callback.onCharacteristicWriteCompleted(bluetoothCentral, characteristic, safeValue);
+                    }
                 }
             });
         }

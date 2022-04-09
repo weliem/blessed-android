@@ -75,6 +75,17 @@ public abstract class BluetoothPeripheralManagerCallback {
     }
 
     /**
+     * A remote central has successfully written a new value to a characteristic
+     *
+     * This callback is called after the value has been set to the characteristic
+     *
+     * @param bluetoothCentral the central that did the write
+     * @param characteristic the characteristic that was written
+     * @param value the value the central has written
+     */
+    public void onCharacteristicWriteCompleted(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattCharacteristic characteristic, @NotNull byte[] value) {}
+
+    /**
      * A remote central has requested to read a local descriptor.
      *
      * <p>This callback is called before the current value of the descriptor is returned to the central.
