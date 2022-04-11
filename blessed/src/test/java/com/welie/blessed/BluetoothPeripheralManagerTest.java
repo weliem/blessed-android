@@ -329,6 +329,7 @@ public class BluetoothPeripheralManagerTest {
         // Then
         verify(characteristic).setValue(value);
         verify(server).sendResponse(device, 1, GattStatus.SUCCESS.value, 0, value);
+        verify(peripheralManagerCallback).onCharacteristicWriteCompleted(any(BluetoothCentral.class), any(BluetoothGattCharacteristic.class), any(byte[].class));
     }
 
     @Test
