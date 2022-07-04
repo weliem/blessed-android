@@ -79,8 +79,8 @@ public class BluetoothCentralManager {
     private @NotNull final Context context;
     private @NotNull final Handler callBackHandler;
     private @NotNull final BluetoothAdapter bluetoothAdapter;
-    private @Nullable BluetoothLeScanner bluetoothScanner;
-    private @Nullable BluetoothLeScanner autoConnectScanner;
+    private @Nullable volatile BluetoothLeScanner bluetoothScanner;
+    private @Nullable volatile BluetoothLeScanner autoConnectScanner;
     private @NotNull final BluetoothCentralManagerCallback bluetoothCentralManagerCallback;
     private @NotNull final Map<String, BluetoothPeripheral> connectedPeripherals = new ConcurrentHashMap<>();
     private @NotNull final Map<String, BluetoothPeripheral> unconnectedPeripherals = new ConcurrentHashMap<>();
@@ -92,7 +92,8 @@ public class BluetoothCentralManager {
     private @Nullable Runnable timeoutRunnable;
     private @Nullable Runnable autoConnectRunnable;
     private @NotNull final Object connectLock = new Object();
-    private @Nullable ScanCallback currentCallback;
+    private @NotNull final Object scanLock = new Object();
+    private @Nullable volatile ScanCallback currentCallback;
     private @Nullable List<ScanFilter> currentFilters;
     private @NotNull ScanSettings scanSettings;
     private @NotNull final ScanSettings autoConnectScanSettings;
@@ -548,7 +549,9 @@ public class BluetoothCentralManager {
     private void stopAutoconnectScan() {
         cancelAutoConnectTimer();
         if (autoConnectScanner != null) {
-            autoConnectScanner.stopScan(autoConnectScanCallback);
+            try {
+                autoConnectScanner.stopScan(autoConnectScanCallback);
+            } catch (Exception ignore) {}
             autoConnectScanner = null;
             Logger.i(TAG,"autoscan stopped");
         }
@@ -563,19 +566,25 @@ public class BluetoothCentralManager {
      */
     @SuppressLint("MissingPermission")
     public void stopScan() {
-        cancelTimeoutTimer();
-        if (isScanning()) {
-            if(bluetoothScanner != null) {
-                bluetoothScanner.stopScan(currentCallback);
-                Logger.i(TAG,"scan stopped");
+        synchronized (scanLock) {
+            cancelTimeoutTimer();
+            if (isScanning()) {
+                try {
+                    if (bluetoothScanner != null) {
+                        bluetoothScanner.stopScan(currentCallback);
+                        Logger.i(TAG, "scan stopped");
+                    }
+                } catch (Exception ignore) {
+                    Logger.e(TAG, "caught exception in stopScan");
+                }
+            } else {
+                Logger.i(TAG, "no scan to stop because no scan is running");
             }
-        } else {
-            Logger.i(TAG,"no scan to stop because no scan is running");
+            currentCallback = null;
+            currentFilters = null;
+            bluetoothScanner = null;
+            scannedPeripherals.clear();
         }
-        currentCallback = null;
-        currentFilters = null;
-        bluetoothScanner = null;
-        scannedPeripherals.clear();
     }
 
     /**
