@@ -1187,7 +1187,11 @@ public class BluetoothCentralManager {
                 // On some phones like Nokia 8, this scanner may still have an older active scan from us
                 // This happens when bluetooth is toggled. So make sure it is gone.
                 bluetoothScanner = bluetoothAdapter.getBluetoothLeScanner();
-                bluetoothScanner.stopScan(defaultScanCallback);
+                if (bluetoothScanner != null) {
+                    try {
+                        bluetoothScanner.stopScan(defaultScanCallback);
+                    } catch (Exception ignore) {}
+                }
 
                 expectingBluetoothOffDisconnects = false;
                 break;
