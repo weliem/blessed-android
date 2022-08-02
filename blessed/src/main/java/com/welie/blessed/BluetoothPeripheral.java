@@ -32,6 +32,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
+import android.bluetooth.BluetoothStatusCodes;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -73,7 +74,7 @@ import static com.welie.blessed.BluetoothBytesParser.bytes2String;
  * <p>A {@link BluetoothPeripheral} lets you create a connection with the peripheral or query information about it.
  * This class is a wrapper around the {@link BluetoothDevice} and takes care of operation queueing, some Android bugs, and provides several convenience functions.
  */
-@SuppressWarnings({"SpellCheckingInspection", "unused", "UnusedReturnValue"})
+@SuppressWarnings({"SpellCheckingInspection", "unused", "UnusedReturnValue", "MissingPermission"})
 public class BluetoothPeripheral {
 
     private static final String TAG = BluetoothPeripheral.class.getSimpleName();
@@ -269,32 +270,42 @@ public class BluetoothPeripheral {
         }
 
         @Override
-        public void onCharacteristicChanged(@NotNull final BluetoothGatt gatt, @NotNull final BluetoothGattCharacteristic characteristic) {
-            final byte[] value = nonnullOf(characteristic.getValue());
+        public void onCharacteristicChanged(@NotNull final BluetoothGatt gatt, @NotNull final BluetoothGattCharacteristic characteristic, @Nullable final byte[] value) {
+            final byte[] safeValue = nonnullOf(value);
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    peripheralCallback.onCharacteristicUpdate(BluetoothPeripheral.this, value, characteristic, GattStatus.SUCCESS);
+                    peripheralCallback.onCharacteristicUpdate(BluetoothPeripheral.this, safeValue, characteristic, GattStatus.SUCCESS);
                 }
             });
         }
 
         @Override
-        public void onCharacteristicRead(@NotNull final BluetoothGatt gatt, @NotNull final BluetoothGattCharacteristic characteristic, final int status) {
+        public void onCharacteristicChanged(@NotNull final BluetoothGatt gatt, @NotNull final BluetoothGattCharacteristic characteristic) {
+            onCharacteristicChanged(gatt, characteristic, characteristic.getValue());
+        }
+
+        @Override
+        public void onCharacteristicRead(@NotNull final BluetoothGatt gatt, @NotNull final BluetoothGattCharacteristic characteristic, @Nullable final byte[] value, final int status) {
             final GattStatus gattStatus = GattStatus.fromValue(status);
             if (gattStatus != GattStatus.SUCCESS) {
                 Logger.e(TAG,"read failed for characteristic <%s>, status '%s'", characteristic.getUuid(), gattStatus);
                 if (failureThatShouldTriggerBonding(gattStatus)) return;
             }
 
-            final byte[] value = nonnullOf(characteristic.getValue());
+            final byte[] safeValue = nonnullOf(value);
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    peripheralCallback.onCharacteristicUpdate(BluetoothPeripheral.this, value, characteristic, gattStatus);
+                    peripheralCallback.onCharacteristicUpdate(BluetoothPeripheral.this, safeValue, characteristic, gattStatus);
                 }
             });
             completedCommand();
+        }
+
+        @Override
+        public void onCharacteristicRead(@NotNull final BluetoothGatt gatt, @NotNull final BluetoothGattCharacteristic characteristic, final int status) {
+            onCharacteristicRead(gatt, characteristic, characteristic.getValue(), status);
         }
 
         @Override
@@ -457,7 +468,6 @@ public class BluetoothPeripheral {
 
     private void delayedDiscoverServices(final long delay) {
         discoverServicesRunnable = new Runnable() {
-            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 Logger.d(TAG,"discovering services of '%s' with delay of %d ms", getName(), delay);
@@ -676,7 +686,6 @@ public class BluetoothPeripheral {
     }
 
     private final BroadcastReceiver pairingRequestBroadcastReceiver = new BroadcastReceiver() {
-        @SuppressLint("MissingPermission")
         @Override
         public void onReceive(final Context context, final Intent intent) {
             final BluetoothDevice receivedDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
@@ -787,7 +796,6 @@ public class BluetoothPeripheral {
      *
      * @return true if bonding was started/enqueued, false if not
      */
-    @SuppressLint("MissingPermission")
     public boolean createBond() {
         // Check if we have a Gatt object
         if (bluetoothGatt == null) {
@@ -860,7 +868,6 @@ public class BluetoothPeripheral {
         if (state == BluetoothProfile.STATE_CONNECTED || state == BluetoothProfile.STATE_CONNECTING) {
             bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_DISCONNECTING);
             mainHandler.post(new Runnable() {
-                @SuppressLint("MissingPermission")
                 @Override
                 public void run() {
                     if (state == BluetoothProfile.STATE_DISCONNECTING && bluetoothGatt != null) {
@@ -882,7 +889,6 @@ public class BluetoothPeripheral {
     /**
      * Complete the disconnect after getting connectionstate == disconnected
      */
-    @SuppressLint("MissingPermission")
     private void completeDisconnect(final boolean notify, @NotNull final HciStatus status) {
         if (bluetoothGatt != null) {
             bluetoothGatt.close();
@@ -923,7 +929,6 @@ public class BluetoothPeripheral {
      *
      * @return the PeripheralType
      */
-    @SuppressLint("MissingPermission")
     @NotNull
     public PeripheralType getType() {
         return PeripheralType.fromValue(device.getType());
@@ -936,7 +941,6 @@ public class BluetoothPeripheral {
      */
     @NotNull
     public String getName() {
-        @SuppressLint("MissingPermission")
         final String name = device.getName();
         if (name != null) {
             // Cache the name so that we even know it when bluetooth is switched off
@@ -951,7 +955,6 @@ public class BluetoothPeripheral {
      *
      * @return the bond state
      */
-    @SuppressLint("MissingPermission")
     @NotNull
     public BondState getBondState() {
         return BondState.fromValue(device.getBondState());
@@ -1136,7 +1139,6 @@ public class BluetoothPeripheral {
         }
 
         return enqueue(new Runnable() {
-            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1225,13 +1227,9 @@ public class BluetoothPeripheral {
         final byte[] bytesToWrite = copyOf(value);
 
         return enqueue(new Runnable() {
-            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (isConnected()) {
-                    currentWriteBytes = bytesToWrite;
-                    characteristic.setWriteType(writeType.writeType);
-
                     if (willCauseLongWrite(bytesToWrite, writeType)) {
                         // Android will turn this into a Long Write because it is larger than the MTU - 3.
                         // When doing a Long Write the byte array will be automatically split in chunks of size MTU - 3.
@@ -1241,8 +1239,8 @@ public class BluetoothPeripheral {
                         // See https://stackoverflow.com/questions/48216517/rxandroidble-write-only-sends-the-first-20b
                         Logger.w(TAG,"value byte array is longer than allowed by MTU, write will fail if peripheral does not support long writes");
                     }
-                    characteristic.setValue(bytesToWrite);
-                    if (bluetoothGatt.writeCharacteristic(characteristic)) {
+
+                    if (internalWriteCharacteristic(characteristic, bytesToWrite, writeType)) {
                         Logger.d(TAG,"writing <%s> to characteristic <%s>", bytes2String(bytesToWrite), characteristic.getUuid());
                         nrTries++;
                     } else {
@@ -1264,6 +1262,24 @@ public class BluetoothPeripheral {
         return (characteristic.getProperties() & writeType.property) == 0;
     }
 
+    private boolean internalWriteCharacteristic(@NotNull final BluetoothGattCharacteristic characteristic,
+                                                @NotNull final byte[] value,
+                                                @NotNull final WriteType writeType) {
+
+        if (bluetoothGatt == null) return false;
+
+        currentWriteBytes = value;
+
+        if (Build.VERSION.SDK_INT >= 33) {
+            final int result = bluetoothGatt.writeCharacteristic(characteristic, currentWriteBytes, writeType.writeType);
+            return result == BluetoothStatusCodes.SUCCESS;
+        } else {
+            characteristic.setWriteType(writeType.writeType);
+            characteristic.setValue(value);
+            return bluetoothGatt.writeCharacteristic(characteristic);
+        }
+    }
+
     /**
      * Read the value of a descriptor.
      *
@@ -1279,7 +1295,6 @@ public class BluetoothPeripheral {
         }
 
         return enqueue(new Runnable() {
-            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1327,7 +1342,6 @@ public class BluetoothPeripheral {
         final byte[] bytesToWrite = copyOf(value);
 
         return enqueue(new Runnable() {
-            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1406,7 +1420,6 @@ public class BluetoothPeripheral {
         final byte[] finalValue = enable ? value : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
 
         return enqueue(new Runnable() {
-            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (notConnected()) {
@@ -1457,7 +1470,6 @@ public class BluetoothPeripheral {
         }
 
         return enqueue(new Runnable() {
-            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1496,7 +1508,6 @@ public class BluetoothPeripheral {
         }
 
         return enqueue(new Runnable() {
-            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1529,7 +1540,6 @@ public class BluetoothPeripheral {
         }
 
         return enqueue(new Runnable() {
-            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1580,7 +1590,6 @@ public class BluetoothPeripheral {
         }
 
         return enqueue(new Runnable() {
-            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1612,7 +1621,6 @@ public class BluetoothPeripheral {
         }
 
         return enqueue(new Runnable() {
-            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (isConnected()) {
@@ -1813,7 +1821,6 @@ public class BluetoothPeripheral {
 
     /////////////////
 
-    @SuppressLint("MissingPermission")
     private BluetoothGatt connectGattHelper(BluetoothDevice remoteDevice, boolean autoConnect, BluetoothGattCallback bluetoothGattCallback) {
 
         if (remoteDevice == null) {
@@ -1866,7 +1873,6 @@ public class BluetoothPeripheral {
         }
     }
 
-    @SuppressLint("MissingPermission")
     private BluetoothGatt connectGattCompat(BluetoothGattCallback bluetoothGattCallback, BluetoothDevice device, boolean autoConnect) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             return device.connectGatt(context, autoConnect, bluetoothGattCallback, transport.value);
