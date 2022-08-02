@@ -98,7 +98,6 @@ public class BluetoothCentralManager {
     private @NotNull ScanSettings scanSettings;
     private @NotNull final ScanSettings autoConnectScanSettings;
     private @NotNull final Map<String, Integer> connectionRetries = new ConcurrentHashMap<>();
-    private boolean expectingBluetoothOffDisconnects = false;
     private @Nullable Runnable disconnectRunnable;
     private @NotNull final Map<String, String> pinCodes = new ConcurrentHashMap<>();
     private @NotNull Transport transport = DEFAULT_TRANSPORT;
@@ -275,11 +274,6 @@ public class BluetoothCentralManager {
 
         @Override
         public void disconnected(@NotNull final BluetoothPeripheral peripheral, @NotNull final HciStatus status) {
-            if (expectingBluetoothOffDisconnects) {
-                cancelDisconnectionTimer();
-                expectingBluetoothOffDisconnects = false;
-            }
-
             removePeripheralFromCaches(peripheral.getAddress());
             callBackHandler.post(new Runnable() {
                 @Override
@@ -569,9 +563,14 @@ public class BluetoothCentralManager {
         synchronized (scanLock) {
             cancelTimeoutTimer();
             if (isScanning()) {
+                // Note that we can't call stopScan if the adapter is off
+                // On some phones like the Nokia 8, the adapter will be already off at this point
+                // So add a try/catch to handle any exceptions
                 try {
                     if (bluetoothScanner != null) {
                         bluetoothScanner.stopScan(currentCallback);
+                        currentCallback = null;
+                        currentFilters = null;
                         Logger.i(TAG, "scan stopped");
                     }
                 } catch (Exception ignore) {
@@ -580,8 +579,7 @@ public class BluetoothCentralManager {
             } else {
                 Logger.i(TAG, "no scan to stop because no scan is running");
             }
-            currentCallback = null;
-            currentFilters = null;
+
             bluetoothScanner = null;
             scannedPeripherals.clear();
         }
@@ -1148,35 +1146,36 @@ public class BluetoothCentralManager {
             case BluetoothAdapter.STATE_OFF:
                 // Check if there are any connected peripherals or connections in progress
                 if (connectedPeripherals.size() > 0 || unconnectedPeripherals.size() > 0) {
-                    // See if they are automatically disconnect
-                    expectingBluetoothOffDisconnects = true;
-                    startDisconnectionTimer();
+                    cancelAllConnectionsWhenBluetoothOff();
                 }
                 Logger.d(TAG,"bluetooth turned off");
                 break;
             case BluetoothAdapter.STATE_TURNING_OFF:
+                // Disconnect connected peripherals
+                for (final BluetoothPeripheral peripheral : connectedPeripherals.values()) {
+                    peripheral.cancelConnection();
+                }
+
+                // Disconnect unconnected peripherals
+                for (final BluetoothPeripheral peripheral : unconnectedPeripherals.values()) {
+                    peripheral.cancelConnection();
+                }
+
+                // Clean up autoconnect by scanning information
+                reconnectPeripheralAddresses.clear();
+                reconnectCallbacks.clear();
+
                 // Stop all scans so that we are back in a clean state
                 if (isScanning()) {
-                    // Note that we can't call stopScan if the adapter is off
-                    // On some phones like the Nokia 8, the adapter will be already off at this point
-                    // So add a try/catch to handle any exceptions
-                    try {
-                        stopScan();
-                    } catch (Exception ignored) { }
+                    stopScan();
                 }
 
                 if(isAutoScanning()) {
-                    try {
-                        stopAutoconnectScan();
-                    } catch (Exception ignored) { }
+                    stopAutoconnectScan();
                 }
-
-                expectingBluetoothOffDisconnects = true;
 
                 cancelTimeoutTimer();
                 cancelAutoConnectTimer();
-                currentCallback = null;
-                currentFilters = null;
                 autoConnectScanner = null;
                 bluetoothScanner = null;
                 Logger.d(TAG,"bluetooth turning off");
@@ -1187,16 +1186,15 @@ public class BluetoothCentralManager {
                 // On some phones like Nokia 8, this scanner may still have an older active scan from us
                 // This happens when bluetooth is toggled. So make sure it is gone.
                 bluetoothScanner = bluetoothAdapter.getBluetoothLeScanner();
-                if (bluetoothScanner != null) {
+                if (bluetoothScanner != null && currentCallback != null) {
                     try {
-                        bluetoothScanner.stopScan(defaultScanCallback);
+                        bluetoothScanner.stopScan(currentCallback);
                     } catch (Exception ignore) {}
                 }
-
-                expectingBluetoothOffDisconnects = false;
+                currentCallback = null;
+                currentFilters = null;
                 break;
             case BluetoothAdapter.STATE_TURNING_ON:
-                expectingBluetoothOffDisconnects = false;
                 Logger.d(TAG,"bluetooth turning on");
                 break;
         }
