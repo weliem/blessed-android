@@ -229,10 +229,12 @@ public class BluetoothPeripheral {
                 if (failureThatShouldTriggerBonding(gattStatus)) return;
             }
 
+            final byte[] value = currentWriteBytes;
+            currentWriteBytes = new byte[0];
+
             // Check if this was the Client Characteristic Configuration Descriptor
             if (descriptor.getUuid().equals(CCC_DESCRIPTOR_UUID)) {
                 if (gattStatus == GattStatus.SUCCESS) {
-                    final byte[] value = currentWriteBytes;
                     if (Arrays.equals(value, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) ||
                             Arrays.equals(value, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)) {
                         notifyingCharacteristics.add(parentCharacteristic);
@@ -248,8 +250,6 @@ public class BluetoothPeripheral {
                     }
                 });
             } else {
-                final byte[] value = currentWriteBytes;
-                currentWriteBytes = new byte[0];
                 callbackHandler.post(new Runnable() {
                     @Override
                     public void run() {
