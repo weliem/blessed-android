@@ -232,7 +232,7 @@ public class BluetoothPeripheral {
             // Check if this was the Client Characteristic Configuration Descriptor
             if (descriptor.getUuid().equals(CCC_DESCRIPTOR_UUID)) {
                 if (gattStatus == GattStatus.SUCCESS) {
-                    final byte[] value = nonnullOf(descriptor.getValue());
+                    final byte[] value = currentWriteBytes;
                     if (Arrays.equals(value, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) ||
                             Arrays.equals(value, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)) {
                         notifyingCharacteristics.add(parentCharacteristic);
@@ -281,7 +281,9 @@ public class BluetoothPeripheral {
 
         @Override
         public void onDescriptorRead(@NotNull final BluetoothGatt gatt, @NotNull final BluetoothGattDescriptor descriptor, final int status) {
-            onDescriptorRead(gatt, descriptor, status, descriptor.getValue());
+            if (android.os.Build.VERSION.SDK_INT < 33) {
+                onDescriptorRead(gatt, descriptor, status, descriptor.getValue());
+            }
         }
 
         @Override
@@ -297,7 +299,9 @@ public class BluetoothPeripheral {
 
         @Override
         public void onCharacteristicChanged(@NotNull final BluetoothGatt gatt, @NotNull final BluetoothGattCharacteristic characteristic) {
-            onCharacteristicChanged(gatt, characteristic, characteristic.getValue());
+            if (android.os.Build.VERSION.SDK_INT < 33) {
+                onCharacteristicChanged(gatt, characteristic, characteristic.getValue());
+            }
         }
 
         @Override
@@ -320,7 +324,9 @@ public class BluetoothPeripheral {
 
         @Override
         public void onCharacteristicRead(@NotNull final BluetoothGatt gatt, @NotNull final BluetoothGattCharacteristic characteristic, final int status) {
-            onCharacteristicRead(gatt, characteristic, characteristic.getValue(), status);
+            if (android.os.Build.VERSION.SDK_INT < 33) {
+                onCharacteristicRead(gatt, characteristic, characteristic.getValue(), status);
+            }
         }
 
         @Override
