@@ -23,7 +23,6 @@
 
 package com.welie.blessed;
 
-import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -34,6 +33,7 @@ import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
+import android.bluetooth.BluetoothStatusCodes;
 import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
@@ -63,6 +63,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static com.welie.blessed.BluetoothBytesParser.bytes2String;
 import static com.welie.blessed.BluetoothBytesParser.mergeArrays;
+
+
+/**
+ * TODO
+ * - Get rid of using characteristic.getValue() calls
+ * - Get rid of using characteristic.setValue() calls
+ */
 
 /**
  * This class represent a peripheral running on the local phone
@@ -561,8 +568,9 @@ public class BluetoothPeripheralManager {
         if (doesNotSupportNotifying(characteristic)) return false;
 
         boolean result = true;
+        final byte[] valueCopy = copyOf(value);
         for (BluetoothDevice device : getConnectedDevices()) {
-            if (!notifyCharacteristicChanged(copyOf(value), device, characteristic)) {
+            if (!notifyCharacteristicChanged(valueCopy, device, characteristic)) {
                 result = false;
             }
         }
@@ -577,20 +585,33 @@ public class BluetoothPeripheralManager {
 
         if (doesNotSupportNotifying(characteristic)) return false;
 
-        final byte[] descriptorValue = characteristic.getDescriptor(CCC_DESCRIPTOR_UUID).getValue();
+        final byte[] descriptorValue = characteristic.getDescriptor(CCC_DESCRIPTOR_UUID).getValue(); // TODO this won't work anymore in Android 13
         final boolean confirm = supportsIndicate(characteristic) && Arrays.equals(descriptorValue, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
         return enqueue(new Runnable() {
             @Override
             public void run() {
-                currentNotifyValue = value;
-                currentNotifyCharacteristic = characteristic;
-                characteristic.setValue(value);
-                if (!bluetoothGattServer.notifyCharacteristicChanged(bluetoothDevice, characteristic, confirm)) {
+                if (!internalNotifyCharacteristicChanged(bluetoothDevice, characteristic, value, confirm)) {
                     Logger.e(TAG,"notifying characteristic changed failed for <%s>", characteristic.getUuid());
                     BluetoothPeripheralManager.this.completedCommand();
                 }
             }
         });
+    }
+
+    private boolean internalNotifyCharacteristicChanged(@NotNull final BluetoothDevice device,
+                                                        @NotNull final BluetoothGattCharacteristic characteristic,
+                                                        @NotNull final byte[] value,
+                                                        final boolean confirm) {
+        currentNotifyValue = value;
+        currentNotifyCharacteristic = characteristic;
+
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            final int result = bluetoothGattServer.notifyCharacteristicChanged(device, characteristic, confirm, value);
+            return result == BluetoothStatusCodes.SUCCESS;
+        } else {
+            characteristic.setValue(value);
+            return bluetoothGattServer.notifyCharacteristicChanged(device, characteristic, confirm);
+        }
     }
 
     /**
