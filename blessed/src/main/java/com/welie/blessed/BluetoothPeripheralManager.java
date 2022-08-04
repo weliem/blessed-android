@@ -67,7 +67,7 @@ import static com.welie.blessed.BluetoothBytesParser.mergeArrays;
 /**
  * This class represent a peripheral running on the local phone
  */
-@SuppressWarnings("UnusedReturnValue")
+@SuppressWarnings({"UnusedReturnValue", "MissingPermission"})
 public class BluetoothPeripheralManager {
 
     private static final String TAG = BluetoothPeripheralManager.class.getSimpleName();
@@ -98,7 +98,6 @@ public class BluetoothPeripheralManager {
     private volatile boolean commandQueueBusy = false;
 
     protected final BluetoothGattServerCallback bluetoothGattServerCallback = new BluetoothGattServerCallback() {
-        @SuppressLint("MissingPermission")
         @Override
         public void onConnectionStateChange(final BluetoothDevice device, final int status, final int newState) {
 
@@ -128,7 +127,6 @@ public class BluetoothPeripheralManager {
             }
         }
 
-        @SuppressLint("MissingPermission")
         private void handleDeviceConnected(@NotNull final BluetoothDevice device) {
             Logger.i(TAG,"Central '%s' (%s) connected", device.getName(), device.getAddress());
             final BluetoothCentral bluetoothCentral = new BluetoothCentral(device.getAddress(), device.getName());
@@ -170,7 +168,6 @@ public class BluetoothPeripheralManager {
 
             final BluetoothCentral bluetoothCentral = getCentral(device);
             mainHandler.post(new Runnable() {
-                @SuppressLint("MissingPermission")
                 @Override
                 public void run() {
                     // Call onCharacteristic before any responses are sent, even if it is a long read
@@ -193,7 +190,6 @@ public class BluetoothPeripheralManager {
             final byte[] safeValue = nonnullOf(value);
             final BluetoothCentral bluetoothCentral = getCentral(device);
             mainHandler.post(new Runnable() {
-                @SuppressLint("MissingPermission")
                 @Override
                 public void run() {
                     GattStatus status = GattStatus.SUCCESS;
@@ -233,7 +229,6 @@ public class BluetoothPeripheralManager {
 
             final BluetoothCentral bluetoothCentral = getCentral(device);
             mainHandler.post(new Runnable() {
-                @SuppressLint("MissingPermission")
                 @Override
                 public void run() {
                     // Call onDescriptorRead before any responses are sent, even if it is a long read
@@ -258,7 +253,6 @@ public class BluetoothPeripheralManager {
 
             final BluetoothCentral bluetoothCentral = getCentral(device);
             mainHandler.post(new Runnable() {
-                @SuppressLint("MissingPermission")
                 @Override
                 public void run() {
                     GattStatus status = GattStatus.SUCCESS;
@@ -324,7 +318,6 @@ public class BluetoothPeripheralManager {
             return status;
         }
 
-        @SuppressLint("MissingPermission")
         @Override
         public void onExecuteWrite(@NotNull final BluetoothDevice device, final int requestId, final boolean execute) {
             final BluetoothCentral bluetoothCentral = getCentral(device);
@@ -442,7 +435,6 @@ public class BluetoothPeripheralManager {
      * @param bluetoothManager a valid BluetoothManager
      * @param callback an instance of BluetoothPeripheralManagerCallback where the callbacks will be handled
      */
-    @SuppressLint("MissingPermission")
     public BluetoothPeripheralManager(@NotNull final Context context, @NotNull final BluetoothManager bluetoothManager, @NotNull final BluetoothPeripheralManagerCallback callback) {
         this.context = Objects.requireNonNull(context, CONTEXT_IS_NULL);
         this.callback = Objects.requireNonNull(callback, "Callback is null");
@@ -463,7 +455,6 @@ public class BluetoothPeripheralManager {
      * this BluetoothPeripheralManager.
      *
      */
-    @SuppressLint("MissingPermission")
     public void close() {
         stopAdvertising();
         context.unregisterReceiver(adapterStateReceiver);
@@ -480,7 +471,6 @@ public class BluetoothPeripheralManager {
      * @param advertiseData the AdvertiseData
      * @param scanResponse the ScanResponse
      */
-    @SuppressLint("MissingPermission")
     public void startAdvertising(@NotNull final AdvertiseSettings settings, @NotNull final AdvertiseData advertiseData, @NotNull final AdvertiseData scanResponse) {
         if (!bluetoothAdapter.isMultipleAdvertisementSupported()) {
             Logger.e(TAG,"device does not support advertising");
@@ -492,7 +482,6 @@ public class BluetoothPeripheralManager {
     /**
      * Stop advertising
      */
-    @SuppressLint("MissingPermission")
     public void stopAdvertising() {
         bluetoothLeAdvertiser.stopAdvertising(advertiseCallback);
         onAdvertisingStopped();
@@ -516,7 +505,6 @@ public class BluetoothPeripheralManager {
         Objects.requireNonNull(service, SERVICE_IS_NULL);
 
         return enqueue(new Runnable() {
-            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 if (!bluetoothGattServer.addService(service)) {
@@ -533,7 +521,6 @@ public class BluetoothPeripheralManager {
      * @param service the service to remove
      * @return true if the service was removed, otherwise false
      */
-    @SuppressLint("MissingPermission")
     public boolean remove(@NotNull final BluetoothGattService service) {
         Objects.requireNonNull(service, SERVICE_IS_NULL);
 
@@ -543,7 +530,6 @@ public class BluetoothPeripheralManager {
     /**
      * Remove all services
      */
-    @SuppressLint("MissingPermission")
     public void removeAllServices() {
         bluetoothGattServer.clearServices();
     }
@@ -594,7 +580,6 @@ public class BluetoothPeripheralManager {
         final byte[] descriptorValue = characteristic.getDescriptor(CCC_DESCRIPTOR_UUID).getValue();
         final boolean confirm = supportsIndicate(characteristic) && Arrays.equals(descriptorValue, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
         return enqueue(new Runnable() {
-            @SuppressLint("MissingPermission")
             @Override
             public void run() {
                 currentNotifyValue = value;
@@ -618,7 +603,6 @@ public class BluetoothPeripheralManager {
         cancelConnection(bluetoothAdapter.getRemoteDevice(bluetoothCentral.getAddress()));
     }
 
-    @SuppressLint("MissingPermission")
     private void cancelConnection(@NotNull final BluetoothDevice bluetoothDevice) {
         Objects.requireNonNull(bluetoothDevice, DEVICE_IS_NULL);
 
@@ -626,7 +610,6 @@ public class BluetoothPeripheralManager {
         bluetoothGattServer.cancelConnection(bluetoothDevice);
     }
 
-    @SuppressLint("MissingPermission")
     private @NotNull List<BluetoothDevice> getConnectedDevices() {
         return bluetoothManager.getConnectedDevices(BluetoothGattServer.GATT);
     }
@@ -702,7 +685,6 @@ public class BluetoothPeripheralManager {
         return connectedCentralsMap.get(address);
     }
 
-    @SuppressLint("MissingPermission")
     @NotNull
     private BluetoothCentral getCentral(@NotNull final BluetoothDevice device) {
         Objects.requireNonNull(device, DEVICE_IS_NULL);
