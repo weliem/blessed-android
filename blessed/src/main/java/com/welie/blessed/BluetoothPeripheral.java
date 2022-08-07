@@ -127,25 +127,18 @@ public class BluetoothPeripheral {
     private static final int REQUEST_MTU_COMMAND = 1;
     private static final int SET_PHY_TYPE_COMMAND = 2;
 
-    private @NotNull
-    final Context context;
-    private @NotNull
-    final Handler callbackHandler;
+    private @NotNull final Context context;
+    private @NotNull final Handler callbackHandler;
     private @NotNull BluetoothDevice device;
-    private @NotNull
-    final InternalCallback listener;
+    private @NotNull final InternalCallback listener;
     protected @NotNull BluetoothPeripheralCallback peripheralCallback;
-    private @NotNull
-    final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
-    private @Nullable
-    volatile BluetoothGatt bluetoothGatt;
+    private @NotNull final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
+    private @Nullable volatile BluetoothGatt bluetoothGatt;
     private @NotNull String cachedName = "";
     private @NotNull byte[] currentWriteBytes = new byte[0];
     private int currentCommand = IDLE;
-    private @NotNull
-    final Set<BluetoothGattCharacteristic> notifyingCharacteristics = new HashSet<>();
-    private @NotNull
-    final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private @NotNull final Set<BluetoothGattCharacteristic> notifyingCharacteristics = new HashSet<>();
+    private @NotNull final Handler mainHandler = new Handler(Looper.getMainLooper());
     private @Nullable Runnable timeoutRunnable;
     private @Nullable Runnable discoverServicesRunnable;
 
