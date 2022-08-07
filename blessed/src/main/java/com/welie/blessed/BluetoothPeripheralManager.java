@@ -42,6 +42,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 
@@ -64,12 +65,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import static com.welie.blessed.BluetoothBytesParser.bytes2String;
 import static com.welie.blessed.BluetoothBytesParser.mergeArrays;
 
-
-/**
- * TODO
- * - Get rid of using characteristic.getValue() calls
- * - Get rid of using characteristic.setValue() calls
- */
 
 /**
  * This class represent a peripheral running on the local phone
@@ -101,7 +96,9 @@ public class BluetoothPeripheralManager {
     private @NotNull final HashMap<BluetoothGattDescriptor, byte[]> writeLongDescriptorTemporaryBytes = new HashMap<>();
     private @NotNull final Map<String, BluetoothCentral> connectedCentralsMap = new ConcurrentHashMap<>();
     private @Nullable BluetoothGattCharacteristic currentNotifyCharacteristic = null;
+    private @NotNull final Set<BluetoothGattCharacteristic> indicatingCharacteristics = new HashSet<>();
     private @NotNull byte[] currentNotifyValue = new byte[0];
+    private @NotNull byte[] currentReadValue = new byte[0];
     private volatile boolean commandQueueBusy = false;
 
     protected final BluetoothGattServerCallback bluetoothGattServerCallback = new BluetoothGattServerCallback() {
@@ -177,15 +174,20 @@ public class BluetoothPeripheralManager {
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
+                    GattStatus status = GattStatus.SUCCESS;
+
                     // Call onCharacteristic before any responses are sent, even if it is a long read
                     if (offset == 0) {
-                        callback.onCharacteristicRead(bluetoothCentral, characteristic);
+                        final ReadResponse response = callback.onCharacteristicRead(bluetoothCentral, characteristic);
+                        Objects.requireNonNull(response, "no valid ReadResponse returned");
+                        status = response.status;
+                        currentReadValue = response.value;
                     }
 
                     // Get the byte array starting at the offset
-                    final byte[] value = chopValue(characteristic.getValue(), offset);
+                    final byte[] value = chopValue(currentReadValue, offset);
 
-                    bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value);
+                    bluetoothGattServer.sendResponse(device, requestId, status.value, offset, value);
                 }
             });
         }
@@ -204,7 +206,9 @@ public class BluetoothPeripheralManager {
                         status = callback.onCharacteristicWrite(bluetoothCentral, characteristic, safeValue);
 
                         if (status == GattStatus.SUCCESS) {
-                            characteristic.setValue(safeValue);
+                            if (android.os.Build.VERSION.SDK_INT < 33) {
+                                characteristic.setValue(safeValue);
+                            }
                         }
                     } else {
                         if (offset == 0) {
@@ -238,15 +242,20 @@ public class BluetoothPeripheralManager {
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
+                    GattStatus status = GattStatus.SUCCESS;
+
                     // Call onDescriptorRead before any responses are sent, even if it is a long read
                     if (offset == 0) {
-                        callback.onDescriptorRead(bluetoothCentral, descriptor);
+                        final ReadResponse response = callback.onDescriptorRead(bluetoothCentral, descriptor);
+                        Objects.requireNonNull(response, "no valid ReadResponse returned");
+                        status = response.status;
+                        currentReadValue = response.value;
                     }
 
                     // Get the byte array starting at the offset
-                    final byte[] value = chopValue(descriptor.getValue(), offset);
+                    final byte[] value = chopValue(currentReadValue, offset);
 
-                    bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value);
+                    bluetoothGattServer.sendResponse(device, requestId, status.value, offset, value);
                 }
             });
         }
@@ -284,7 +293,9 @@ public class BluetoothPeripheralManager {
                     }
 
                     if (status == GattStatus.SUCCESS && !preparedWrite) {
-                        descriptor.setValue(safeValue);
+                        if (android.os.Build.VERSION.SDK_INT < 33) {
+                            descriptor.setValue(safeValue);
+                        }
                     }
 
                     if (responseNeeded) {
@@ -294,10 +305,16 @@ public class BluetoothPeripheralManager {
                     if (status == GattStatus.SUCCESS && descriptor.getUuid().equals(CCC_DESCRIPTOR_UUID)) {
                         if (Arrays.equals(safeValue, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)
                                 || Arrays.equals(safeValue, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)) {
+
+                            if (Arrays.equals(safeValue, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)) {
+                                indicatingCharacteristics.add(characteristic);
+                            }
+
                             Logger.i(TAG,"notifying enabled for <%s>", characteristic.getUuid());
                             callback.onNotifyingEnabled(bluetoothCentral, characteristic);
                         } else {
                             Logger.i(TAG,"notifying disabled for <%s>", characteristic.getUuid());
+                            indicatingCharacteristics.remove(characteristic);
                             callback.onNotifyingDisabled(bluetoothCentral, characteristic);
                         }
                     } else if (status == GattStatus.SUCCESS && !preparedWrite) {
@@ -340,8 +357,13 @@ public class BluetoothPeripheralManager {
                                 status = callback.onCharacteristicWrite(bluetoothCentral, characteristic, writeLongCharacteristicTemporaryBytes.get(characteristic));
 
                                 if (status == GattStatus.SUCCESS) {
-                                    characteristic.setValue(writeLongCharacteristicTemporaryBytes.get(characteristic));
+                                    final byte[] value = writeLongCharacteristicTemporaryBytes.get(characteristic);
+                                    if (android.os.Build.VERSION.SDK_INT < 33) {
+                                        characteristic.setValue(value);
+                                    }
                                     writeLongCharacteristicTemporaryBytes.clear();
+
+                                    callback.onCharacteristicWriteCompleted(bluetoothCentral, characteristic, value);
                                 }
                             }
                         } else if (!writeLongDescriptorTemporaryBytes.isEmpty()) {
@@ -351,7 +373,10 @@ public class BluetoothPeripheralManager {
                                 status = callback.onDescriptorWrite(bluetoothCentral, descriptor, writeLongDescriptorTemporaryBytes.get(descriptor));
 
                                 if (status == GattStatus.SUCCESS) {
-                                    descriptor.setValue(writeLongDescriptorTemporaryBytes.get(descriptor));
+                                    final byte[] value = writeLongDescriptorTemporaryBytes.get(descriptor);
+                                    if (android.os.Build.VERSION.SDK_INT < 33) {
+                                        descriptor.setValue(value);
+                                    }
                                     writeLongDescriptorTemporaryBytes.clear();
                                 }
                             }
@@ -581,12 +606,10 @@ public class BluetoothPeripheralManager {
         Objects.requireNonNull(value, CHARACTERISTIC_VALUE_IS_NULL);
         Objects.requireNonNull(bluetoothDevice, DEVICE_IS_NULL);
         Objects.requireNonNull(characteristic, CHARACTERISTIC_IS_NULL);
-        Objects.requireNonNull(characteristic.getValue(), CHARACTERISTIC_VALUE_IS_NULL);
 
         if (doesNotSupportNotifying(characteristic)) return false;
 
-        final byte[] descriptorValue = characteristic.getDescriptor(CCC_DESCRIPTOR_UUID).getValue(); // TODO this won't work anymore in Android 13
-        final boolean confirm = supportsIndicate(characteristic) && Arrays.equals(descriptorValue, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+        final boolean confirm = supportsIndicate(characteristic) && indicatingCharacteristics.contains(characteristic);
         return enqueue(new Runnable() {
             @Override
             public void run() {
