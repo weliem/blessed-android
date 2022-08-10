@@ -73,7 +73,7 @@ public abstract class BluetoothPeripheralManagerCallback {
      * @param value            the value the central wants to write
      * @return GattStatus.SUCCESS if the value is acceptable, otherwise an appropriate status
      */
-    public GattStatus onCharacteristicWrite(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattCharacteristic characteristic, @NotNull byte[] value) {
+    public @NotNull GattStatus onCharacteristicWrite(@NotNull BluetoothCentral bluetoothCentral, @NotNull BluetoothGattCharacteristic characteristic, @NotNull byte[] value) {
         return GattStatus.SUCCESS;
     }
 
