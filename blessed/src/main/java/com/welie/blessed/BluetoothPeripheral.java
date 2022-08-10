@@ -23,7 +23,6 @@
 
 package com.welie.blessed;
 
-import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -761,9 +760,13 @@ public class BluetoothPeripheral {
                     registerBondingBroadcastReceivers();
                     discoveryStarted = false;
                     connectTimestamp = SystemClock.elapsedRealtime();
-                    startConnectionTimer(BluetoothPeripheral.this);
-                    bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTING);
                     bluetoothGatt = connectGattHelper(device, false, bluetoothGattCallback);
+                    if (bluetoothGatt != null) {
+                        bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTING);
+                        startConnectionTimer(BluetoothPeripheral.this);
+                    } else {
+                        Logger.e(TAG, "failed to connect to peripheral '%s'", getAddress());
+                    }
                 }
             }, DIRECT_CONNECTION_DELAY_IN_MS);
         } else {
@@ -788,7 +791,11 @@ public class BluetoothPeripheral {
                     discoveryStarted = false;
                     connectTimestamp = SystemClock.elapsedRealtime();
                     bluetoothGatt = connectGattHelper(device, true, bluetoothGattCallback);
-                    bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTING);
+                    if (bluetoothGatt != null) {
+                        bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTING);
+                    } else {
+                        Logger.e(TAG, "failed to autoconnect to peripheral '%s'", getAddress());
+                    }
                 }
             });
         } else {
@@ -864,7 +871,9 @@ public class BluetoothPeripheral {
             mainHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_DISCONNECTED);
+                    if (bluetoothGatt != null) {
+                        bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_DISCONNECTED);
+                    }
                 }
             }, 50);
         } else {
@@ -880,7 +889,9 @@ public class BluetoothPeripheral {
      */
     private void disconnect() {
         if (state == BluetoothProfile.STATE_CONNECTED || state == BluetoothProfile.STATE_CONNECTING) {
-            bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_DISCONNECTING);
+            if (bluetoothGatt != null) {
+                bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_DISCONNECTING);
+            }
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -896,7 +907,6 @@ public class BluetoothPeripheral {
     }
 
     void disconnectWhenBluetoothOff() {
-        bluetoothGatt = null;
         completeDisconnect(true, HciStatus.SUCCESS);
     }
 
@@ -1985,7 +1995,9 @@ public class BluetoothPeripheral {
                 mainHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.CONNECTION_FAILED_ESTABLISHMENT.value, BluetoothProfile.STATE_DISCONNECTED);
+                        if (bluetoothGatt != null) {
+                            bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.CONNECTION_FAILED_ESTABLISHMENT.value, BluetoothProfile.STATE_DISCONNECTED);
+                        }
                     }
                 }, 50);
 
