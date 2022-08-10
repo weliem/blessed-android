@@ -738,9 +738,11 @@ public class BluetoothPeripheral {
                     registerBondingBroadcastReceivers();
                     discoveryStarted = false;
                     connectTimestamp = SystemClock.elapsedRealtime();
-                    startConnectionTimer(BluetoothPeripheral.this);
-                    bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTING);
                     bluetoothGatt = connectGattHelper(device, false, bluetoothGattCallback);
+                    if (bluetoothGatt != null) {
+                        bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTING);
+                    }
+                    startConnectionTimer(BluetoothPeripheral.this);
                 }
             }, DIRECT_CONNECTION_DELAY_IN_MS);
         } else {
@@ -760,12 +762,14 @@ public class BluetoothPeripheral {
                 @Override
                 public void run() {
                     // Connect to device with autoConnect = true
-                    Logger.i(TAG,"autoConnect to '%s' (%s) using transport %s", getName(), getAddress(), transport.name());
+                    Logger.i(TAG, "autoConnect to '%s' (%s) using transport %s", getName(), getAddress(), transport.name());
                     registerBondingBroadcastReceivers();
                     discoveryStarted = false;
                     connectTimestamp = SystemClock.elapsedRealtime();
                     bluetoothGatt = connectGattHelper(device, true, bluetoothGattCallback);
-                    bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTING);
+                    if (bluetoothGatt != null) {
+                        bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTING);
+                    }
                 }
             });
         } else {
@@ -842,7 +846,9 @@ public class BluetoothPeripheral {
             mainHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_DISCONNECTED);
+                    if (bluetoothGatt != null) {
+                        bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_DISCONNECTED);
+                    }
                 }
             }, 50);
         } else {
@@ -858,7 +864,9 @@ public class BluetoothPeripheral {
      */
     private void disconnect() {
         if (state == BluetoothProfile.STATE_CONNECTED || state == BluetoothProfile.STATE_CONNECTING) {
-            bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_DISCONNECTING);
+            if (bluetoothGatt != null) {
+                bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.SUCCESS.value, BluetoothProfile.STATE_DISCONNECTING);
+            }
             mainHandler.post(new Runnable() {
                 @SuppressLint("MissingPermission")
                 @Override
@@ -1953,7 +1961,9 @@ public class BluetoothPeripheral {
                 mainHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.CONNECTION_FAILED_ESTABLISHMENT.value, BluetoothProfile.STATE_DISCONNECTED);
+                        if (bluetoothGatt != null) {
+                            bluetoothGattCallback.onConnectionStateChange(bluetoothGatt, HciStatus.CONNECTION_FAILED_ESTABLISHMENT.value, BluetoothProfile.STATE_DISCONNECTED);
+                        }
                     }
                 }, 50);
 
