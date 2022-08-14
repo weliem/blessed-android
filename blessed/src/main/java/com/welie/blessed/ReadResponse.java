@@ -7,7 +7,7 @@ public class ReadResponse {
     public @NotNull final GattStatus status;
     public @Nullable final byte[] value;
 
-    ReadResponse(@NotNull final GattStatus status, @Nullable final byte[] value) {
+    public ReadResponse(@NotNull final GattStatus status, @Nullable final byte[] value) {
         this.status = status;
         this.value = value;
     }
