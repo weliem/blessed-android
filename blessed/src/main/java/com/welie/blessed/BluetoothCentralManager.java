@@ -24,7 +24,6 @@
 package com.welie.blessed;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -96,7 +95,6 @@ public class BluetoothCentralManager {
     private @NotNull ScanSettings scanSettings;
     private @NotNull final ScanSettings autoConnectScanSettings;
     private @NotNull final Map<String, Integer> connectionRetries = new ConcurrentHashMap<>();
-    private @Nullable Runnable disconnectRunnable;
     private @NotNull final Map<String, String> pinCodes = new ConcurrentHashMap<>();
     private @NotNull Transport transport = DEFAULT_TRANSPORT;
 
@@ -899,7 +897,7 @@ public class BluetoothCentralManager {
             public void run() {
                 Logger.d(TAG,"scanning timeout, restarting scan");
                 final ScanCallback callback = currentCallback;
-                final List<ScanFilter> filters = currentFilters;
+                final List<ScanFilter> filters = currentFilters != null ? currentFilters : Collections.<ScanFilter>emptyList();
                 stopScan();
 
                 // Restart the scan and timer
@@ -1082,33 +1080,6 @@ public class BluetoothCentralManager {
         // Clean up autoconnect by scanning information
         reconnectPeripheralAddresses.clear();
         reconnectCallbacks.clear();
-    }
-
-    /**
-     * Timer to determine if manual disconnection in case of bluetooth off is needed
-     */
-    private void startDisconnectionTimer() {
-        cancelDisconnectionTimer();
-        disconnectRunnable = new Runnable() {
-            @Override
-            public void run() {
-                Logger.e(TAG,"bluetooth turned off but no automatic disconnects happening, so doing it ourselves");
-                cancelAllConnectionsWhenBluetoothOff();
-                disconnectRunnable = null;
-            }
-        };
-
-        mainHandler.postDelayed(disconnectRunnable, 1000);
-    }
-
-    /**
-     * Cancel timer for bluetooth off disconnects
-     */
-    private void cancelDisconnectionTimer() {
-        if (disconnectRunnable != null) {
-            mainHandler.removeCallbacks(disconnectRunnable);
-            disconnectRunnable = null;
-        }
     }
 
     protected final BroadcastReceiver adapterStateReceiver = new BroadcastReceiver() {
