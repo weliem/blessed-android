@@ -182,6 +182,7 @@ public class BluetoothPeripheralManagerTest {
         // Given
         byte[] value = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
         when(characteristic.getValue()).thenReturn(value);
+        when(peripheralManagerCallback.onCharacteristicRead(any(BluetoothCentral.class), any(BluetoothGattCharacteristic.class))).thenReturn(new ReadResponse(GattStatus.SUCCESS, value));
 
         // When
         peripheralManager.bluetoothGattServerCallback.onCharacteristicReadRequest(device, 1, 0, characteristic);
@@ -200,13 +201,11 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onCharacteristicReadRequest(device, 1, 24, characteristic);
-
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
         verify(server).sendResponse(eq(device), eq(1), eq(GattStatus.SUCCESS.value), eq(24), bytesCaptor.capture());
         assertEquals(0, bytesCaptor.getValue().length);
-
 
         // When
         peripheralManager.bluetoothGattServerCallback.onCharacteristicReadRequest(device, 1, 25, characteristic);
@@ -223,10 +222,10 @@ public class BluetoothPeripheralManagerTest {
         // Given
         byte[] value = new byte[]{0x00, 0x01, 0x02};
         when(characteristic.getValue()).thenReturn(value);
+        when(peripheralManagerCallback.onCharacteristicRead(any(BluetoothCentral.class), any(BluetoothGattCharacteristic.class))).thenReturn(new ReadResponse(GattStatus.SUCCESS, value));
 
         // When
         peripheralManager.bluetoothGattServerCallback.onCharacteristicReadRequest(device, 1, 0, characteristic);
-
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
         // Then
@@ -239,6 +238,7 @@ public class BluetoothPeripheralManagerTest {
         byte[] value = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
         byte[] secondChunk = new byte[]{23, 24};
         when(characteristic.getValue()).thenReturn(value);
+        when(peripheralManagerCallback.onCharacteristicRead(any(BluetoothCentral.class), any(BluetoothGattCharacteristic.class))).thenReturn(new ReadResponse(GattStatus.SUCCESS, value));
 
         // When
         peripheralManager.bluetoothGattServerCallback.onCharacteristicReadRequest(device, 1, 0, characteristic);
@@ -257,6 +257,8 @@ public class BluetoothPeripheralManagerTest {
 
     @Test
     public void When_a_read_descriptor_request_is_received_then_onDescriptorRead_is_called() {
+        when(peripheralManagerCallback.onDescriptorRead(any(BluetoothCentral.class), any(BluetoothGattDescriptor.class))).thenReturn(new ReadResponse(GattStatus.SUCCESS, new byte[0]));
+
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorReadRequest(device, 1, 0, descriptor);
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
@@ -270,6 +272,7 @@ public class BluetoothPeripheralManagerTest {
         // Given
         byte[] value = new byte[]{0x00, 0x01, 0x02};
         when(descriptor.getValue()).thenReturn(value);
+        when(peripheralManagerCallback.onDescriptorRead(any(BluetoothCentral.class), any(BluetoothGattDescriptor.class))).thenReturn(new ReadResponse(GattStatus.SUCCESS, value));
 
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorReadRequest(device, 1, 0, descriptor);
@@ -285,6 +288,7 @@ public class BluetoothPeripheralManagerTest {
         byte[] value = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
         byte[] secondChunk = new byte[]{23, 24};
         when(descriptor.getValue()).thenReturn(value);
+        when(peripheralManagerCallback.onDescriptorRead(any(BluetoothCentral.class), any(BluetoothGattDescriptor.class))).thenReturn(new ReadResponse(GattStatus.SUCCESS, value));
 
         // When
         peripheralManager.bluetoothGattServerCallback.onDescriptorReadRequest(device, 1, 0, descriptor);
@@ -672,10 +676,16 @@ public class BluetoothPeripheralManagerTest {
         byte[] value = new byte[]{0x00, 0x01, 0x02};
         when(characteristic.getDescriptor(CCC_DESCRIPTOR_UUID)).thenReturn(descriptor);
         when(descriptor.getValue()).thenReturn(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+        when(descriptor.getUuid()).thenReturn(CCC_DESCRIPTOR_UUID);
+        when(descriptor.getCharacteristic()).thenReturn(characteristic);
+        when(peripheralManagerCallback.onDescriptorWrite(any(BluetoothCentral.class), any(BluetoothGattDescriptor.class), any(byte[].class))).thenReturn(GattStatus.SUCCESS);
 
         // When
         peripheralManager.bluetoothGattServerCallback.onConnectionStateChange(device, GattStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTED);
         when(bluetoothManager.getConnectedDevices(BluetoothGattServer.GATT)).thenReturn(Collections.singletonList(device));
+
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device,1, descriptor, false, true, 0,BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
         boolean result = peripheralManager.notifyCharacteristicChanged(value, characteristic);
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
@@ -695,10 +705,15 @@ public class BluetoothPeripheralManagerTest {
         when(characteristic.getProperties()).thenReturn(BluetoothGattCharacteristic.PROPERTY_INDICATE);
         when(characteristic.getDescriptor(CCC_DESCRIPTOR_UUID)).thenReturn(descriptor);
         when(descriptor.getValue()).thenReturn(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+        when(descriptor.getCharacteristic()).thenReturn(characteristic);
+        when(descriptor.getUuid()).thenReturn(CCC_DESCRIPTOR_UUID);
         peripheralManager.bluetoothGattServerCallback.onConnectionStateChange(device, GattStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTED);
         when(bluetoothManager.getConnectedDevices(BluetoothGattServer.GATT)).thenReturn(Collections.singletonList(device));
+        when(peripheralManagerCallback.onDescriptorWrite(any(BluetoothCentral.class), any(BluetoothGattDescriptor.class), any(byte[].class))).thenReturn(GattStatus.SUCCESS);
 
         // When
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device,1, descriptor, false, true, 0,BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
         peripheralManager.notifyCharacteristicChanged(value, characteristic);
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 

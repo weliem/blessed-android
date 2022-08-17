@@ -66,16 +66,19 @@ peripheralManager.startAdvertising(advertiseSettings, scanResponse, advertiseDat
         
 ## Implementing characteristic read or write requests
 
-When a remote central connects and tries to read a characteristic, you get a callback on `onCharacteristicRead`. You don't necessarily need to implement it if the characterist already has the proper value. But if you want to update it just before it get returned, you need to override this method. For example, if you implement the current time characteristic and you want to make sure the characteristic value is updated before it is returned, you can do:
+When a remote central connects and tries to read a characteristic, you get a callback on `onCharacteristicRead`. 
+You need to return a ReadResponse object which must contain a GattStatus object and optionally a byte array. 
+If you want to reject the read, just return a GattStatus that is not SUCCESS. If you are returning SUCCESS you must also provide a byte array with the value of the characteristic.\
 
 ```java
 @Override
-public void onCharacteristicRead(@NotNull BluetoothCentral central, @NotNull BluetoothGattCharacteristic characteristic) {
-    currentTime.setValue(getCurrentTime());
+public ReadResponse onCharacteristicRead(@NotNull BluetoothCentral central, @NotNull BluetoothGattCharacteristic characteristic) {
+    return new ReadResponse(GattStatus.SUCCESS, getCurrentTime());
 }
 ```
 
-When a write request happens, you get a callback on `onCharacteristicWrite`. If you want to validate the value before it is assigned to the characteristic you can do that by overriding this method. If you consider the value valid, you must return GattStatus.SUCCESS and otherwise you return some other GattStatus value that represents the error. After you return GattStatus.SUCCESS, the value is assigned to the characteristic. Otherwise the characteristics's value will remain unchanged and the remote central will receive an error. For example:
+When a write request happens, you get a callback on `onCharacteristicWrite`. If you want to validate the value before the write is completed you can do that by overriding this method. If you consider the value valid, you must return GattStatus.SUCCESS and otherwise you return some other GattStatus value that represents the error. 
+After you return GattStatus.SUCCESS, the value is assigned to the characteristic (only when api-level is < 33). Otherwise the characteristics's value will remain unchanged and the remote central will receive an error. For example:
 
 ```java
 @Override
@@ -116,7 +119,7 @@ public void onNotifyingDisabled(@NotNull BluetoothCentral central, @NotNull Blue
 
 ## Sending notifications
 
-Once notifications have been enabled, you can send notifactions by calling:
+Once notifications have been enabled, you can send notifications by calling:
 
 ```java
 peripheralManager.notifyCharacteristicChanged(value, characteristic);

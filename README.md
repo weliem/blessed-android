@@ -293,12 +293,3 @@ An example application is provided in the repo. It shows how to connect to Blood
 * Accu-Chek Instant glucose meter
 * Omron X4 Smart
 
-## Acknowledgements
-
-BLESSED is the result of learning from many others about how to do BLE. Here are some references to material that helped me develop BLESSED:
-
-* Stuart Kent's [presentation on BLE](https://www.stkent.com/2017/09/18/ble-on-android.html)
-* [Emil's posts](https://stackoverflow.com/users/556495/emil) on StackOverflow
-* The [Android BLE Library](https://github.com/NordicSemiconductor/Android-BLE-Library) by Nordic Semiconductor
-* The [RxAndroidBle library](https://github.com/Polidea/RxAndroidBle) by Polidea
-
