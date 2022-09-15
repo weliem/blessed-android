@@ -562,6 +562,26 @@ public class BluetoothPeripheralManager {
         return result;
     }
 
+    /**
+     * Send a notification or indication that a local characteristic has been
+     * updated to the central passed in
+     *
+     * <p>A notification or indication is sent to the remote centrals to signal
+     * that the characteristic has been updated. If the connected central is not
+     * found then false is return
+     *
+     * @param characteristic the characteristic for which to send a notification
+     * @return true if the central exists and the operation was enqueued, otherwise false
+     */
+    public boolean notifyCharacteristicChanged(@NotNull final byte[] value, @NotNull final BluetoothCentral bluetoothCentral, @NotNull final BluetoothGattCharacteristic characteristic){
+        BluetoothDevice bluetoothDevice = getDeviceForCentral(bluetoothCentral);
+        if (bluetoothDevice != null) {
+            return notifyCharacteristicChanged(copyOf(value), bluetoothDevice, characteristic);
+        } else {
+            return false;
+        }
+    }
+
     private boolean notifyCharacteristicChanged(@NotNull final byte[] value, @NotNull final BluetoothDevice bluetoothDevice, @NotNull final BluetoothGattCharacteristic characteristic) {
         Objects.requireNonNull(value, CHARACTERISTIC_VALUE_IS_NULL);
         Objects.requireNonNull(bluetoothDevice, DEVICE_IS_NULL);
@@ -605,6 +625,15 @@ public class BluetoothPeripheralManager {
 
     private @NotNull List<BluetoothDevice> getConnectedDevices() {
         return bluetoothManager.getConnectedDevices(BluetoothGattServer.GATT);
+    }
+
+    private BluetoothDevice getDeviceForCentral(@NotNull final BluetoothCentral bluetoothCentral) {
+        for(BluetoothDevice bluetoothDevice : getConnectedDevices()) {
+            if(bluetoothDevice.getAddress().equals(bluetoothCentral.getAddress())) {
+                return bluetoothDevice;
+            }
+        }
+        return null;
     }
 
     /**
