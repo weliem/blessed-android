@@ -574,7 +574,10 @@ public class BluetoothPeripheralManager {
      * @return true if the central exists and the operation was enqueued, otherwise false
      */
     public boolean notifyCharacteristicChanged(@NotNull final byte[] value, @NotNull final BluetoothCentral bluetoothCentral, @NotNull final BluetoothGattCharacteristic characteristic){
-        BluetoothDevice bluetoothDevice = getDeviceForCentral(bluetoothCentral);
+        Objects.requireNonNull(bluetoothCentral, CENTRAL_IS_NULL);
+        Objects.requireNonNull(value, CHARACTERISTIC_VALUE_IS_NULL);
+        Objects.requireNonNull(characteristic, CHARACTERISTIC_IS_NULL);
+        BluetoothDevice bluetoothDevice = bluetoothAdapter.getRemoteDevice(bluetoothCentral.getAddress());
         if (bluetoothDevice != null) {
             return notifyCharacteristicChanged(copyOf(value), bluetoothDevice, characteristic);
         } else {
@@ -625,15 +628,6 @@ public class BluetoothPeripheralManager {
 
     private @NotNull List<BluetoothDevice> getConnectedDevices() {
         return bluetoothManager.getConnectedDevices(BluetoothGattServer.GATT);
-    }
-
-    private BluetoothDevice getDeviceForCentral(@NotNull final BluetoothCentral bluetoothCentral) {
-        for(BluetoothDevice bluetoothDevice : getConnectedDevices()) {
-            if(bluetoothDevice.getAddress().equals(bluetoothCentral.getAddress())) {
-                return bluetoothDevice;
-            }
-        }
-        return null;
     }
 
     /**
