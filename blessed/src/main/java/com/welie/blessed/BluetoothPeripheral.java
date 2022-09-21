@@ -1633,6 +1633,18 @@ public class BluetoothPeripheral {
                         currentCommand = SET_PHY_TYPE_COMMAND;
                         Logger.i(TAG, "setting preferred Phy: tx = %s, rx = %s, options = %s", txPhy, rxPhy, phyOptions);
                         bluetoothGatt.setPreferredPhy(txPhy.mask, rxPhy.mask, phyOptions.value);
+
+                        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.TIRAMISU) {
+                            // There is a bug in Android 13 where onPhyUpdate is not always called
+                            // Therefore complete this command after a delay in order not to block the queueu
+                            currentCommand = IDLE;
+                            callbackHandler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    completedCommand();
+                                }
+                            }, 200);
+                        }
                     }
                 } else {
                     completedCommand();
