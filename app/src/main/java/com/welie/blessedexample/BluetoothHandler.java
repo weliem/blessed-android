@@ -17,6 +17,8 @@ import com.welie.blessed.ConnectionPriority;
 import com.welie.blessed.GattStatus;
 import com.welie.blessed.HciStatus;
 
+import com.welie.blessed.PhyOptions;
+import com.welie.blessed.PhyType;
 import com.welie.blessed.ScanFailure;
 import com.welie.blessed.WriteType;
 
@@ -117,9 +119,13 @@ class BluetoothHandler {
             // Request a new connection priority
             peripheral.requestConnectionPriority(ConnectionPriority.HIGH);
 
+            peripheral.setPreferredPhy(PhyType.LE_2M, PhyType.LE_2M, PhyOptions.S2);
+
             // Read manufacturer and model number from the Device Information Service
             peripheral.readCharacteristic(DIS_SERVICE_UUID, MANUFACTURER_NAME_CHARACTERISTIC_UUID);
             peripheral.readCharacteristic(DIS_SERVICE_UUID, MODEL_NUMBER_CHARACTERISTIC_UUID);
+
+            peripheral.readPhy();
 
             // Turn on notifications for Current Time Service and write it if possible
             BluetoothGattCharacteristic currentTimeCharacteristic = peripheral.getCharacteristic(CTS_SERVICE_UUID, CURRENT_TIME_CHARACTERISTIC_UUID);
@@ -376,7 +382,7 @@ class BluetoothHandler {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID, HRS_SERVICE_UUID, PLX_SERVICE_UUID, WSS_SERVICE_UUID, GLUCOSE_SERVICE_UUID});
+                central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID, PLX_SERVICE_UUID, WSS_SERVICE_UUID, GLUCOSE_SERVICE_UUID});
             }
         },1000);
     }

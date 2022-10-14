@@ -103,7 +103,6 @@ public class BluetoothPeripheralManager {
     protected final BluetoothGattServerCallback bluetoothGattServerCallback = new BluetoothGattServerCallback() {
         @Override
         public void onConnectionStateChange(final BluetoothDevice device, final int status, final int newState) {
-
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
                     // Call connect() even though we are already connected
@@ -132,7 +131,7 @@ public class BluetoothPeripheralManager {
 
         private void handleDeviceConnected(@NotNull final BluetoothDevice device) {
             Logger.i(TAG,"Central '%s' (%s) connected", device.getName(), device.getAddress());
-            final BluetoothCentral bluetoothCentral = new BluetoothCentral(device.getAddress(), device.getName());
+            final BluetoothCentral bluetoothCentral = new BluetoothCentral(device);
             connectedCentralsMap.put(bluetoothCentral.getAddress(), bluetoothCentral);
             mainHandler.post(new Runnable() {
                 @Override
@@ -757,7 +756,7 @@ public class BluetoothPeripheralManager {
 
         BluetoothCentral result = connectedCentralsMap.get(device.getAddress());
         if (result == null) {
-            result = new BluetoothCentral(device.getAddress(), device.getName());
+            result = new BluetoothCentral(device);
         }
         return result;
     }

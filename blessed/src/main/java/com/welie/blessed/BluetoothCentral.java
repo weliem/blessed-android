@@ -23,35 +23,37 @@
 
 package com.welie.blessed;
 
+import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothDevice;
+
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
 /**
  * This class represent a remote Central
  */
+@SuppressLint("MissingPermission")
 public class BluetoothCentral {
 
-    @NotNull
-    private final String address;
-
-    @Nullable
-    private final String name;
+    @NotNull private final BluetoothDevice device;
 
     private int currentMtu = 23;
 
-    BluetoothCentral(@NotNull String address, @Nullable String name) {
-        this.address = Objects.requireNonNull(address, "address is null");
-        this.name = name;
+    BluetoothCentral(@NotNull BluetoothDevice device) {
+        this.device = device;
     }
 
     public @NotNull String getAddress() {
-        return address;
+        return device.getAddress();
     }
 
     public @NotNull String getName() {
-        return name == null ? "" : name;
+        return device.getName() == null ? "" : device.getName();
+    }
+
+    public BondState getBondState() {
+        return BondState.fromValue(device.getBondState());
     }
 
     protected void setCurrentMtu(final int currentMtu) {
