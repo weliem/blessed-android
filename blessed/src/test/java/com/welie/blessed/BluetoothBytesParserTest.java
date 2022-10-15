@@ -19,6 +19,8 @@ import static com.welie.blessed.BluetoothBytesParser.FORMAT_SINT8;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT16;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT24;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT32;
+import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT48;
+import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT64;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT8;
 import static java.nio.ByteOrder.BIG_ENDIAN;
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
@@ -340,16 +342,16 @@ public class BluetoothBytesParserTest {
         BluetoothBytesParser parser;
 
         parser = new BluetoothBytesParser(new byte[]{0,0,0,0,0,0,0,1}, BIG_ENDIAN);
-        assertEquals(1L, (long) parser.getLongValue());
+        assertEquals(1L, (long) parser.getLongValue(FORMAT_UINT64));
 
         parser = new BluetoothBytesParser(new byte[]{0,0,0,0,0,0,1,1}, BIG_ENDIAN);
-        assertEquals(257L, (long) parser.getLongValue());
+        assertEquals(257L, (long) parser.getLongValue(FORMAT_UINT64));
 
         parser = new BluetoothBytesParser(new byte[]{1,1,1,1,1,1,1,1}, BIG_ENDIAN);
-        assertEquals(72340172838076673L, (long) parser.getLongValue());
+        assertEquals(72340172838076673L, (long) parser.getLongValue(FORMAT_UINT64));
 
         parser = new BluetoothBytesParser(new byte[]{1,2,3,4,5,6,7,8}, BIG_ENDIAN);
-        assertEquals(72623859790382856L, (long)parser.getLongValue());
+        assertEquals(72623859790382856L, (long)parser.getLongValue(FORMAT_UINT64));
     }
 
     @Test
@@ -357,16 +359,16 @@ public class BluetoothBytesParserTest {
         BluetoothBytesParser parser;
 
         parser = new BluetoothBytesParser(new byte[]{1,0,0,0,0,0,0,0}, LITTLE_ENDIAN);
-        assertEquals(1L, (long) parser.getLongValue());
+        assertEquals(1L, (long) parser.getLongValue(FORMAT_UINT64));
 
         parser = new BluetoothBytesParser(new byte[]{1,1,0,0,0,0,0,0}, LITTLE_ENDIAN);
-        assertEquals(257L, (long) parser.getLongValue());
+        assertEquals(257L, (long) parser.getLongValue(FORMAT_UINT64));
 
         parser = new BluetoothBytesParser(new byte[]{1,1,1,1,1,1,1,1}, LITTLE_ENDIAN);
-        assertEquals(72340172838076673L, (long) parser.getLongValue());
+        assertEquals(72340172838076673L, (long) parser.getLongValue(FORMAT_UINT64));
 
         parser = new BluetoothBytesParser(new byte[]{8,7,6,5,4,3,2,1}, LITTLE_ENDIAN);
-        assertEquals(72623859790382856L, (long) parser.getLongValue());
+        assertEquals(72623859790382856L, (long) parser.getLongValue(FORMAT_UINT64));
     }
 
     @Test (expected = IllegalArgumentException.class)
@@ -778,38 +780,40 @@ public class BluetoothBytesParserTest {
     @Test
     public void setLong_LittleEndianTest() {
         BluetoothBytesParser parser = new BluetoothBytesParser(LITTLE_ENDIAN);
-        parser.setLong(1234567890123L);
-        assertEquals(1234567890123L, (long) parser.getLongValue(0, LITTLE_ENDIAN));
+        parser.setLong(1234567890123L, FORMAT_UINT64);
+        parser.setLong(946684800L, FORMAT_UINT48);
+        assertEquals(1234567890123L, (long) parser.getLongValue(FORMAT_UINT64, 0, LITTLE_ENDIAN));
+        assertEquals(946684800L, (long) parser.getLongValue(FORMAT_UINT48, 8, LITTLE_ENDIAN));
 
         parser = new BluetoothBytesParser(LITTLE_ENDIAN);
         parser.setIntValue(123, FORMAT_UINT8);
-        parser.setLong(1234567890123L);
+        parser.setLong(1234567890123L, FORMAT_UINT64);
         assertEquals(9, parser.getValue().length);
         parser.setOffset(0);
         assertEquals(123, (int) parser.getIntValue(FORMAT_UINT8));
-        assertEquals(1234567890123L, (long) parser.getLongValue(LITTLE_ENDIAN));
+        assertEquals(1234567890123L, (long) parser.getLongValue(FORMAT_UINT64, LITTLE_ENDIAN));
     }
 
     @Test
     public void setLong_BigEndianTest() {
         BluetoothBytesParser parser = new BluetoothBytesParser(BIG_ENDIAN);
-        parser.setLong(1234567890123L);
-        assertEquals(1234567890123L, (long) parser.getLongValue(0, BIG_ENDIAN));
+        parser.setLong(1234567890123L, FORMAT_UINT64);
+        assertEquals(1234567890123L, (long) parser.getLongValue(FORMAT_UINT64, 0, BIG_ENDIAN));
 
         parser = new BluetoothBytesParser(BIG_ENDIAN);
         parser.setIntValue(123, FORMAT_UINT8);
-        parser.setLong(1234567890123L);
+        parser.setLong(1234567890123L, FORMAT_UINT64);
         assertEquals(9, parser.getValue().length);
 
         parser.setOffset(0);
         assertEquals(123, (int) parser.getIntValue(FORMAT_UINT8));
-        assertEquals(1234567890123L, (long) parser.getLongValue(BIG_ENDIAN));
+        assertEquals(1234567890123L, (long) parser.getLongValue(FORMAT_UINT64, BIG_ENDIAN));
 
-        parser.setLong(987654321L);
+        parser.setLong(987654321L, FORMAT_UINT64);
         parser.setOffset(0);
         assertEquals(123, (int) parser.getIntValue(FORMAT_UINT8));
-        assertEquals(1234567890123L, (long) parser.getLongValue());
-        assertEquals(987654321L, (long) parser.getLongValue());
+        assertEquals(1234567890123L, (long) parser.getLongValue(FORMAT_UINT64));
+        assertEquals(987654321L, (long) parser.getLongValue(FORMAT_UINT64));
     }
 
     @Test

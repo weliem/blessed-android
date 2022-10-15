@@ -71,6 +71,16 @@ public class BluetoothBytesParser {
     public static final int FORMAT_UINT32 = 0x14;
 
     /**
+     * Characteristic value format type uint48
+     */
+    public static final int FORMAT_UINT48 = 0x16;
+
+    /**
+     * Characteristic value format type uint64
+     */
+    public static final int FORMAT_UINT64 = 0x18;
+
+    /**
      * Characteristic value format type sint8
      */
     public static final int FORMAT_SINT8 = 0x21;
@@ -178,8 +188,8 @@ public class BluetoothBytesParser {
      * @throws IllegalArgumentException if there are not enough bytes for a long value
      */
     @NotNull
-    public Long getLongValue() {
-        return getLongValue(internalByteOrder);
+    public Long getLongValue(final int formatType) {
+        return getLongValue(formatType, internalByteOrder);
     }
 
     /**
@@ -191,10 +201,10 @@ public class BluetoothBytesParser {
      * @throws NullPointerException if the value of byteOrder is null
      */
     @NotNull
-    public Long getLongValue(@NotNull final ByteOrder byteOrder) {
+    public Long getLongValue(final int formatType, @NotNull final ByteOrder byteOrder) {
         Objects.requireNonNull(byteOrder);
-        long result = getLongValue(internalOffset, byteOrder);
-        internalOffset += 8;
+        long result = getLongValue(formatType, internalOffset, byteOrder);
+        internalOffset += getTypeLen(formatType);
         return result;
     }
 
@@ -208,21 +218,22 @@ public class BluetoothBytesParser {
      * @throws NullPointerException if the value of byteOrder is null
      */
     @NotNull
-    public Long getLongValue(final int offset, @NotNull final ByteOrder byteOrder) {
+    public Long getLongValue(final int formatType, final int offset, @NotNull final ByteOrder byteOrder) {
         Objects.requireNonNull(byteOrder);
+        int length = getTypeLen(formatType);
         if (offset < 0) throw new IllegalArgumentException(OFFSET_MUST_BE_GREATER_OR_EQUAL_TO_ZERO);
-        if ((offset + 8) > mValue.length) throw new IllegalArgumentException(INVALID_OFFSET);
+        if ((offset + length) > mValue.length) throw new IllegalArgumentException(INVALID_OFFSET);
 
         if (byteOrder == LITTLE_ENDIAN) {
-            long value = 0x00FF & mValue[offset + 7];
-            for (int i = 6; i >= 0; i--) {
+            long value = 0x00FF & mValue[offset + length - 1];
+            for (int i = length - 2; i >= 0; i--) {
                 value <<= 8;
                 value += 0x00FF & mValue[i + offset];
             }
             return value;
         } else if (byteOrder == BIG_ENDIAN) {
             long value = 0x00FF & mValue[offset];
-            for (int i = 1; i < 8; i++) {
+            for (int i = 1; i < length; i++) {
                 value <<= 8;
                 value += 0x00FF & mValue[i + offset];
             }
@@ -595,31 +606,36 @@ public class BluetoothBytesParser {
      * Set byte array to a long. This will increment the internal offset
      *
      * @param value New long value for this byte array
+     * @param formatType Long format type used to transform the value parameter
      */
-    public void setLong(final long value) {
-        setLong(value, internalOffset);
-        internalOffset += 8;
+    public void setLong(final long value, final int formatType) {
+        setLong(value, formatType, internalOffset);
+        internalOffset += getTypeLen(formatType);
     }
 
     /**
      * Set byte array to a long
      *
      * @param value  New long value for this byte array
+     * @param formatType Long format type used to transform the value parameter
      * @param offset Offset at which the value should be placed
      * @throws IllegalArgumentException if the offset is invalid
      */
-    public void setLong(final long value, final int offset) {
+    public void setLong(final long value, final int formatType, final int offset) {
         if (offset < 0) throw new IllegalArgumentException(OFFSET_MUST_BE_GREATER_OR_EQUAL_TO_ZERO);
-        prepareArray(offset + 8);
+        if (!(formatType == FORMAT_UINT48 | formatType == FORMAT_UINT64)) throw new IllegalArgumentException("format type not allowed");
+
+        int length = getTypeLen(formatType);
+        prepareArray(offset + length);
 
         long newValue = value;
         if (internalByteOrder == ByteOrder.BIG_ENDIAN) {
-            for (int i = 7; i >= 0; i--) {
+            for (int i = length - 1; i >= 0; i--) {
                 mValue[i + offset] = (byte) (newValue & 0xFF);
                 newValue >>= 8;
             }
         } else {
-            for (int i = 0; i < 8; i++) {
+            for (int i = 0; i < length; i++) {
                 mValue[i + offset] = (byte) (newValue & 0xFF);
                 newValue >>= 8;
             }
@@ -664,9 +680,9 @@ public class BluetoothBytesParser {
                     mValue[newOffset++] = (byte) (newMantissa & 0xFF);
                     mValue[newOffset++] = (byte) ((newMantissa >> 8) & 0xFF);
                     mValue[newOffset++] = (byte) ((newMantissa >> 16) & 0xFF);
-                    mValue[newOffset] += (byte) (newExponent & 0xFF);
+                    mValue[newOffset] = (byte) (newExponent & 0xFF);
                 } else {
-                    mValue[newOffset++] += (byte) (newExponent & 0xFF);
+                    mValue[newOffset++] = (byte) (newExponent & 0xFF);
                     mValue[newOffset++] = (byte) ((newMantissa >> 16) & 0xFF);
                     mValue[newOffset++] = (byte) ((newMantissa >> 8) & 0xFF);
                     mValue[newOffset] = (byte) (newMantissa & 0xFF);
