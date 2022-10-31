@@ -38,6 +38,7 @@ import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
+import android.bluetooth.le.ScanFilter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -95,7 +96,8 @@ public class BluetoothPeripheralManager {
     private @NotNull final HashMap<BluetoothGattDescriptor, byte[]> writeLongDescriptorTemporaryBytes = new HashMap<>();
     private @NotNull final Map<String, BluetoothCentral> connectedCentralsMap = new ConcurrentHashMap<>();
     private @Nullable BluetoothGattCharacteristic currentNotifyCharacteristic = null;
-    private @NotNull final Set<BluetoothGattCharacteristic> indicatingCharacteristics = new HashSet<>();
+    private @NotNull final HashMap<BluetoothGattCharacteristic, Set<String>> centralsWantingNotifications = new HashMap<>();
+    private @NotNull final HashMap<BluetoothGattCharacteristic, Set<String>> centralsWantingIndications = new HashMap<>();
     private @NotNull byte[] currentNotifyValue = new byte[0];
     private @NotNull byte[] currentReadValue = new byte[0];
     private volatile boolean commandQueueBusy = false;
@@ -305,14 +307,17 @@ public class BluetoothPeripheralManager {
                                 || Arrays.equals(safeValue, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)) {
 
                             if (Arrays.equals(safeValue, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)) {
-                                indicatingCharacteristics.add(characteristic);
+                                addCentralWantingIndications(characteristic, bluetoothCentral);
+                            } else {
+                                addCentralWantingNotifications(characteristic, bluetoothCentral);
                             }
 
                             Logger.i(TAG,"notifying enabled for <%s>", characteristic.getUuid());
                             callback.onNotifyingEnabled(bluetoothCentral, characteristic);
                         } else {
                             Logger.i(TAG,"notifying disabled for <%s>", characteristic.getUuid());
-                            indicatingCharacteristics.remove(characteristic);
+                            removeCentralWantingIndications(characteristic, bluetoothCentral);
+                            removeCentralWantingNotifications(characteristic, bluetoothCentral);
                             callback.onNotifyingDisabled(bluetoothCentral, characteristic);
                         }
                     } else if (status == GattStatus.SUCCESS && !preparedWrite) {
@@ -591,9 +596,8 @@ public class BluetoothPeripheralManager {
         if (doesNotSupportNotifying(characteristic)) return false;
 
         boolean result = true;
-        final byte[] valueCopy = copyOf(value);
-        for (BluetoothDevice device : getConnectedDevices()) {
-            if (!notifyCharacteristicChanged(valueCopy, device, characteristic)) {
+        for (BluetoothCentral device : getConnectedCentrals()) {
+            if (!notifyCharacteristicChanged(value, device, characteristic)) {
                 result = false;
             }
         }
@@ -615,22 +619,22 @@ public class BluetoothPeripheralManager {
         Objects.requireNonNull(bluetoothCentral, CENTRAL_IS_NULL);
         Objects.requireNonNull(value, CHARACTERISTIC_VALUE_IS_NULL);
         Objects.requireNonNull(characteristic, CHARACTERISTIC_IS_NULL);
-        BluetoothDevice bluetoothDevice = bluetoothAdapter.getRemoteDevice(bluetoothCentral.getAddress());
-        if (bluetoothDevice != null) {
-            return notifyCharacteristicChanged(copyOf(value), bluetoothDevice, characteristic);
-        } else {
+
+        final BluetoothDevice bluetoothDevice = bluetoothCentral.device;
+        final boolean confirm = supportsIndicate(characteristic) && getCentralsWantingIndications(characteristic).contains(bluetoothCentral);
+        if (!confirm && !getCentralsWantingNotifications(characteristic).contains(bluetoothCentral)) {
             return false;
         }
+        return notifyCharacteristicChanged(copyOf(value), bluetoothDevice, characteristic, confirm);
     }
 
-    private boolean notifyCharacteristicChanged(@NotNull final byte[] value, @NotNull final BluetoothDevice bluetoothDevice, @NotNull final BluetoothGattCharacteristic characteristic) {
+    private boolean notifyCharacteristicChanged(@NotNull final byte[] value, @NotNull final BluetoothDevice bluetoothDevice, @NotNull final BluetoothGattCharacteristic characteristic, final boolean confirm) {
         Objects.requireNonNull(value, CHARACTERISTIC_VALUE_IS_NULL);
         Objects.requireNonNull(bluetoothDevice, DEVICE_IS_NULL);
         Objects.requireNonNull(characteristic, CHARACTERISTIC_IS_NULL);
 
         if (doesNotSupportNotifying(characteristic)) return false;
 
-        final boolean confirm = supportsIndicate(characteristic) && indicatingCharacteristics.contains(characteristic);
         return enqueue(new Runnable() {
             @Override
             public void run() {
@@ -857,5 +861,55 @@ public class BluetoothPeripheralManager {
 
     private boolean doesNotSupportNotifying(@NotNull final BluetoothGattCharacteristic characteristic) {
         return !(supportsIndicate(characteristic) || supportsNotify(characteristic));
+    }
+
+    protected void addCentralWantingIndications(@NotNull final BluetoothGattCharacteristic characteristic, @NotNull final BluetoothCentral central) {
+        Set<String> centrals = centralsWantingIndications.get(characteristic);
+        if (centrals == null) {
+            centrals = new HashSet<>();
+            centralsWantingIndications.put(characteristic, centrals);
+        }
+        centrals.add(central.getAddress());
+    }
+
+    protected void addCentralWantingNotifications(@NotNull final BluetoothGattCharacteristic characteristic, @NotNull final BluetoothCentral central) {
+        Set<String> centrals = centralsWantingNotifications.get(characteristic);
+        if (centrals == null) {
+            centrals = new HashSet<>();
+            centralsWantingNotifications.put(characteristic, centrals);
+        }
+        centrals.add(central.getAddress());
+    }
+
+    protected void removeCentralWantingIndications(@NotNull final BluetoothGattCharacteristic characteristic, @NotNull final BluetoothCentral central) {
+        Set<String> centrals = centralsWantingIndications.get(characteristic);
+        if (centrals != null) {
+            centrals.remove(central.getAddress());
+        }
+    }
+
+    protected void removeCentralWantingNotifications(@NotNull final BluetoothGattCharacteristic characteristic, @NotNull final BluetoothCentral central) {
+        Set<String> centrals = centralsWantingNotifications.get(characteristic);
+        if (centrals != null) {
+            centrals.remove(central.getAddress());
+        }
+    }
+
+    public @NotNull Set<BluetoothCentral> getCentralsWantingIndications(final @NotNull BluetoothGattCharacteristic characteristic) {
+        Set<String> centrals = centralsWantingIndications.get(characteristic);
+        return  (centrals == null) ?  Collections.<BluetoothCentral>emptySet() : getCentralsByAddress(centrals);
+    }
+
+    public @NotNull Set<BluetoothCentral> getCentralsWantingNotifications(final @NotNull BluetoothGattCharacteristic characteristic) {
+        Set<String> centrals = centralsWantingNotifications.get(characteristic);
+        return  (centrals == null) ?  Collections.<BluetoothCentral>emptySet() : getCentralsByAddress(centrals);
+    }
+
+    private @NotNull Set<BluetoothCentral> getCentralsByAddress(final @NotNull Set<String> centralAddresses) {
+        HashSet<BluetoothCentral> result = new HashSet<>();
+        for (String centralAddress : centralAddresses) {
+            result.add(getCentral(centralAddress));
+        }
+        return result;
     }
 }

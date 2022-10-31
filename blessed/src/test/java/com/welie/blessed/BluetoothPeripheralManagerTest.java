@@ -653,10 +653,14 @@ public class BluetoothPeripheralManagerTest {
         byte[] value = new byte[]{0x00, 0x01, 0x02};
         when(characteristic.getDescriptor(CCC_DESCRIPTOR_UUID)).thenReturn(descriptor);
         when(descriptor.getValue()).thenReturn(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+        when(descriptor.getUuid()).thenReturn(CCC_DESCRIPTOR_UUID);
+        when(descriptor.getCharacteristic()).thenReturn(characteristic);
+        when(peripheralManagerCallback.onDescriptorWrite(any(BluetoothCentral.class), any(BluetoothGattDescriptor.class), any(byte[].class))).thenReturn(GattStatus.SUCCESS);
 
         // When
         peripheralManager.bluetoothGattServerCallback.onConnectionStateChange(device, GattStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTED);
-        when(bluetoothManager.getConnectedDevices(BluetoothGattServer.GATT)).thenReturn(Collections.singletonList(device));
+        peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device,1, descriptor, false, true, 0,BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
         boolean result = peripheralManager.notifyCharacteristicChanged(value, characteristic);
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 
@@ -682,8 +686,6 @@ public class BluetoothPeripheralManagerTest {
 
         // When
         peripheralManager.bluetoothGattServerCallback.onConnectionStateChange(device, GattStatus.SUCCESS.value, BluetoothProfile.STATE_CONNECTED);
-        when(bluetoothManager.getConnectedDevices(BluetoothGattServer.GATT)).thenReturn(Collections.singletonList(device));
-
         peripheralManager.bluetoothGattServerCallback.onDescriptorWriteRequest(device,1, descriptor, false, true, 0,BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
         boolean result = peripheralManager.notifyCharacteristicChanged(value, characteristic);

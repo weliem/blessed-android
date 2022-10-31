@@ -36,7 +36,7 @@ import java.util.Objects;
 @SuppressLint("MissingPermission")
 public class BluetoothCentral {
 
-    @NotNull private final BluetoothDevice device;
+    @NotNull protected final BluetoothDevice device;
 
     private int currentMtu = 23;
 
@@ -64,6 +64,10 @@ public class BluetoothCentral {
         return currentMtu;
     }
 
+    public boolean createBond() { return device.createBond(); }
+
+    public boolean setPairingConfirmation(Boolean confirm) { return device.setPairingConfirmation(confirm); }
+
     /**
      * Get maximum length of byte array that can be written depending on WriteType
      *
@@ -80,5 +84,18 @@ public class BluetoothCentral {
             default:
                 return currentMtu - 3;
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BluetoothCentral that = (BluetoothCentral) o;
+        return device.getAddress().equals(that.device.getAddress());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(device);
     }
 }
