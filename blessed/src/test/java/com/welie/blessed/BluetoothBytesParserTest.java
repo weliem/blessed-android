@@ -826,7 +826,8 @@ public class BluetoothBytesParserTest {
     @Test
     public void setSFloat_BigEndianTest() {
         BluetoothBytesParser parser = new BluetoothBytesParser(BIG_ENDIAN);
-        parser.setFloatValue(190, -2, FORMAT_SFLOAT, 0);
+        parser.setSFloatValue(1.90f, 2);
+        parser.setOffset(0);
         assertEquals(1.90f, parser.getFloatValue(FORMAT_SFLOAT));
     }
 

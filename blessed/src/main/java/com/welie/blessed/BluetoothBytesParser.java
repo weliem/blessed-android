@@ -735,6 +735,18 @@ public class BluetoothBytesParser {
     }
 
     /**
+     * Set byte array to a SFloat using a given precision, i.e. number of digits after the comma
+     *
+     * @param value     SFloat value to create byte[] from
+     * @param precision number of digits after the comma to use
+     */
+    public void setSFloatValue(final float value, final int precision) {
+        float mantissa = (float) (value * Math.pow(10, precision));
+        setFloatValue((int) mantissa, -precision, FORMAT_SFLOAT, internalOffset);
+        internalOffset += getTypeLen(FORMAT_SFLOAT);
+    }
+
+    /**
      * Set byte array to the bytes at current offset
      *
      * @param value byteArray to be added to this byte array
