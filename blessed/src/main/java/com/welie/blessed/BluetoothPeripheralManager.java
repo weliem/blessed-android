@@ -145,6 +145,10 @@ public class BluetoothPeripheralManager {
         private void handleDeviceDisconnected(@NotNull final BluetoothDevice device) {
             final BluetoothCentral bluetoothCentral = getCentral(device);
             Logger.i(TAG,"Central '%s' (%s) disconnected", bluetoothCentral.getName(), bluetoothCentral.getAddress());
+
+            if (bluetoothCentral.getBondState() != BondState.BONDED) {
+                removeCentralFromWantingAnything(bluetoothCentral);
+            }
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -891,6 +895,18 @@ public class BluetoothPeripheralManager {
         Set<String> centrals = centralsWantingNotifications.get(characteristic);
         if (centrals != null) {
             centrals.remove(central.getAddress());
+        }
+    }
+
+    protected void removeCentralFromWantingAnything(@NotNull final BluetoothCentral central) {
+        final String centralAddress = central.getAddress();
+
+        for (Map.Entry<BluetoothGattCharacteristic, Set<String>> entry : centralsWantingIndications.entrySet()) {
+            entry.getValue().remove(centralAddress);
+        }
+
+        for (Map.Entry<BluetoothGattCharacteristic, Set<String>> entry : centralsWantingNotifications.entrySet()) {
+            entry.getValue().remove(centralAddress);
         }
     }
 
