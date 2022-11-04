@@ -925,6 +925,7 @@ public class BluetoothBytesParser {
         }
         return sb.toString();
     }
+
     /**
      * Convert a hex string to byte array
      *
@@ -1082,5 +1083,9 @@ public class BluetoothBytesParser {
 
     public void setUInt64(long value) {
         setLong(value, FORMAT_UINT64);
+    }
+
+    public @NotNull Integer peekIntValue(final int formatType) {
+        return getIntValue(formatType, internalOffset, internalByteOrder);
     }
 }
