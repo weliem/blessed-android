@@ -919,9 +919,10 @@ public class BluetoothBytesParserTest {
     @Test
     public void hexString_to_byte_array_Test() {
         byte[] value = new byte[]{0x01, 0x40, (byte) 0x80, (byte) 0x81, (byte)0xA0, (byte)0xF0, (byte) 0xFF};
-        String valueString = BluetoothBytesParser.bytes2String(value);
+        String valueString = BluetoothBytesParser.asHexString(value);
         byte[] decodedValue = BluetoothBytesParser.string2bytes(valueString);
         assertArrayEquals(value, decodedValue);
+        assertEquals("01408081a0f0ff", valueString);
     }
 
     @Test
@@ -933,4 +934,40 @@ public class BluetoothBytesParserTest {
         assertArrayEquals(new byte[]{0x01, 0x40, (byte) 0x80}, byteArray);
         assertEquals(3, parser.getOffset() );
     }
+
+    @Test
+    public void getStringOfLengthTestNoZeros() {
+        byte[] value = "abc".getBytes();
+        BluetoothBytesParser parser = new BluetoothBytesParser(value);
+        String valueString = parser.getStringOfLength(value.length);
+
+        assertEquals( "abc", valueString);
+    }
+
+    @Test
+    public void getStringOfLengthTestWithSpaces() {
+        byte[] value = "ab c ".getBytes();
+        BluetoothBytesParser parser = new BluetoothBytesParser(value);
+        String valueString = parser.getStringOfLength(value.length);
+
+        assertEquals( "ab c ", valueString);
+    }
+
+    @Test
+    public void getStringOfLengthTestWithZero() {
+        byte[] value = new byte[]{0x61, 0x62, 0x63, 0x00};
+        BluetoothBytesParser parser = new BluetoothBytesParser(value);
+        String valueString = parser.getStringOfLength(value.length);
+
+        assertEquals( "abc", valueString);
+    }
+
+    @Test
+    public void getFormattedHexString() {
+        byte[] value = new byte[]{0x61, 0x62, 0x63, 0x00};
+        String valueString = BluetoothBytesParser.asHexString(value, ":");
+
+        assertEquals( "61:62:63:00", valueString);
+    }
+
 }

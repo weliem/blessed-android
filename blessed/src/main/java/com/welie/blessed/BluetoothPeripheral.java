@@ -65,7 +65,7 @@ import static android.bluetooth.BluetoothDevice.BOND_NONE;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_INDICATE;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_NOTIFY;
 import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_READ;
-import static com.welie.blessed.BluetoothBytesParser.bytes2String;
+import static com.welie.blessed.BluetoothBytesParser.asHexString;
 
 /**
  * Represents a remote Bluetooth peripheral and replaces BluetoothDevice and BluetoothGatt
@@ -217,7 +217,7 @@ public class BluetoothPeripheral {
             final GattStatus gattStatus = GattStatus.fromValue(status);
             final BluetoothGattCharacteristic parentCharacteristic = descriptor.getCharacteristic();
             if (gattStatus != GattStatus.SUCCESS) {
-                Logger.e(TAG, "failed to write <%s> to descriptor of characteristic <%s> for device: '%s', status '%s' ", bytes2String(currentWriteBytes), parentCharacteristic.getUuid(), getAddress(), gattStatus);
+                Logger.e(TAG, "failed to write <%s> to descriptor of characteristic <%s> for device: '%s', status '%s' ", asHexString(currentWriteBytes), parentCharacteristic.getUuid(), getAddress(), gattStatus);
                 if (failureThatShouldTriggerBonding(gattStatus)) return;
             }
 
@@ -325,7 +325,7 @@ public class BluetoothPeripheral {
         public void onCharacteristicWrite(@NotNull final BluetoothGatt gatt, @NotNull final BluetoothGattCharacteristic characteristic, final int status) {
             final GattStatus gattStatus = GattStatus.fromValue(status);
             if (gattStatus != GattStatus.SUCCESS) {
-                Logger.e(TAG, "writing <%s> to characteristic <%s> failed, status '%s'", bytes2String(currentWriteBytes), characteristic.getUuid(), gattStatus);
+                Logger.e(TAG, "writing <%s> to characteristic <%s> failed, status '%s'", asHexString(currentWriteBytes), characteristic.getUuid(), gattStatus);
                 if (failureThatShouldTriggerBonding(gattStatus)) return;
             }
 
@@ -1266,7 +1266,7 @@ public class BluetoothPeripheral {
                     }
 
                     if (internalWriteCharacteristic(characteristic, bytesToWrite, writeType)) {
-                        Logger.d(TAG, "writing <%s> to characteristic <%s>", bytes2String(bytesToWrite), characteristic.getUuid());
+                        Logger.d(TAG, "writing <%s> to characteristic <%s>", asHexString(bytesToWrite), characteristic.getUuid());
                         nrTries++;
                     } else {
                         Logger.e(TAG, "writeCharacteristic failed for characteristic: %s", characteristic.getUuid());
@@ -1371,7 +1371,7 @@ public class BluetoothPeripheral {
             public void run() {
                 if (isConnected()) {
                     if (internalWriteDescriptor(descriptor, bytesToWrite)) {
-                        Logger.d(TAG, "writing <%s> to descriptor <%s>", bytes2String(bytesToWrite), descriptor.getUuid());
+                        Logger.d(TAG, "writing <%s> to descriptor <%s>", asHexString(bytesToWrite), descriptor.getUuid());
                         nrTries++;
                     } else {
                         Logger.e(TAG, "writeDescriptor failed for descriptor: %s", descriptor.getUuid());

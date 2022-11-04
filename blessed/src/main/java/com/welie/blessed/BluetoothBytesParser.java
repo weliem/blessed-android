@@ -40,6 +40,7 @@ import static java.nio.ByteOrder.LITTLE_ENDIAN;
 public class BluetoothBytesParser {
 
     private static final String INVALID_OFFSET = "invalid offset";
+    private static final String INVALID_LENGTH = "invalid length";
     private static final String UNSUPPORTED_FORMAT_TYPE = "unsupported format type";
     private static final String OFFSET_MUST_BE_GREATER_OR_EQUAL_TO_ZERO = "offset must be greater or equal to zero";
     private int internalOffset;
@@ -426,8 +427,34 @@ public class BluetoothBytesParser {
         return getStringValue(internalOffset);
     }
 
+    public String getStringOfLength(int length) {
+        if (length <= 0) throw new IllegalArgumentException(INVALID_LENGTH);
+        if (mValue == null || internalOffset + length > mValue.length) throw new IllegalArgumentException(INVALID_LENGTH);
+
+        byte[] strBytes = new byte[length];
+        System.arraycopy(mValue, internalOffset, strBytes, 0, length);
+
+        internalOffset += length;
+        return bytesToString(strBytes);
+    }
+
     /**
-     * Return a String from this byte array. This operation will not advance the internal offset to the next position.
+     * Convert byte array to string using 0x00 as end of string character
+     *
+     * @param strBytes the byte array to convert to String
+     * @return the String representation of these bytes
+     */
+    private String bytesToString(byte[] strBytes) {
+        // Find zero byte, if any
+        int j = 0;
+        while (j < strBytes.length && (strBytes[j] != 0)) j++;
+
+        // Convert to string
+        return new String(strBytes, 0, j, StandardCharsets.ISO_8859_1);
+    }
+
+    /**
+     * Return a String from this byte array. This operation will not advance the internal offset to the next position. Trailing spaces are being trimmed
      *
      * @param offset Offset at which the string value can be found.
      * @return String value represented by the byte array
@@ -439,8 +466,9 @@ public class BluetoothBytesParser {
         if (mValue == null || offset > mValue.length) throw new IllegalArgumentException(INVALID_OFFSET);
 
         // Copy all bytes
-        byte[] strBytes = new byte[mValue.length - offset];
-        for (int i = 0; i != (mValue.length - offset); ++i) strBytes[i] = mValue[offset + i];
+        int length = mValue.length - offset;
+        byte[] strBytes = new byte[length];
+        System.arraycopy(mValue, offset, strBytes, 0, length);
 
         // Get rid of trailing zero/space bytes
         int j = strBytes.length;
@@ -873,21 +901,29 @@ public class BluetoothBytesParser {
     }
 
     /**
-     * Convert a byte array to a string
+     * Convert a byte array to a hex string
      *
      * @param bytes the bytes to convert
      * @return String object that represents the byte array
      */
     @NotNull
-    public static String bytes2String(@Nullable final byte[] bytes) {
+    public static String asHexString(@Nullable final byte[] bytes) {
+        return asHexString(bytes, "");
+    }
+
+    public static String asHexString(@Nullable final byte[] bytes, @NotNull final String separator) {
         if (bytes == null) return "";
         StringBuilder sb = new StringBuilder();
+        int index = 0;
         for (byte b : bytes) {
             sb.append(String.format("%02x", b & 0xff));
+            if (index < (bytes.length - 1)) {
+                sb.append(separator);
+            }
+            index++;
         }
         return sb.toString();
     }
-
     /**
      * Convert a hex string to byte array
      *
@@ -960,7 +996,7 @@ public class BluetoothBytesParser {
 
     @Override
     public String toString() {
-        return bytes2String(mValue);
+        return asHexString(mValue);
     }
 
     /**
