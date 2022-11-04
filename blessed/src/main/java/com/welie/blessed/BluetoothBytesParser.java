@@ -220,6 +220,7 @@ public class BluetoothBytesParser {
     @NotNull
     public Long getLongValue(final int formatType, final int offset, @NotNull final ByteOrder byteOrder) {
         Objects.requireNonNull(byteOrder);
+        if (!(formatType == FORMAT_UINT48 | formatType == FORMAT_UINT64)) throw new IllegalArgumentException("format type not allowed");
         int length = getTypeLen(formatType);
         if (offset < 0) throw new IllegalArgumentException(OFFSET_MUST_BE_GREATER_OR_EQUAL_TO_ZERO);
         if ((offset + length) > mValue.length) throw new IllegalArgumentException(INVALID_OFFSET);
@@ -960,5 +961,89 @@ public class BluetoothBytesParser {
     @Override
     public String toString() {
         return bytes2String(mValue);
+    }
+
+    /**
+     * New style of convenience methods to get values
+     */
+
+    public @NotNull Integer getUInt8() {
+        return getIntValue(FORMAT_UINT8);
+    }
+
+    public @NotNull Integer getSInt8() {
+        return getIntValue(FORMAT_SINT8);
+    }
+
+    public @NotNull Integer getUInt16() {
+        return getIntValue(FORMAT_UINT16);
+    }
+
+    public @NotNull Integer getSInt16() {
+        return getIntValue(FORMAT_SINT16);
+    }
+
+    public @NotNull Integer getUInt24() {
+        return getIntValue(FORMAT_UINT24);
+    }
+
+    public @NotNull Integer getSInt24() {
+        return getIntValue(FORMAT_SINT24);
+    }
+
+    public @NotNull Integer getUInt32() {
+        return getIntValue(FORMAT_UINT32);
+    }
+
+    public @NotNull Integer getSInt32() {
+        return getIntValue(FORMAT_SINT32);
+    }
+
+    public @NotNull Long getUInt48() {
+        return getLongValue(FORMAT_UINT48);
+    }
+
+    public @NotNull Long getUInt64() {
+        return getLongValue(FORMAT_UINT64);
+    }
+
+    public @NotNull Float getFloat() {
+        return getFloatValue(FORMAT_FLOAT);
+    }
+
+    public @NotNull Float getSFloat() {
+        return getFloatValue(FORMAT_SFLOAT);
+    }
+
+    public void setUInt8(int value) {
+        setIntValue(value, FORMAT_UINT8);
+    }
+
+    public void setSInt8(int value) {
+        setIntValue(value, FORMAT_SINT8);
+    }
+
+    public void setUInt16(int value) {
+        setIntValue(value, FORMAT_UINT16);
+    }
+
+    public void setSInt16(int value) {
+        setIntValue(value, FORMAT_SINT16);
+    }
+
+    public void setUInt32(int value) {
+        setIntValue(value, FORMAT_UINT32);
+    }
+
+    public void setSInt32(int value) {
+        setIntValue(value, FORMAT_SINT32);
+    }
+
+    public void setUInt48(long value) {
+        setLong(value, FORMAT_UINT48);
+    }
+
+    public void setUInt64(long value) {
+        setLong(value, FORMAT_UINT64);
     }
 }

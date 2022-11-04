@@ -23,7 +23,7 @@ public class WeightMeasurement implements Serializable {
         BluetoothBytesParser parser = new BluetoothBytesParser(byteArray);
 
         // Parse flag byte
-        final int flags = parser.getIntValue(BluetoothBytesParser.FORMAT_UINT8);
+        final int flags = parser.getUInt8();
         unit = ((flags & 0x01) > 0) ? WeightUnit.Pounds : WeightUnit.Kilograms;
         final boolean timestampPresent = (flags & 0x02) > 0;
         final boolean userIDPresent = (flags & 0x04) > 0;
@@ -31,7 +31,7 @@ public class WeightMeasurement implements Serializable {
 
         // Get weight value
         double weightMultiplier = (unit == WeightUnit.Kilograms) ? 0.005 : 0.01;
-        weight = parser.getIntValue(FORMAT_UINT16) * weightMultiplier;
+        weight = parser.getUInt16() * weightMultiplier;
 
         // Get timestamp if present
         if (timestampPresent) {
@@ -42,13 +42,13 @@ public class WeightMeasurement implements Serializable {
 
         // Get user ID if present
         if (userIDPresent) {
-            userID = parser.getIntValue(FORMAT_UINT8);
+            userID = parser.getUInt8();
         }
 
         // Get BMI and Height if present
         if (bmiAndHeightPresent) {
-            BMI = parser.getIntValue(FORMAT_UINT16);
-            height = parser.getIntValue(FORMAT_UINT16);
+            BMI = parser.getUInt16();
+            height = parser.getUInt16();
         }
     }
 

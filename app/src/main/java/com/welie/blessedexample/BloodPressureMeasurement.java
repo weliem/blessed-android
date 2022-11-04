@@ -24,7 +24,7 @@ public class BloodPressureMeasurement implements Serializable {
         BluetoothBytesParser parser = new BluetoothBytesParser(value);
 
         // Parse the flags
-        int flags = parser.getIntValue(FORMAT_UINT8);
+        int flags = parser.getUInt8();
         isMMHG = !((flags & 0x01) > 0);
         boolean timestampPresent = (flags & 0x02) > 0;
         boolean pulseRatePresent = (flags & 0x04) > 0;
@@ -32,9 +32,9 @@ public class BloodPressureMeasurement implements Serializable {
         boolean measurementStatusPresent = (flags & 0x10) > 0;
 
         // Get systolic, diastolic and mean arterial pressure
-        systolic = parser.getFloatValue(FORMAT_SFLOAT);
-        diastolic = parser.getFloatValue(FORMAT_SFLOAT);
-        meanArterialPressure = parser.getFloatValue(FORMAT_SFLOAT);
+        systolic = parser.getSFloat();
+        diastolic = parser.getSFloat();
+        meanArterialPressure = parser.getSFloat();
 
         // Read timestamp
         if (timestampPresent) {
@@ -45,12 +45,12 @@ public class BloodPressureMeasurement implements Serializable {
 
         // Read pulse rate
         if (pulseRatePresent) {
-            pulseRate = parser.getFloatValue(FORMAT_SFLOAT);
+            pulseRate = parser.getSFloat();
         }
 
         // Read userId
         if (userIdPresent) {
-            userID = parser.getIntValue(FORMAT_UINT8);
+            userID = parser.getUInt8();
         }
     }
 

@@ -21,13 +21,13 @@ public class TemperatureMeasurement implements Serializable {
         BluetoothBytesParser parser = new BluetoothBytesParser(byteArray);
 
         // Parse flag byte
-        final int flags = parser.getIntValue(FORMAT_UINT8);
+        final int flags = parser.getUInt8();
         unit = ((flags & 0x01) > 0 ? TemperatureUnit.Fahrenheit : TemperatureUnit.Celsius);
         final boolean timestampPresent = (flags & 0x02) > 0;
         final boolean typePresent = (flags & 0x04) > 0;
 
         // Get temperature value
-        temperatureValue = parser.getFloatValue(FORMAT_FLOAT);
+        temperatureValue = parser.getFloat();
 
         // Get timestamp
         if(timestampPresent) {
@@ -36,7 +36,7 @@ public class TemperatureMeasurement implements Serializable {
 
         // Get temperature type
         if(typePresent) {
-            int typeValue = parser.getIntValue(FORMAT_UINT8);
+            int typeValue = parser.getUInt8();
             type = TemperatureType.fromValue(typeValue);
         }
     }
@@ -50,6 +50,6 @@ public class TemperatureMeasurement implements Serializable {
         } else {
             formattedTimestamp = "null";
         }
-        return String.format(Locale.ENGLISH,"%.1f %s (%s), at (%s)", temperatureValue, unit == TemperatureUnit.Celsius ? "celcius" : "fahrenheit", type, formattedTimestamp);
+        return String.format(Locale.ENGLISH,"%.1f %s (%s), at (%s)", temperatureValue, unit == TemperatureUnit.Celsius ? "celsius" : "fahrenheit", type, formattedTimestamp);
     }
 }

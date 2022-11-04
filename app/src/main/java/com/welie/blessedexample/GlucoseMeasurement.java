@@ -25,25 +25,25 @@ public class GlucoseMeasurement implements Serializable {
         BluetoothBytesParser parser = new BluetoothBytesParser(byteArray);
 
         // Parse flags
-        final int flags = parser.getIntValue(FORMAT_UINT8);
+        final int flags = parser.getUInt8();
         final boolean timeOffsetPresent = (flags & 0x01) > 0;
         final boolean typeAndLocationPresent = (flags & 0x02) > 0;
         unit = (flags & 0x04) > 0 ? MmolPerLiter : MiligramPerDeciliter;
         contextWillFollow = (flags & 0x10) > 0;
 
         // Sequence number is used to match the reading with an optional glucose context
-        sequenceNumber = parser.getIntValue(FORMAT_UINT16);
+        sequenceNumber = parser.getUInt16();
 
         // Read timestamp
         timestamp = parser.getDateTime();
 
         if (timeOffsetPresent) {
-            int timeOffset = parser.getIntValue(FORMAT_SINT16);
+            int timeOffset = parser.getSInt16();
             timestamp = new Date(timestamp.getTime() + (timeOffset * 60000));
         }
 
         if (typeAndLocationPresent) {
-            final float glucoseConcentration = parser.getFloatValue(FORMAT_SFLOAT);
+            final float glucoseConcentration = parser.getSFloat();
             final int multiplier = unit == MiligramPerDeciliter ? 100000 : 1000;
             value = glucoseConcentration * multiplier;
         }

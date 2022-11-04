@@ -23,7 +23,7 @@ public class PulseOximeterSpotMeasurement implements Serializable {
     public PulseOximeterSpotMeasurement(byte[] value) {
         BluetoothBytesParser parser = new BluetoothBytesParser(value);
 
-        int flags = parser.getIntValue(FORMAT_UINT8);
+        int flags = parser.getUInt8();
         boolean timestampPresent = (flags & 0x01) > 0;
         boolean measurementStatusPresent = (flags & 0x02) > 0;
         boolean sensorStatusPresent = (flags & 0x04) > 0;
@@ -31,10 +31,10 @@ public class PulseOximeterSpotMeasurement implements Serializable {
         deviceClockSet = (flags & 0x10) == 0;
 
         // Get SpO2 value
-        spO2 = parser.getFloatValue(FORMAT_SFLOAT).intValue();
+        spO2 = parser.getSFloat().intValue();
 
         // Get pulse value
-        pulseRate = parser.getFloatValue(FORMAT_SFLOAT).intValue();
+        pulseRate = parser.getSFloat().intValue();
 
         if (timestampPresent) {
             Date timestamp = parser.getDateTime();
@@ -44,16 +44,16 @@ public class PulseOximeterSpotMeasurement implements Serializable {
         }
 
         if (measurementStatusPresent) {
-            measurementStatus = parser.getIntValue(FORMAT_UINT16);
+            measurementStatus = parser.getUInt16();
         }
 
         if (sensorStatusPresent) {
-            sensorStatus = parser.getIntValue(FORMAT_UINT16);
-            int reservedByte = parser.getIntValue(FORMAT_UINT8);
+            sensorStatus = parser.getUInt16();
+            int reservedByte = parser.getUInt8();
         }
 
         if (pulseAmplitudeIndexPresent) {
-            pulseAmplitudeIndex = parser.getFloatValue(FORMAT_SFLOAT);
+            pulseAmplitudeIndex = parser.getSFloat();
         }
     }
 
