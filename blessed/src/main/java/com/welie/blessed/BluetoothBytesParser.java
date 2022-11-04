@@ -911,6 +911,7 @@ public class BluetoothBytesParser {
         return asHexString(bytes, "");
     }
 
+    @NotNull
     public static String asHexString(@Nullable final byte[] bytes, @NotNull final String separator) {
         if (bytes == null) return "";
         StringBuilder sb = new StringBuilder();
