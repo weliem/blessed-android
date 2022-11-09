@@ -30,37 +30,37 @@ public class PulseOximeterContinuousMeasurement implements Serializable {
     public PulseOximeterContinuousMeasurement(byte[] value) {
         BluetoothBytesParser parser = new BluetoothBytesParser(value);
 
-        int flags = parser.getIntValue(FORMAT_UINT8);
+        int flags = parser.getUInt8();
         boolean spo2FastPresent = (flags & 0x01) > 0;
         boolean spo2SlowPresent = (flags & 0x02) > 0;
         boolean measurementStatusPresent = (flags & 0x04) > 0;
         boolean sensorStatusPresent = (flags & 0x08) > 0;
         boolean pulseAmplitudeIndexPresent = (flags & 0x10) > 0;
 
-        SpO2 = parser.getFloatValue(FORMAT_SFLOAT).intValue();
-        pulseRate = parser.getFloatValue(FORMAT_SFLOAT).intValue();
+        SpO2 = parser.getSFloat().intValue();
+        pulseRate = parser.getSFloat().intValue();
 
         if (spo2FastPresent) {
-            SpO2Fast = parser.getFloatValue(FORMAT_SFLOAT).intValue();
-            pulseRateFast = parser.getFloatValue(FORMAT_SFLOAT).intValue();
+            SpO2Fast = parser.getSFloat().intValue();
+            pulseRateFast = parser.getSFloat().intValue();
         }
 
         if (spo2SlowPresent) {
-            SpO2Slow = parser.getFloatValue(FORMAT_SFLOAT).intValue();
-            pulseRateSlow = parser.getFloatValue(FORMAT_SFLOAT).intValue();
+            SpO2Slow = parser.getSFloat().intValue();
+            pulseRateSlow = parser.getSFloat().intValue();
         }
 
         if (measurementStatusPresent) {
-            measurementStatus = parser.getIntValue(FORMAT_UINT16);
+            measurementStatus = parser.getUInt16();
         }
 
         if (sensorStatusPresent) {
-            sensorStatus = parser.getIntValue(FORMAT_UINT16);
-            int reservedByte = parser.getIntValue(FORMAT_UINT8);
+            sensorStatus = parser.getUInt16();
+            int reservedByte = parser.getUInt8();
         }
 
         if (pulseAmplitudeIndexPresent) {
-            pulseAmplitudeIndex = parser.getFloatValue(FORMAT_SFLOAT);
+            pulseAmplitudeIndex = parser.getSFloat();
         }
     }
 

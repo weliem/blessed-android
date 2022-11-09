@@ -36,7 +36,7 @@ import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_SINT16;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT16;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT8;
-import static com.welie.blessed.BluetoothBytesParser.bytes2String;
+import static com.welie.blessed.BluetoothBytesParser.asHexString;
 
 import static java.lang.Math.abs;
 
@@ -175,9 +175,9 @@ class BluetoothHandler {
         @Override
         public void onCharacteristicWrite(@NotNull BluetoothPeripheral peripheral, @NotNull byte[] value, @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
             if (status == GattStatus.SUCCESS) {
-                Timber.i("SUCCESS: Writing <%s> to <%s>", bytes2String(value), characteristic.getUuid());
+                Timber.i("SUCCESS: Writing <%s> to <%s>", asHexString(value), characteristic.getUuid());
             } else {
-                Timber.i("ERROR: Failed writing <%s> to <%s> (%s)", bytes2String(value), characteristic.getUuid(), status);
+                Timber.i("ERROR: Failed writing <%s> to <%s> (%s)", asHexString(value), characteristic.getUuid(), status);
             }
         }
 
