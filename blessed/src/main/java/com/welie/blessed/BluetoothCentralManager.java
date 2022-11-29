@@ -938,7 +938,9 @@ public class BluetoothCentralManager {
 
                 // Stop previous autoconnect scans if any
                 if (autoConnectScanner != null) {
-                    autoConnectScanner.stopScan(autoConnectScanCallback);
+                    if (isBluetoothEnabled()) {
+                        autoConnectScanner.stopScan(autoConnectScanCallback);
+                    }
                     autoConnectScanner = null;
                 }
 
