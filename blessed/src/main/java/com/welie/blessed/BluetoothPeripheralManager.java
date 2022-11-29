@@ -599,11 +599,10 @@ public class BluetoothPeripheralManager {
         if (doesNotSupportNotifying(characteristic)) return false;
 
         boolean result = true;
-        for (BluetoothCentral device : getConnectedCentrals()) {
-            if (!notifyCharacteristicChanged(value, device, characteristic)) {
-                result = false;
-            }
+        for (final BluetoothCentral central : getCentralsWantingNotifications(characteristic)) {
+            result = result && notifyCharacteristicChanged(value, central, characteristic);
         }
+
         return result;
     }
 
