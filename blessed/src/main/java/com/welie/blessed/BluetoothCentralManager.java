@@ -937,12 +937,7 @@ public class BluetoothCentralManager {
                 Logger.d(TAG,"autoconnect scan timeout, restarting scan");
 
                 // Stop previous autoconnect scans if any
-                if (autoConnectScanner != null) {
-                    if (isBluetoothEnabled()) {
-                        autoConnectScanner.stopScan(autoConnectScanCallback);
-                    }
-                    autoConnectScanner = null;
-                }
+                stopAutoconnectScan();
 
                 // Restart the auto connect scan and timer
                 mainHandler.postDelayed(new Runnable() {
