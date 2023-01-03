@@ -79,8 +79,8 @@ public class BluetoothCentralManager {
     private @Nullable volatile BluetoothLeScanner bluetoothScanner;
     private @Nullable volatile BluetoothLeScanner autoConnectScanner;
     private @NotNull final BluetoothCentralManagerCallback bluetoothCentralManagerCallback;
-    private @NotNull final Map<String, BluetoothPeripheral> connectedPeripherals = new ConcurrentHashMap<>();
-    private @NotNull final Map<String, BluetoothPeripheral> unconnectedPeripherals = new ConcurrentHashMap<>();
+    protected @NotNull final Map<String, BluetoothPeripheral> connectedPeripherals = new ConcurrentHashMap<>();
+    protected @NotNull final Map<String, BluetoothPeripheral> unconnectedPeripherals = new ConcurrentHashMap<>();
     private @NotNull final Map<String, BluetoothPeripheral> scannedPeripherals = new ConcurrentHashMap<>();
     private @NotNull final List<String> reconnectPeripheralAddresses = new ArrayList<>();
     private @NotNull final Map<String, BluetoothPeripheralCallback> reconnectCallbacks = new ConcurrentHashMap<>();
