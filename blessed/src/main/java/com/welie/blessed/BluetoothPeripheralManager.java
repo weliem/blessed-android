@@ -90,6 +90,7 @@ public class BluetoothPeripheralManager {
     private @NotNull final BluetoothLeAdvertiser bluetoothLeAdvertiser;
     private @NotNull final BluetoothGattServer bluetoothGattServer;
     private @NotNull final BluetoothPeripheralManagerCallback callback;
+    private @Nullable BluetoothCentralManager centralManager = null;
     protected @NotNull final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
     private @NotNull final HashMap<BluetoothGattCharacteristic, byte[]> writeLongCharacteristicTemporaryBytes = new HashMap<>();
     private @NotNull final HashMap<BluetoothGattDescriptor, byte[]> writeLongDescriptorTemporaryBytes = new HashMap<>();
@@ -106,6 +107,15 @@ public class BluetoothPeripheralManager {
         public void onConnectionStateChange(final BluetoothDevice device, final int status, final int newState) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
+
+                    // First check if this is a connecting peripheral because Android
+                    // will also call this callback for connecting peripherals
+                    if (centralManager != null) {
+                        if (centralManager.unconnectedPeripherals.containsKey(device.getAddress())) {
+                            return;
+                        }
+                    }
+
                     // Call connect() even though we are already connected
                     // It basically tells Android we will really use this connection
                     // If we don't do this, then cancelConnection won't work
@@ -119,7 +129,7 @@ public class BluetoothPeripheralManager {
 
                     handleDeviceConnected(device);
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                    // Deal is double disconnect messages
+                    // Deal with double disconnect messages
                     if (!connectedCentralsMap.containsKey(device.getAddress())) return;
 
                     handleDeviceDisconnected(device);
@@ -484,6 +494,10 @@ public class BluetoothPeripheralManager {
         // Register for broadcasts on BluetoothAdapter state change
         final IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
         context.registerReceiver(adapterStateReceiver, filter);
+    }
+
+    public void setCentralManager(@NotNull final BluetoothCentralManager central) {
+        this.centralManager = Objects.requireNonNull(central);
     }
 
     /**
