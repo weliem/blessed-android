@@ -151,4 +151,11 @@ Typically, when a central disconnects, you stop notifying and clean up.
 
 The BluetoothPeripheralManager class supports long reads and writes. It will take care of splitting up characteristic byte arrays in smaller chunks and re-assembling them. Hence, nothing special is needed and they function the same way as normal read and writes.
 
+## Using CentralManager and PeripheralManager at the same time
+If you use the BluetoothCentralManager and BluetoothPeripheralManager at the same time, you need to tell the peripheralmanager who the central manager is:
+
+```java
+peripheralManager.setCentralManager(central)
+```
+If you don't do this, the peripheral manager will not be able to distinguish centrals from peripherals and you will see too many connected events.
 
