@@ -135,13 +135,13 @@ public class BluetoothPeripheralManager {
                     handleDeviceDisconnected(device);
                 }
             } else {
-                Logger.i(TAG,"Device '%s' disconnected with status %d", device.getName(), status);
+                Logger.i(TAG,"Device '%s' disconnected with status %d", notNull(device.getName()), status);
                 handleDeviceDisconnected(device);
             }
         }
 
         private void handleDeviceConnected(@NotNull final BluetoothDevice device) {
-            Logger.i(TAG,"Central '%s' (%s) connected", device.getName(), device.getAddress());
+            Logger.i(TAG,"Central '%s' (%s) connected", notNull(device.getName()) , device.getAddress());
             final BluetoothCentral bluetoothCentral = new BluetoothCentral(device);
             connectedCentralsMap.put(bluetoothCentral.getAddress(), bluetoothCentral);
             mainHandler.post(new Runnable() {
@@ -692,7 +692,7 @@ public class BluetoothPeripheralManager {
     private void cancelConnection(@NotNull final BluetoothDevice bluetoothDevice) {
         Objects.requireNonNull(bluetoothDevice, DEVICE_IS_NULL);
 
-        Logger.i(TAG,"cancelConnection with '%s' (%s)", bluetoothDevice.getName(), bluetoothDevice.getAddress());
+        Logger.i(TAG,"cancelConnection with '%s' (%s)", notNull(bluetoothDevice.getName()), bluetoothDevice.getAddress());
         bluetoothGattServer.cancelConnection(bluetoothDevice);
     }
 
@@ -856,6 +856,9 @@ public class BluetoothPeripheralManager {
     byte[] copyOf(@Nullable final byte[] source) {
         return (source == null) ? new byte[0] : Arrays.copyOf(source, source.length);
     }
+
+    @NotNull
+    String notNull(@Nullable final String string) { return string == null ? "" : string; }
 
     /**
      * Make a byte array nonnull by either returning the original byte array if non-null or an empty bytearray
