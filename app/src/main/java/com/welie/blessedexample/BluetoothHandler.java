@@ -382,7 +382,14 @@ class BluetoothHandler {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                central.scanForPeripheralsWithServices(new UUID[]{BLP_SERVICE_UUID, HTS_SERVICE_UUID, PLX_SERVICE_UUID, WSS_SERVICE_UUID, GLUCOSE_SERVICE_UUID});
+                central.scanForPeripheralsWithServices(new UUID[]{
+                        HRS_SERVICE_UUID,
+                        BLP_SERVICE_UUID,
+                        HTS_SERVICE_UUID,
+                        PLX_SERVICE_UUID,
+                        WSS_SERVICE_UUID,
+                        GLUCOSE_SERVICE_UUID}
+                );
             }
         },1000);
     }
