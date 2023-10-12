@@ -4,6 +4,12 @@
 [![Downloads](https://jitpack.io/v/weliem/blessed-android/month.svg)](https://jitpack.io/#weliem/blessed-android)
 [![Android Build](https://github.com/weliem/blessed-android/actions/workflows/gradle.yml/badge.svg)](https://github.com/weliem/blessed-android/actions/workflows/gradle.yml)
 
+## Update!
+
+A Kotlin version of this library is available here: [blessed-kotlin](https://github.com/weliem/blessed-kotlin). 
+
+## Introduction
+
 BLESSED is a very compact Bluetooth Low Energy (BLE) library for Android 5 and higher, that makes working with BLE on Android very easy. It takes care of many aspects of working with BLE you would normally have to take care of yourself like:
 
 * *Queueing commands*, so you can don't have to wait anymore for the completion of a command before issueing the next command
@@ -30,7 +36,7 @@ The `BluetoothBytesParser` class is a utility class that makes parsing byte arra
 
 The BLESSED library was inspired by CoreBluetooth on iOS and provides the same level of abstraction, but at the same time it also stays true to Android by keeping most methods the same and allowing you to work with the standard classes for Services, Characteristics and Descriptors. If you already have developed using CoreBluetooth you can very easily port your code to Android using this library.
 
-BLESSED is written in Java but has been optimized for Kotlin as well. When using the library in Kotlin, all types will be correct in (non-)nullability. A full Kotlin variant using coroutines is available as [blessed-android-coroutines](https://github.com/weliem/blessed-android-coroutines)
+BLESSED is written in Java but has been optimized for Kotlin as well. When using the library in Kotlin, all types will be correct in (non-)nullability.
 
 This library is also available for Linux, see [blessed-bluez](https://github.com/weliem/blessed-bluez)
 
