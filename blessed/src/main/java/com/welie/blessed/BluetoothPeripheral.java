@@ -1153,11 +1153,6 @@ public class BluetoothPeripheral {
     public boolean readCharacteristic(@NotNull final BluetoothGattCharacteristic characteristic) {
         Objects.requireNonNull(characteristic, NO_VALID_CHARACTERISTIC_PROVIDED);
 
-        if (notConnected()) {
-            Logger.e(TAG, PERIPHERAL_NOT_CONNECTED);
-            return false;
-        }
-
         if (doesNotSupportReading(characteristic)) {
             String message = String.format("characteristic <%s> does not have read property", characteristic.getUuid());
             throw new IllegalArgumentException(message);
@@ -1229,11 +1224,6 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(characteristic, NO_VALID_CHARACTERISTIC_PROVIDED);
         Objects.requireNonNull(value, NO_VALID_VALUE_PROVIDED);
         Objects.requireNonNull(writeType, NO_VALID_WRITE_TYPE_PROVIDED);
-
-        if (notConnected()) {
-            Logger.e(TAG, PERIPHERAL_NOT_CONNECTED);
-            return false;
-        }
 
         if (value.length == 0) {
             throw new IllegalArgumentException(VALUE_BYTE_ARRAY_IS_EMPTY);
@@ -1314,11 +1304,6 @@ public class BluetoothPeripheral {
     public boolean readDescriptor(@NotNull final BluetoothGattDescriptor descriptor) {
         Objects.requireNonNull(descriptor, NO_VALID_DESCRIPTOR_PROVIDED);
 
-        if (notConnected()) {
-            Logger.e(TAG, PERIPHERAL_NOT_CONNECTED);
-            return false;
-        }
-
         return enqueue(new Runnable() {
             @Override
             public void run() {
@@ -1349,11 +1334,6 @@ public class BluetoothPeripheral {
     public boolean writeDescriptor(@NotNull final BluetoothGattDescriptor descriptor, @NotNull final byte[] value) {
         Objects.requireNonNull(descriptor, NO_VALID_DESCRIPTOR_PROVIDED);
         Objects.requireNonNull(value, NO_VALID_VALUE_PROVIDED);
-
-        if (notConnected()) {
-            Logger.e(TAG, PERIPHERAL_NOT_CONNECTED);
-            return false;
-        }
 
         if (value.length == 0) {
             throw new IllegalArgumentException(VALUE_BYTE_ARRAY_IS_EMPTY);
@@ -1432,11 +1412,6 @@ public class BluetoothPeripheral {
     public boolean setNotify(@NotNull final BluetoothGattCharacteristic characteristic, final boolean enable) {
         Objects.requireNonNull(characteristic, NO_VALID_CHARACTERISTIC_PROVIDED);
 
-        if (notConnected()) {
-            Logger.e(TAG, PERIPHERAL_NOT_CONNECTED);
-            return false;
-        }
-
         // Get the Client Characteristic Configuration Descriptor for the characteristic
         final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CCC_DESCRIPTOR_UUID);
         if (descriptor == null) {
@@ -1500,11 +1475,6 @@ public class BluetoothPeripheral {
      * @return true if the operation was enqueued, false otherwise
      */
     public boolean readRemoteRssi() {
-        if (notConnected()) {
-            Logger.e(TAG, PERIPHERAL_NOT_CONNECTED);
-            return false;
-        }
-
         return enqueue(new Runnable() {
             @Override
             public void run() {
@@ -1538,11 +1508,6 @@ public class BluetoothPeripheral {
             throw new IllegalArgumentException("mtu must be between 23 and 517");
         }
 
-        if (notConnected()) {
-            Logger.e(TAG, PERIPHERAL_NOT_CONNECTED);
-            return false;
-        }
-
         return enqueue(new Runnable() {
             @Override
             public void run() {
@@ -1569,11 +1534,6 @@ public class BluetoothPeripheral {
      */
     public boolean requestConnectionPriority(@NotNull final ConnectionPriority priority) {
         Objects.requireNonNull(priority, NO_VALID_PRIORITY_PROVIDED);
-
-        if (notConnected()) {
-            Logger.e(TAG, PERIPHERAL_NOT_CONNECTED);
-            return false;
-        }
 
         return enqueue(new Runnable() {
             @Override
@@ -1615,11 +1575,6 @@ public class BluetoothPeripheral {
         Objects.requireNonNull(rxPhy);
         Objects.requireNonNull(phyOptions);
 
-        if (notConnected()) {
-            Logger.e(TAG, PERIPHERAL_NOT_CONNECTED);
-            return false;
-        }
-
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             Logger.e(TAG, "setPreferredPhy requires Android 8.0 or newer");
             return false;
@@ -1658,11 +1613,6 @@ public class BluetoothPeripheral {
      * in {@link BluetoothPeripheralCallback#onPhyUpdate}
      */
     public boolean readPhy() {
-        if (notConnected()) {
-            Logger.e(TAG, PERIPHERAL_NOT_CONNECTED);
-            return false;
-        }
-
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             Logger.e(TAG, "setPreferredPhy requires Android 8.0 or newer");
             return false;
@@ -1710,6 +1660,11 @@ public class BluetoothPeripheral {
      * @return true if the command was successfully enqueued, otherwise false
      */
     private boolean enqueue(Runnable command) {
+        if (notConnected()) {
+            Logger.e(TAG, PERIPHERAL_NOT_CONNECTED);
+            return false;
+        }
+
         final boolean result = commandQueue.add(command);
         if (result) {
             nextCommand();
