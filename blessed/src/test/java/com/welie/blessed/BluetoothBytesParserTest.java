@@ -30,7 +30,7 @@ import static android.os.Build.VERSION_CODES.M;
 import static org.junit.Assert.assertArrayEquals;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(manifest=Config.NONE, sdk = { M }, shadows={ShadowBluetoothLEAdapter.class} )
+@Config(manifest=Config.NONE, sdk = { M } )
 public class BluetoothBytesParserTest {
 
     @Before
