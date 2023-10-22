@@ -1161,15 +1161,11 @@ public class BluetoothPeripheral {
         return enqueue(new Runnable() {
             @Override
             public void run() {
-                if (isConnected()) {
-                    if (bluetoothGatt.readCharacteristic(characteristic)) {
-                        Logger.d(TAG, "reading characteristic <%s>", characteristic.getUuid());
-                        nrTries++;
-                    } else {
-                        Logger.e(TAG, "readCharacteristic failed for characteristic: %s", characteristic.getUuid());
-                        completedCommand();
-                    }
+                if (bluetoothGatt.readCharacteristic(characteristic)) {
+                    Logger.d(TAG, "reading characteristic <%s>", characteristic.getUuid());
+                    nrTries++;
                 } else {
+                    Logger.e(TAG, "readCharacteristic failed for characteristic: %s", characteristic.getUuid());
                     completedCommand();
                 }
             }
@@ -1244,25 +1240,21 @@ public class BluetoothPeripheral {
         return enqueue(new Runnable() {
             @Override
             public void run() {
-                if (isConnected()) {
-                    if (willCauseLongWrite(bytesToWrite, writeType)) {
-                        // Android will turn this into a Long Write because it is larger than the MTU - 3.
-                        // When doing a Long Write the byte array will be automatically split in chunks of size MTU - 3.
-                        // However, the peripheral's firmware must also support it, so it is not guaranteed to work.
-                        // Long writes are also very inefficient because of the confirmation of each write operation.
-                        // So it is better to increase MTU if possible. Hence a warning if this write becomes a long write...
-                        // See https://stackoverflow.com/questions/48216517/rxandroidble-write-only-sends-the-first-20b
-                        Logger.w(TAG, "value byte array is longer than allowed by MTU, write will fail if peripheral does not support long writes");
-                    }
+                if (willCauseLongWrite(bytesToWrite, writeType)) {
+                    // Android will turn this into a Long Write because it is larger than the MTU - 3.
+                    // When doing a Long Write the byte array will be automatically split in chunks of size MTU - 3.
+                    // However, the peripheral's firmware must also support it, so it is not guaranteed to work.
+                    // Long writes are also very inefficient because of the confirmation of each write operation.
+                    // So it is better to increase MTU if possible. Hence a warning if this write becomes a long write...
+                    // See https://stackoverflow.com/questions/48216517/rxandroidble-write-only-sends-the-first-20b
+                    Logger.w(TAG, "value byte array is longer than allowed by MTU, write will fail if peripheral does not support long writes");
+                }
 
-                    if (internalWriteCharacteristic(characteristic, bytesToWrite, writeType)) {
-                        Logger.d(TAG, "writing <%s> to characteristic <%s>", asHexString(bytesToWrite), characteristic.getUuid());
-                        nrTries++;
-                    } else {
-                        Logger.e(TAG, "writeCharacteristic failed for characteristic: %s", characteristic.getUuid());
-                        completedCommand();
-                    }
+                if (internalWriteCharacteristic(characteristic, bytesToWrite, writeType)) {
+                    Logger.d(TAG, "writing <%s> to characteristic <%s>", asHexString(bytesToWrite), characteristic.getUuid());
+                    nrTries++;
                 } else {
+                    Logger.e(TAG, "writeCharacteristic failed for characteristic: %s", characteristic.getUuid());
                     completedCommand();
                 }
             }
@@ -1307,15 +1299,11 @@ public class BluetoothPeripheral {
         return enqueue(new Runnable() {
             @Override
             public void run() {
-                if (isConnected()) {
-                    if (bluetoothGatt.readDescriptor(descriptor)) {
-                        Logger.d(TAG, "reading descriptor <%s>", descriptor.getUuid());
-                        nrTries++;
-                    } else {
-                        Logger.e(TAG, "readDescriptor failed for characteristic: %s", descriptor.getUuid());
-                        completedCommand();
-                    }
+                if (bluetoothGatt.readDescriptor(descriptor)) {
+                    Logger.d(TAG, "reading descriptor <%s>", descriptor.getUuid());
+                    nrTries++;
                 } else {
+                    Logger.e(TAG, "readDescriptor failed for characteristic: %s", descriptor.getUuid());
                     completedCommand();
                 }
             }
@@ -1349,15 +1337,11 @@ public class BluetoothPeripheral {
         return enqueue(new Runnable() {
             @Override
             public void run() {
-                if (isConnected()) {
-                    if (internalWriteDescriptor(descriptor, bytesToWrite)) {
-                        Logger.d(TAG, "writing <%s> to descriptor <%s>", asHexString(bytesToWrite), descriptor.getUuid());
-                        nrTries++;
-                    } else {
-                        Logger.e(TAG, "writeDescriptor failed for descriptor: %s", descriptor.getUuid());
-                        completedCommand();
-                    }
+                if (internalWriteDescriptor(descriptor, bytesToWrite)) {
+                    Logger.d(TAG, "writing <%s> to descriptor <%s>", asHexString(bytesToWrite), descriptor.getUuid());
+                    nrTries++;
                 } else {
+                    Logger.e(TAG, "writeDescriptor failed for descriptor: %s", descriptor.getUuid());
                     completedCommand();
                 }
             }
@@ -1435,11 +1419,6 @@ public class BluetoothPeripheral {
         return enqueue(new Runnable() {
             @Override
             public void run() {
-                if (notConnected()) {
-                    completedCommand();
-                    return;
-                }
-
                 // First try to set notification for Gatt object
                 if (!bluetoothGatt.setCharacteristicNotification(characteristic, enable)) {
                     Logger.e(TAG, "setCharacteristicNotification failed for characteristic: %s", characteristic.getUuid());
@@ -1478,12 +1457,8 @@ public class BluetoothPeripheral {
         return enqueue(new Runnable() {
             @Override
             public void run() {
-                if (isConnected()) {
-                    if (!bluetoothGatt.readRemoteRssi()) {
-                        Logger.e(TAG, "readRemoteRssi failed");
-                        completedCommand();
-                    }
-                } else {
+                if (!bluetoothGatt.readRemoteRssi()) {
+                    Logger.e(TAG, "readRemoteRssi failed");
                     completedCommand();
                 }
             }
@@ -1511,15 +1486,11 @@ public class BluetoothPeripheral {
         return enqueue(new Runnable() {
             @Override
             public void run() {
-                if (isConnected()) {
-                    if (bluetoothGatt.requestMtu(mtu)) {
-                        currentCommand = REQUEST_MTU_COMMAND;
-                        Logger.i(TAG, "requesting MTU of %d", mtu);
-                    } else {
-                        Logger.e(TAG, "requestMtu failed");
-                        completedCommand();
-                    }
+                if (bluetoothGatt.requestMtu(mtu)) {
+                    currentCommand = REQUEST_MTU_COMMAND;
+                    Logger.i(TAG, "requesting MTU of %d", mtu);
                 } else {
+                    Logger.e(TAG, "requestMtu failed");
                     completedCommand();
                 }
             }
@@ -1538,12 +1509,10 @@ public class BluetoothPeripheral {
         return enqueue(new Runnable() {
             @Override
             public void run() {
-                if (isConnected()) {
-                    if (bluetoothGatt.requestConnectionPriority(priority.value)) {
-                        Logger.d(TAG, "requesting connection priority %s", priority);
-                    } else {
-                        Logger.e(TAG, "could not request connection priority");
-                    }
+                if (bluetoothGatt.requestConnectionPriority(priority.value)) {
+                    Logger.d(TAG, "requesting connection priority %s", priority);
+                } else {
+                    Logger.e(TAG, "could not request connection priority");
                 }
 
                 // Complete command as there is no reliable callback for this, but allow some time
@@ -1583,26 +1552,22 @@ public class BluetoothPeripheral {
         return enqueue(new Runnable() {
             @Override
             public void run() {
-                if (isConnected()) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        currentCommand = SET_PHY_TYPE_COMMAND;
-                        Logger.i(TAG, "setting preferred Phy: tx = %s, rx = %s, options = %s", txPhy, rxPhy, phyOptions);
-                        bluetoothGatt.setPreferredPhy(txPhy.mask, rxPhy.mask, phyOptions.value);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    currentCommand = SET_PHY_TYPE_COMMAND;
+                    Logger.i(TAG, "setting preferred Phy: tx = %s, rx = %s, options = %s", txPhy, rxPhy, phyOptions);
+                    bluetoothGatt.setPreferredPhy(txPhy.mask, rxPhy.mask, phyOptions.value);
 
-                        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.TIRAMISU) {
-                            // There is a bug in Android 13 where onPhyUpdate is not always called
-                            // Therefore complete this command after a delay in order not to block the queueu
-                            currentCommand = IDLE;
-                            callbackHandler.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    completedCommand();
-                                }
-                            }, 200);
-                        }
+                    if (Build.VERSION.SDK_INT == Build.VERSION_CODES.TIRAMISU) {
+                        // There is a bug in Android 13 where onPhyUpdate is not always called
+                        // Therefore complete this command after a delay in order not to block the queueu
+                        currentCommand = IDLE;
+                        callbackHandler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                completedCommand();
+                            }
+                        }, 200);
                     }
-                } else {
-                    completedCommand();
                 }
             }
         });
@@ -1621,13 +1586,9 @@ public class BluetoothPeripheral {
         return enqueue(new Runnable() {
             @Override
             public void run() {
-                if (isConnected()) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        bluetoothGatt.readPhy();
-                        Logger.d(TAG, "reading Phy");
-                    }
-                } else {
-                    completedCommand();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    bluetoothGatt.readPhy();
+                    Logger.d(TAG, "reading Phy");
                 }
             }
         });
@@ -1741,7 +1702,9 @@ public class BluetoothPeripheral {
                 @Override
                 public void run() {
                     try {
-                        bluetoothCommand.run();
+                        if (isConnected()) {
+                            bluetoothCommand.run();
+                        }
                     } catch (Exception ex) {
                         Logger.e(TAG, "command exception for device '%s'", getName());
                         Logger.e(TAG, ex.toString());
