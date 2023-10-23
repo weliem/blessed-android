@@ -273,6 +273,7 @@ class BluetoothHandler {
 
         private void sendMeasurement(@NotNull Intent intent, @NotNull BluetoothPeripheral peripheral ) {
             intent.putExtra(MEASUREMENT_EXTRA_PERIPHERAL, peripheral.getAddress());
+            intent.setPackage(context.getPackageName());
             context.sendBroadcast(intent);
         }
 
