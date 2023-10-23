@@ -129,6 +129,9 @@ public class BluetoothPeripheral {
     private @NotNull final Context context;
     private @NotNull final Handler callbackHandler;
     private @NotNull BluetoothDevice device;
+
+    private final PeripheralType peripheralType;
+
     private @NotNull final InternalCallback listener;
     protected @NotNull BluetoothPeripheralCallback peripheralCallback;
     private @NotNull final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
@@ -732,6 +735,7 @@ public class BluetoothPeripheral {
     BluetoothPeripheral(@NotNull final Context context, @NotNull final BluetoothDevice device, @NotNull final InternalCallback listener, @NotNull final BluetoothPeripheralCallback peripheralCallback, @NotNull final Handler callbackHandler, @NotNull final Transport transport) {
         this.context = Objects.requireNonNull(context, "no valid context provided");
         this.device = Objects.requireNonNull(device, NO_VALID_DEVICE_PROVIDED);
+        this.peripheralType = PeripheralType.fromValue(device.getType());
         this.listener = Objects.requireNonNull(listener, "no valid listener provided");
         this.peripheralCallback = Objects.requireNonNull(peripheralCallback, NO_VALID_PERIPHERAL_CALLBACK_PROVIDED);
         this.callbackHandler = Objects.requireNonNull(callbackHandler, "no valid callback handler provided");
@@ -955,7 +959,7 @@ public class BluetoothPeripheral {
      */
     @NotNull
     public PeripheralType getType() {
-        return PeripheralType.fromValue(device.getType());
+        return peripheralType;
     }
 
     /**
