@@ -1,23 +1,27 @@
 package com.welie.blessedexample;
 
+import androidx.annotation.NonNull;
+
 import com.welie.blessed.BluetoothBytesParser;
 
 import java.io.Serializable;
-import java.util.Calendar;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-
-import static android.bluetooth.BluetoothGattCharacteristic.FORMAT_SFLOAT;
-import static android.bluetooth.BluetoothGattCharacteristic.FORMAT_UINT8;
+import org.jetbrains.annotations.Nullable;
 
 public class BloodPressureMeasurement implements Serializable {
 
+    @Nullable
     public Integer userID;
     public Float systolic;
     public Float diastolic;
     public Float meanArterialPressure;
+    @Nullable
     public Date timestamp;
     public boolean isMMHG;
+    @Nullable
     public Float pulseRate;
 
     public BloodPressureMeasurement(byte[] value) {
@@ -39,8 +43,6 @@ public class BloodPressureMeasurement implements Serializable {
         // Read timestamp
         if (timestampPresent) {
             timestamp = parser.getDateTime();
-        } else {
-            timestamp = Calendar.getInstance().getTime();
         }
 
         // Read pulse rate
@@ -54,8 +56,17 @@ public class BloodPressureMeasurement implements Serializable {
         }
     }
 
+
+    @NonNull
     @Override
     public String toString() {
-        return String.format(Locale.ENGLISH,"%.0f/%.0f %s, MAP %.0f, %.0f bpm, user %d at (%s)", systolic, diastolic, isMMHG ? "mmHg" : "kPa", meanArterialPressure, pulseRate, userID, timestamp);
+        DateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.ENGLISH);
+        String formattedTimestamp;
+        if(timestamp != null) {
+            formattedTimestamp = df.format(timestamp);
+        } else {
+            formattedTimestamp = "null";
+        }
+        return String.format(Locale.ENGLISH,"%.0f/%.0f %s, MAP %.0f, %.0f bpm, user %d at (%s)", systolic, diastolic, isMMHG ? "mmHg" : "kPa", meanArterialPressure, pulseRate, userID, formattedTimestamp);
     }
 }

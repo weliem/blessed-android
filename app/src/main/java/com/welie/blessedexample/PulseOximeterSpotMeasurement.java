@@ -5,20 +5,21 @@ import com.welie.blessed.BluetoothBytesParser;
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
+import androidx.annotation.NonNull;
 
-
-import static com.welie.blessed.BluetoothBytesParser.*;
+import org.jetbrains.annotations.Nullable;
 
 public class PulseOximeterSpotMeasurement implements Serializable {
-    private final int spO2;
-    private final int pulseRate;
-    private float pulseAmplitudeIndex;
-    private final boolean deviceClockSet;
-    private Date timestamp;
-    private int measurementStatus;
-    private int sensorStatus;
+    public final int spO2;
+    public final int pulseRate;
+    public float pulseAmplitudeIndex;
+    public final boolean deviceClockSet;
+    @Nullable
+    public Date timestamp;
+    public int measurementStatus;
+    public int sensorStatus;
 
     public PulseOximeterSpotMeasurement(byte[] value) {
         BluetoothBytesParser parser = new BluetoothBytesParser(value);
@@ -37,10 +38,7 @@ public class PulseOximeterSpotMeasurement implements Serializable {
         pulseRate = parser.getSFloat().intValue();
 
         if (timestampPresent) {
-            Date timestamp = parser.getDateTime();
-            setTimestamp(timestamp);
-        } else {
-            setTimestamp(Calendar.getInstance().getTime());
+            timestamp = parser.getDateTime();
         }
 
         if (measurementStatusPresent) {
@@ -57,42 +55,11 @@ public class PulseOximeterSpotMeasurement implements Serializable {
         }
     }
 
-    public int getSpO2() {
-        return spO2;
-    }
-
-    public int getPulseRate() {
-        return pulseRate;
-    }
-
-    public float getPulseAmplitudeIndex() {
-        return pulseAmplitudeIndex;
-    }
-
-    public Date getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public boolean isDeviceClockSet() {
-        return deviceClockSet;
-    }
-
-    public int getMeasurementStatus() {
-        return measurementStatus;
-    }
-
-    public int getSensorStatus() {
-        return sensorStatus;
-    }
-
+    @NonNull
     @Override
     public String toString() {
-        DateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-        String formattedTimestamp = df.format(timestamp);
-        return String.format("SpO2 %d%% HR: %d PAI: %.1f (%s)", spO2, pulseRate, pulseAmplitudeIndex, formattedTimestamp);
+        DateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss",  Locale.ENGLISH);
+        String formattedTimestamp = timestamp != null ? df.format(timestamp) : "null";
+        return String.format( Locale.ENGLISH, "SpO2 %d%% HR: %d PAI: %.1f (%s)", spO2, pulseRate, pulseAmplitudeIndex, formattedTimestamp);
     }
 }

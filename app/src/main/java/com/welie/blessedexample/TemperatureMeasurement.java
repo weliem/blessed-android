@@ -7,14 +7,15 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-
-import static com.welie.blessed.BluetoothBytesParser.FORMAT_FLOAT;
-import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT8;
+import androidx.annotation.NonNull;
+import org.jetbrains.annotations.Nullable;
 
 public class TemperatureMeasurement implements Serializable {
     public TemperatureUnit unit;
     public float temperatureValue;
+    @Nullable
     public Date timestamp;
+    @Nullable
     public TemperatureType type;
 
     public TemperatureMeasurement(byte[] byteArray) {
@@ -41,6 +42,7 @@ public class TemperatureMeasurement implements Serializable {
         }
     }
 
+    @NonNull
     @Override
     public String toString() {
         DateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.ENGLISH);

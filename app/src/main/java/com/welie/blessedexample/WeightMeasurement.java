@@ -5,18 +5,21 @@ import com.welie.blessed.BluetoothBytesParser;
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
-
-import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT16;
-import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT8;
+import java.util.Locale;
+import androidx.annotation.NonNull;
+import org.jetbrains.annotations.Nullable;
 
 public class WeightMeasurement implements Serializable {
     public final double weight;
     public final WeightUnit unit;
-    public final Date timestamp;
+    @Nullable
+    public Date timestamp;
+    @Nullable
     public Integer userID;
+    @Nullable
     public Integer BMI;
+    @Nullable
     public Integer height;
 
     public WeightMeasurement(byte[] byteArray) {
@@ -36,8 +39,6 @@ public class WeightMeasurement implements Serializable {
         // Get timestamp if present
         if (timestampPresent) {
             timestamp = parser.getDateTime();
-        } else {
-            timestamp = Calendar.getInstance().getTime();
         }
 
         // Get user ID if present
@@ -52,10 +53,11 @@ public class WeightMeasurement implements Serializable {
         }
     }
 
+    @NonNull
     @Override
     public String toString() {
-        DateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+        DateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.ENGLISH);
         String formattedTimestamp = timestamp != null ? df.format(timestamp) : "null";
-        return String.format("%.1f %s, user %d, BMI %d, height %d at (%s)", weight, unit == WeightUnit.Kilograms ? "kg" : "lb", userID, BMI, height, formattedTimestamp);
+        return String.format(Locale.ENGLISH, "%.1f %s, user %d, BMI %d, height %d at (%s)", weight, unit == WeightUnit.Kilograms ? "kg" : "lb", userID, BMI, height, formattedTimestamp);
     }
 }

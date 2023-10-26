@@ -7,9 +7,6 @@ import com.welie.blessed.BluetoothBytesParser;
 import java.io.Serializable;
 import java.util.Locale;
 
-import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT16;
-import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT8;
-
 public class HeartRateMeasurement implements Serializable {
 
     public final Integer pulse;

@@ -3,15 +3,14 @@ package com.welie.blessedexample;
 import com.welie.blessed.BluetoothBytesParser;
 
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-
-import static com.welie.blessed.BluetoothBytesParser.FORMAT_SFLOAT;
-import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT8;
-import static com.welie.blessed.BluetoothBytesParser.FORMAT_SINT16;
-import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT16;
 import static com.welie.blessedexample.GlucoseMeasurementUnit.MiligramPerDeciliter;
 import static com.welie.blessedexample.GlucoseMeasurementUnit.MmolPerLiter;
+
+import androidx.annotation.NonNull;
 
 public class GlucoseMeasurement implements Serializable {
 
@@ -39,7 +38,7 @@ public class GlucoseMeasurement implements Serializable {
 
         if (timeOffsetPresent) {
             int timeOffset = parser.getSInt16();
-            timestamp = new Date(timestamp.getTime() + (timeOffset * 60000));
+            timestamp = new Date(timestamp.getTime() + (timeOffset * 60000L));
         }
 
         if (typeAndLocationPresent) {
@@ -49,8 +48,11 @@ public class GlucoseMeasurement implements Serializable {
         }
     }
 
+    @NonNull
     @Override
     public String toString() {
-        return String.format(Locale.ENGLISH,"%.1f %s, at (%s)", value, unit == MmolPerLiter ? "mmol/L" : "mg/dL", timestamp);
+        DateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.ENGLISH);
+        String formattedTimestamp = timestamp != null ? df.format(timestamp) : "null";
+        return String.format(Locale.ENGLISH,"%.1f %s, at (%s)", value, unit == MmolPerLiter ? "mmol/L" : "mg/dL", formattedTimestamp);
     }
 }

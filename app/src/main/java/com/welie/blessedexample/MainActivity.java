@@ -158,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
             BloodPressureMeasurement measurement = (BloodPressureMeasurement) intent.getSerializableExtra(BluetoothHandler.MEASUREMENT_BLOODPRESSURE_EXTRA);
             if (measurement == null) return;
 
-            measurementValue.setText(String.format(Locale.ENGLISH, "%.0f/%.0f %s, %.0f bpm\n%s\n\nfrom %s", measurement.systolic, measurement.diastolic, measurement.isMMHG ? "mmHg" : "kpa", measurement.pulseRate, dateFormat.format(measurement.timestamp), peripheral.getName()));
+            measurementValue.setText(String.format(Locale.ENGLISH, "%s\n\nfrom %s", measurement, peripheral.getName()));
         }
     };
 
@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
             TemperatureMeasurement measurement = (TemperatureMeasurement) intent.getSerializableExtra(BluetoothHandler.MEASUREMENT_TEMPERATURE_EXTRA);
             if (measurement == null) return;
 
-            measurementValue.setText(String.format(Locale.ENGLISH, "%.1f %s (%s)\n%s\n\nfrom %s", measurement.temperatureValue, measurement.unit == TemperatureUnit.Celsius ? "celsius" : "fahrenheit", measurement.type, dateFormat.format(measurement.timestamp), peripheral.getName()));
+            measurementValue.setText(String.format(Locale.ENGLISH, "%s\n\nfrom %s", measurement, peripheral.getName()));
         }
     };
 
@@ -193,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
             }
             PulseOximeterSpotMeasurement spotMeasurement = (PulseOximeterSpotMeasurement) intent.getSerializableExtra(BluetoothHandler.MEASUREMENT_PULSE_OX_EXTRA_SPOT);
             if (spotMeasurement != null) {
-                measurementValue.setText(String.format(Locale.ENGLISH, "SpO2 %d%%,  Pulse %d bpm\n%s\n\nfrom %s", spotMeasurement.getSpO2(), spotMeasurement.getPulseRate(), dateFormat.format(spotMeasurement.getTimestamp()), peripheral.getName()));
+                measurementValue.setText(String.format(Locale.ENGLISH, "%s\n\nfrom %s", spotMeasurement, peripheral.getName()));
             }
         }
     };
@@ -204,7 +204,7 @@ public class MainActivity extends AppCompatActivity {
             BluetoothPeripheral peripheral = getPeripheral(intent.getStringExtra(BluetoothHandler.MEASUREMENT_EXTRA_PERIPHERAL));
             WeightMeasurement measurement = (WeightMeasurement) intent.getSerializableExtra(BluetoothHandler.MEASUREMENT_WEIGHT_EXTRA);
             if (measurement != null) {
-                measurementValue.setText(String.format(Locale.ENGLISH, "%.1f %s\n%s\n\nfrom %s", measurement.weight, measurement.unit.toString(), dateFormat.format(measurement.timestamp), peripheral.getName()));
+                measurementValue.setText(String.format(Locale.ENGLISH, "%s\n\nfrom %s", measurement, peripheral.getName()));
             }
         }
     };
@@ -215,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
             BluetoothPeripheral peripheral = getPeripheral(intent.getStringExtra(BluetoothHandler.MEASUREMENT_EXTRA_PERIPHERAL));
             GlucoseMeasurement measurement = (GlucoseMeasurement) intent.getSerializableExtra(BluetoothHandler.MEASUREMENT_GLUCOSE_EXTRA);
             if (measurement != null) {
-                measurementValue.setText(String.format(Locale.ENGLISH, "%.1f %s\n%s\n\nfrom %s", measurement.value, measurement.unit == GlucoseMeasurementUnit.MmolPerLiter ? "mmol/L" : "mg/dL", dateFormat.format(measurement.timestamp), peripheral.getName()));
+                measurementValue.setText(String.format(Locale.ENGLISH, "%s\n\nfrom %s", measurement, peripheral.getName()));
             }
         }
     };
