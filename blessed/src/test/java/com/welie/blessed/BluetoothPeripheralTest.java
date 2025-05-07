@@ -43,6 +43,7 @@ import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPON
 import static android.bluetooth.BluetoothProfile.STATE_CONNECTED;
 import static android.bluetooth.BluetoothProfile.STATE_DISCONNECTED;
 import static android.os.Build.VERSION_CODES.M;
+import static android.os.Build.VERSION_CODES.N;
 import static android.os.Build.VERSION_CODES.O_MR1;
 import static com.welie.blessed.ConnectionState.CONNECTED;
 import static com.welie.blessed.ConnectionState.CONNECTING;
@@ -67,7 +68,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.openMocks;
 
 @RunWith(RobolectricTestRunner.class)
-@Config( manifest=Config.NONE, sdk = { M })
+@Config( manifest=Config.NONE, sdk = { N })
 public class BluetoothPeripheralTest {
     private BluetoothPeripheral peripheral;
     private final Handler handler = new Handler();
@@ -112,7 +113,6 @@ public class BluetoothPeripheralTest {
         when(device.getAddress()).thenReturn("12:23:34:98:76:54");
         when(device.connectGatt(any(Context.class), anyBoolean(), any(BluetoothGattCallback.class), anyInt())).thenReturn(gatt);
         when(gatt.getDevice()).thenReturn(device);
-
         peripheral = new BluetoothPeripheral(context, device, internalCallback, peripheralCallback, handler, transport);
     }
 
