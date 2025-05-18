@@ -1,16 +1,16 @@
 [versions]
 agp = "8.1.4"
-annotations = "20.1.0"
-core = "1.5.0"
+annotations = "23.0.0"
+core = "1.6.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 appcompat = "1.6.1"
 material = "1.12.0"
 activity = "1.10.1"
-constraintlayout = "2.1.4"
+constraintlayout = "2.2.1"
 mockitoCore = "3.8.0"
-robolectric = "4.10.3"
+robolectric = "4.13"
 timber = "5.0.1"
 
 [libraries]
