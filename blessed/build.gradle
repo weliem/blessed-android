@@ -1,5 +1,7 @@
-apply plugin: 'com.android.library'
-apply plugin: 'maven-publish'
+plugins {
+    id 'com.android.library'
+    id 'maven-publish'
+}
 
 group = 'com.github.weliem'
 
@@ -32,12 +34,12 @@ android {
 }
 
 dependencies {
-    implementation 'com.jakewharton.timber:timber:5.0.1'
-    implementation 'org.jetbrains:annotations:23.0.0'
-    testImplementation 'junit:junit:4.13.2'
-    testImplementation "org.robolectric:robolectric:4.13"
-    testImplementation "org.mockito:mockito-core:3.8.0"
-    testImplementation 'androidx.test:core:1.6.1'
+    implementation libs.timber
+    implementation libs.annotations
+    testImplementation libs.junit
+    testImplementation libs.robolectric
+    testImplementation libs.mockito.core
+    testImplementation libs.core
 }
 
 afterEvaluate {
@@ -54,8 +56,3 @@ afterEvaluate {
     }
 }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
-}
