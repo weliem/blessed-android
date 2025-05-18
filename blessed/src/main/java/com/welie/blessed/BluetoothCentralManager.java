@@ -374,6 +374,17 @@ public class BluetoothCentralManager {
     }
 
     /**
+     * Set the default scanSettings.
+     *
+     * @param scanSettings the custom scan settings to use
+     */
+    public void setScanSettings(@NotNull final ScanSettings scanSettings) {
+        Objects.requireNonNull(scanSettings);
+
+        this.scanSettings = scanSettings;
+    }
+
+    /**
      * Get the transport to be used during connection phase.
      *
      * @return transport
