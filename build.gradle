@@ -3,3 +3,16 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
 }
+
+subprojects {
+    configurations.all {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'org.jetbrains.kotlin'
+                    && (details.requested.name == 'kotlin-stdlib-jdk7'
+                    || details.requested.name == 'kotlin-stdlib-jdk8')) {
+                details.useVersion '1.8.22'
+                details.because 'kotlin-stdlib 1.8+ already includes jdk7/jdk8 extensions; align versions to avoid duplicates'
+            }
+        }
+    }
+}
