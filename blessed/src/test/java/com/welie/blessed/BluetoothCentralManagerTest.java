@@ -1,7 +1,21 @@
 package com.welie.blessed;
 
+import static android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES;
+import static android.os.Build.VERSION_CODES.M;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.openMocks;
+
 import android.Manifest;
-import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -17,9 +31,6 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 
-import androidx.test.core.app.ApplicationProvider;
-
-import org.bouncycastle.crypto.util.Pack;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,33 +40,14 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-import org.robolectric.shadow.api.Shadow;
-import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowLooper;
-import org.robolectric.shadows.ShadowPackageManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
-
-import static android.bluetooth.le.ScanSettings.CALLBACK_TYPE_ALL_MATCHES;
-import static android.os.Build.VERSION_CODES.M;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.openMocks;
-import static org.robolectric.Shadows.shadowOf;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(manifest=Config.NONE, sdk = { M } )
@@ -140,7 +132,7 @@ public class BluetoothCentralManagerTest {
         verify(callback).onDiscoveredPeripheral(bluetoothPeripheralCaptor.capture(), scanResultCaptor.capture());
 
         assertEquals(scanResultCaptor.getValue(), scanResult);
-        assertEquals(bluetoothPeripheralCaptor.getValue().getAddress(), "12:23:34:98:76:54");
+        assertEquals("12:23:34:98:76:54", bluetoothPeripheralCaptor.getValue().getAddress());
     }
 
     @Test
@@ -155,7 +147,7 @@ public class BluetoothCentralManagerTest {
         verify(scanner).startScan(scanFiltersCaptor.capture(), scanSettingsCaptor.capture(), scanCallbackCaptor.capture());
         assertEquals(1, scanFiltersCaptor.getValue().size());
         ScanFilter uuidFilter = scanFiltersCaptor.getValue().get(0);
-        UUID uuid = uuidFilter.getServiceUuid().getUuid();
+        UUID uuid = Objects.requireNonNull(uuidFilter.getServiceUuid()).getUuid();
         assertEquals(BLP_SERVICE_UUID, uuid);
 
         // When
@@ -174,7 +166,7 @@ public class BluetoothCentralManagerTest {
         verify(callback).onDiscoveredPeripheral(bluetoothPeripheralCaptor.capture(), scanResultCaptor.capture());
 
         assertEquals(scanResultCaptor.getValue(), scanResult);
-        assertEquals(bluetoothPeripheralCaptor.getValue().getAddress(), "12:23:34:98:76:54");
+        assertEquals("12:23:34:98:76:54", bluetoothPeripheralCaptor.getValue().getAddress());
     }
 
     @Test
@@ -210,7 +202,7 @@ public class BluetoothCentralManagerTest {
         verify(callback).onDiscoveredPeripheral(bluetoothPeripheralCaptor.capture(), scanResultCaptor.capture());
 
         assertEquals(scanResultCaptor.getValue(), scanResult);
-        assertEquals(bluetoothPeripheralCaptor.getValue().getAddress(), myAddress);
+        assertEquals(myAddress, bluetoothPeripheralCaptor.getValue().getAddress());
     }
 
     @Test
@@ -261,7 +253,7 @@ public class BluetoothCentralManagerTest {
         verify(callback).onDiscoveredPeripheral(bluetoothPeripheralCaptor.capture(), scanResultCaptor.capture());
 
         assertEquals(scanResultCaptor.getValue(), scanResult);
-        assertEquals(bluetoothPeripheralCaptor.getValue().getName(), "Polar H7");
+        assertEquals("Polar H7", bluetoothPeripheralCaptor.getValue().getName());
     }
 
     @Test
@@ -327,7 +319,7 @@ public class BluetoothCentralManagerTest {
 
     @Test (expected = IllegalArgumentException.class)
     public void scanForPeripheralsUsingFiltersEmptyTest() {
-        central.scanForPeripheralsUsingFilters(new ArrayList<ScanFilter>());
+        central.scanForPeripheralsUsingFilters(new ArrayList<>());
     }
 
     @Test
@@ -728,7 +720,7 @@ public class BluetoothCentralManagerTest {
         // Then
         verify(peripheral, never()).autoConnect();
         verify(peripheral2).autoConnect();
-        verify(scanner).startScan(ArgumentMatchers.<ScanFilter>anyList(), any(ScanSettings.class), any(ScanCallback.class));
+        verify(scanner).startScan(ArgumentMatchers.anyList(), any(ScanSettings.class), any(ScanCallback.class));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -873,7 +865,7 @@ public class BluetoothCentralManagerTest {
   //      bluetoothAdapter.setEnabled(false);
         when(bluetoothAdapter.isEnabled()).thenReturn(false);
         central.scanForPeripherals();
-        verify(scanner, never()).startScan(ArgumentMatchers.<ScanFilter>anyList(), any(ScanSettings.class), any(ScanCallback.class));
+        verify(scanner, never()).startScan(ArgumentMatchers.anyList(), any(ScanSettings.class), any(ScanCallback.class));
     }
 
     @Test (expected = SecurityException.class)
@@ -882,7 +874,7 @@ public class BluetoothCentralManagerTest {
                 .thenReturn(PackageManager.PERMISSION_DENIED);
 
         central.scanForPeripherals();
-        verify(scanner, never()).startScan(ArgumentMatchers.<ScanFilter>anyList(), any(ScanSettings.class), any(ScanCallback.class));
+        verify(scanner, never()).startScan(ArgumentMatchers.anyList(), any(ScanSettings.class), any(ScanCallback.class));
     }
 
     @Test

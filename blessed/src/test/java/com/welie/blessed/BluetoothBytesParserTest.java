@@ -1,15 +1,6 @@
 package com.welie.blessed;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
-
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-
+import static android.os.Build.VERSION_CODES.M;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_FLOAT;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_SFLOAT;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_SINT16;
@@ -22,12 +13,20 @@ import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT32;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT48;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT64;
 import static com.welie.blessed.BluetoothBytesParser.FORMAT_UINT8;
+import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertArrayEquals;
 import static java.nio.ByteOrder.BIG_ENDIAN;
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
-import static junit.framework.Assert.assertEquals;
 
-import static android.os.Build.VERSION_CODES.M;
-import static org.junit.Assert.assertArrayEquals;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(manifest=Config.NONE, sdk = { M } )

@@ -1,5 +1,44 @@
 package com.welie.blessed;
 
+import static android.bluetooth.BluetoothDevice.BOND_BONDED;
+import static android.bluetooth.BluetoothDevice.BOND_BONDING;
+import static android.bluetooth.BluetoothDevice.BOND_NONE;
+import static android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_HIGH;
+import static android.bluetooth.BluetoothGatt.GATT_FAILURE;
+import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
+import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_INDICATE;
+import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_NOTIFY;
+import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_READ;
+import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE;
+import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE;
+import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
+import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE;
+import static android.bluetooth.BluetoothProfile.STATE_CONNECTED;
+import static android.bluetooth.BluetoothProfile.STATE_DISCONNECTED;
+import static android.os.Build.VERSION_CODES.N;
+import static android.os.Build.VERSION_CODES.O_MR1;
+import static com.welie.blessed.ConnectionState.CONNECTED;
+import static com.welie.blessed.ConnectionState.CONNECTING;
+import static com.welie.blessed.ConnectionState.DISCONNECTED;
+import static com.welie.blessed.ConnectionState.DISCONNECTING;
+import static junit.framework.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.openMocks;
+
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
@@ -26,46 +65,6 @@ import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-
-import static android.bluetooth.BluetoothDevice.BOND_BONDED;
-import static android.bluetooth.BluetoothDevice.BOND_BONDING;
-import static android.bluetooth.BluetoothDevice.BOND_NONE;
-import static android.bluetooth.BluetoothGatt.CONNECTION_PRIORITY_HIGH;
-import static android.bluetooth.BluetoothGatt.GATT_FAILURE;
-import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
-import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_INDICATE;
-import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_NOTIFY;
-import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_READ;
-import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE;
-import static android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE;
-import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
-import static android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE;
-import static android.bluetooth.BluetoothProfile.STATE_CONNECTED;
-import static android.bluetooth.BluetoothProfile.STATE_DISCONNECTED;
-import static android.os.Build.VERSION_CODES.M;
-import static android.os.Build.VERSION_CODES.N;
-import static android.os.Build.VERSION_CODES.O_MR1;
-import static com.welie.blessed.ConnectionState.CONNECTED;
-import static com.welie.blessed.ConnectionState.CONNECTING;
-import static com.welie.blessed.ConnectionState.DISCONNECTED;
-import static com.welie.blessed.ConnectionState.DISCONNECTING;
-import static junit.framework.Assert.assertFalse;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.openMocks;
 
 @RunWith(RobolectricTestRunner.class)
 @Config( manifest=Config.NONE, sdk = { N })
@@ -965,6 +964,7 @@ public class BluetoothPeripheralTest {
         when(intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR)).thenReturn(BOND_BONDED);
         when(intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)).thenReturn(device);
 
+        assertNotNull(broadcastReceiver);
         broadcastReceiver.onReceive(context, intent);
 
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
@@ -1080,6 +1080,7 @@ public class BluetoothPeripheralTest {
         when(intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)).thenReturn(device);
 
         // When
+        assertNotNull(broadcastReceiver);
         broadcastReceiver.onReceive(context, intent);
 
         // Then
@@ -1102,6 +1103,7 @@ public class BluetoothPeripheralTest {
         when(intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)).thenReturn(device);
 
         // When
+        assertNotNull(broadcastReceiver);
         broadcastReceiver.onReceive(context, intent);
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
 

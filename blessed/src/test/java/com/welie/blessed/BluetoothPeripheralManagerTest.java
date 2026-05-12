@@ -1,6 +1,19 @@
 package com.welie.blessed;
 
 
+import static android.bluetooth.BluetoothGattService.SERVICE_TYPE_PRIMARY;
+import static android.os.Build.VERSION_CODES.M;
+import static com.welie.blessed.BluetoothPeripheralManager.CCC_DESCRIPTOR_UUID;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.openMocks;
+
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -19,6 +32,7 @@ import android.os.ParcelUuid;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,19 +45,6 @@ import org.robolectric.shadows.ShadowLooper;
 
 import java.util.Collections;
 import java.util.UUID;
-
-import static android.bluetooth.BluetoothGattService.SERVICE_TYPE_PRIMARY;
-import static com.welie.blessed.BluetoothPeripheralManager.CCC_DESCRIPTOR_UUID;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static android.os.Build.VERSION_CODES.M;
-import static org.mockito.MockitoAnnotations.openMocks;
-import static org.mockito.ArgumentMatchers.eq;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(manifest=Config.NONE, sdk = {M})
@@ -748,6 +749,7 @@ public class BluetoothPeripheralManagerTest {
         BluetoothCentral central = peripheralManager.getCentral(device.getAddress());
 
         // When
+        Assert.assertNotNull(central);
         peripheralManager.cancelConnection(central);
 
         // Then
